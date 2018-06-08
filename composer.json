@@ -1,7 +1,7 @@
 {
     "name": "firadio/firadiophp",
     "description": "The FiradioPHP Framework",
-    "type": "project",
+    "type": "framework",
     "keywords": [
         "firadio",
         "framework",
