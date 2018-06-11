@@ -124,11 +124,12 @@ class F {
         if (is_string($aMessage)) {
             $aMessage = array('message' => $aMessage);
         }
-        echo json_encode($aMessage) . PHP_EOL;
+        // echo json_encode($aMessage) . PHP_EOL;
         self::console_log($aMessage);
         if (isset(F::$aInstances['log'])) {
             F::$aInstances['log']->error($aMessage, $ex);
         }
+        throw new Exception($aMessage['message']);
     }
 
     public static function setcookie($name, $value = "", $expire = 0, $path = '', $domain = '') {
