@@ -58,17 +58,25 @@ class Router {
      * @return type
      */
     public function getResponse($oRes) {
+        $ext = strtolower($oRes->pathinfo['extension']);
         try {
-            //$this->beginTransactionAll();
-            $this->execAction($oRes);
-            //$this->rollbackAll();
+            if ($ext === '' || $ext === 'php' || $ext === 'api') {
+                //$this->beginTransactionAll();
+                $this->execAction($oRes);
+                //$this->rollbackAll();
+            } else if ($ext === 'htm' || $ext === 'html') {
+                $this->execAction($oRes);
+            } else {
+                $this->error('请求的文件扩展名错误', 'Error In FileExtension');
+            }
         } catch (Exception $ex) {
             //$this->rollbackAll();
             $exCode = $ex->getCode();
             $oRes->assign('code', $exCode);
             if ($exCode === -1) {
                 //该异常由$oRes->end();发起
-                throw new Exception($ex->getMessage(), $exCode);
+                //throw new Exception($ex->getMessage(), $exCode);
+                $this->html($ex->getMessage());
             }
             $traces = $ex->getTrace();
             $message = $ex->getMessage();
@@ -111,6 +119,10 @@ class Router {
         return $oRes->response;
     }
 
+    private function html($html) {
+        throw new Exception($html, -1);
+    }
+
     private function getFuncInfo($file_path) {
         if (!$this->config['cache_enable']) {
             return $this->getFuncInfoByFile($file_path);
@@ -145,6 +157,14 @@ class Router {
     private function load_php_file($file, $oRes) {
         if (($funcInfo = $this->getFuncInfo($file)) === false) {
             return false;
+        }
+        $ext = strtolower($oRes->pathinfo['extension']);
+        if ($ext === 'html' || $ext === 'htm') {
+            //把参数列表传给params
+            foreach ($funcInfo['refFunPar'] as $obj) {
+                $oRes->refFunPar[$obj->name] = array();
+            }
+            return true;
         }
         $argv = $oRes->request;
         $fp = $this->getFucntionParameterForAction($funcInfo['refFunPar'], $argv, $oRes);
@@ -264,6 +284,11 @@ class Router {
             if ($ret === false) {
                 return false;
             }
+        }
+        $ext = strtolower($oRes->pathinfo['extension']);
+        if ($ext === 'html' || $ext === 'htm') {
+            $html = file_get_contents(__DIR__ . DS . 'api.html');
+            $this->html('test1');
         }
         return true;
     }

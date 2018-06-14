@@ -10,6 +10,7 @@ class Response {
     public $fBeginTime = 0; //开始时间
     private $ipaddr = ''; //输入网络IP地址
     private $path = ''; //输入用户请求路径
+    private $pathinfo = ''; //输入用户请求路径
     private $sessionId = ''; //会话ID
     private $APICOOKID = ''; //会话ID
     private $request = ''; //输入用户请求数据
@@ -25,6 +26,7 @@ class Response {
     public $aParam = array();
     public $sRawContent; //保存原始的HTTP_RAW_POST_DATA
     public $channels = array();
+    public $refFunPar = array();
 
     public function __get($name) {
         if ($name === 'ipaddr') {
@@ -32,6 +34,9 @@ class Response {
         }
         if ($name === 'path') {
             return $this->path;
+        }
+        if ($name === 'pathinfo') {
+            return $this->pathinfo;
         }
         if ($name === 'sessionId') {
             return $this->sessionId;
@@ -57,6 +62,7 @@ class Response {
             return;
         }
         if ($name === 'path') {
+            $this->pathinfo = pathinfo($value);
             $this->path = F::path_format($value);
             return;
         }

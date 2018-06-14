@@ -1,4 +1,6 @@
 @ECHO OFF
+git config --global core.safecrlf false
+git config --global core.autocrlf input
 ECHO =========git diff============
 git diff
 ECHO =========git pull ^&^& git commit============
@@ -7,7 +9,7 @@ git pull
 git commit
 ECHO =========git add *============
 PAUSE
-git add *
+git add --all
 ECHO =========git commit============
 PAUSE
 git commit

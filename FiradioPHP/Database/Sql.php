@@ -11,6 +11,7 @@ namespace FiradioPHP\Database;
 class Sql {
 
     private $aSql = array();
+    private $aPage = array();
     public $link;
 
     public function __construct($link) {
@@ -35,6 +36,7 @@ class Sql {
     }
 
     public function tableField($tableField) {
+        $this->aSql['tableField'] = $tableField;
         $convert_field = function ($tableName, $tableAlias, $sFields) {
             $aField = explode(',', $sFields);
             $sRet = '';
@@ -178,6 +180,52 @@ class Sql {
     public function offset($offset) {
         $this->aSql['offset'] = $offset;
         return $this;
+    }
+
+    public function page($page) {
+        $this->aPage['page'] = intval($page);
+        if (isset($this->aPage['page_max']) && $this->aPage['page'] > $this->aPage['page_max']) {
+            $this->aPage['page'] = $this->aPage['page_max'];
+        }
+        if ($this->aPage['page'] < 1) {
+            $this->aPage['page'] = 1;
+        }
+        $this->aSql['offset'] = $this->aSql['limit'] * ($this->aPage['page'] - 1);
+        return $this;
+    }
+
+    public function size($size) {
+        $this->aPage['size'] = intval($size);
+        if ($this->aPage['size'] < 1) {
+            $this->aPage['size'] = 1;
+        }
+        if ($this->aPage['size'] > 1000) {
+            $this->aPage['size'] = 1000;
+        }
+        $this->aSql['limit'] = $this->aPage['size'];
+        if (isset($this->aPage['count'])) {
+            $this->aPage['page_max'] = ceil($this->aPage['count'] / $this->aPage['size']);
+        }
+        if (isset($this->aPage['page'])) {
+            $this->page($this->aPage['page']);
+        }
+        return $this;
+    }
+
+    public function count() {
+        $sql = 'SELECT';
+        $sql .= ' COUNT(*)';
+        $sql .= ' FROM ' . $this->aSql['table'];
+        if (isset($this->aSql['where']) && !empty($this->aSql['where'])) {
+            $sql .= ' WHERE ' . $this->aSql['where'];
+        }
+        $sth = $this->getSth($sql);
+        $row = $sth->fetch(\PDO::FETCH_NUM);
+        $this->aPage['count'] = intval($row[0]);
+        if (isset($this->aPage['size'])) {
+            $this->size($this->aPage['size']);
+        }
+        return $this->aPage['count'];
     }
 
     public function lock() {
