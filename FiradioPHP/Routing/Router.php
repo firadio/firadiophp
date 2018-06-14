@@ -76,7 +76,14 @@ class Router {
             if ($exCode === -1) {
                 //该异常由$oRes->end();发起
                 //throw new Exception($ex->getMessage(), $exCode);
-                $this->html($ex->getMessage());
+                $this->end($ex->getMessage());
+                return $oRes->response;
+            }
+            if ($ext === 'htm' || $ext === 'html') {
+                $html = '<title>' . $ex->title . '</title>';
+                $html .= '<h1>' . $ex->getMessage() . '</h1>';
+                $this->end($html);
+                return $oRes->response;
             }
             $traces = $ex->getTrace();
             $message = $ex->getMessage();
@@ -119,7 +126,15 @@ class Router {
         return $oRes->response;
     }
 
-    private function html($html) {
+    private function end($html) {
+        throw new Exception($html, -1);
+    }
+
+    private function html($path, $aData) {
+        $html = file_get_contents(__DIR__ . DS . $path);
+        foreach ($aData as $key => $value) {
+            $html = str_replace('{$' . $key . '}', $value, $html);
+        }
         throw new Exception($html, -1);
     }
 
@@ -155,14 +170,18 @@ class Router {
     }
 
     private function load_php_file($file, $oRes) {
-        if (($funcInfo = $this->getFuncInfo($file)) === false) {
+        $path = $this->config['action_dir'] . $file . '.php';
+        if (($funcInfo = $this->getFuncInfo($path)) === false) {
             return false;
         }
         $ext = strtolower($oRes->pathinfo['extension']);
         if ($ext === 'html' || $ext === 'htm') {
             //把参数列表传给params
             foreach ($funcInfo['refFunPar'] as $obj) {
-                $oRes->refFunPar[$obj->name] = array();
+                if (!isset($oRes->refFunPar[$obj->name])) {
+                    $oRes->refFunPar[$obj->name] = array();
+                }
+                $oRes->refFunPar[$obj->name][] = $file;
             }
             return true;
         }
@@ -271,7 +290,7 @@ class Router {
      */
     private function execAction($oRes) {
         if ($oRes->path === '' || $oRes->path === '/') {
-            return $this->load_php_file($this->config['action_dir'] . '/index.php', $oRes);
+            return $this->load_php_file('/index', $oRes);
         }
         $aPath = explode('/', $oRes->path);
         $sPath = '';
@@ -279,16 +298,18 @@ class Router {
             if ($dir === '') {
                 continue;
             }
-            $sPath .= DS . $dir;
-            $ret = $this->load_php_file($this->config['action_dir'] . $sPath . '.php', $oRes);
+            $sPath .= '/' . $dir;
+            $ret = $this->load_php_file($sPath, $oRes);
             if ($ret === false) {
                 return false;
             }
         }
         $ext = strtolower($oRes->pathinfo['extension']);
         if ($ext === 'html' || $ext === 'htm') {
-            $html = file_get_contents(__DIR__ . DS . 'api.html');
-            $this->html('test1');
+            $this->html('api.html', array(
+                'title' => 'API开放接口调用',
+                'refFunPar' => json_encode($oRes->refFunPar),
+            ));
         }
         return true;
     }
