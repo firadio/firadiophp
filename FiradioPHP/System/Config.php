@@ -45,7 +45,7 @@ class Config {
         $aClassInfo = &$this->aClass[$sName];
         $oInstance = array_pop($aClassInfo['free']);
         if ($oInstance === NULL) {
-            F::debug('new ' . $sName);
+            //F::debug('new ' . $sName);
             $oInstance = new $aClassInfo['class']($aClassInfo['config']);
         }
         if (preg_match('/^db[0-9]+$/', $sName) || preg_match('/^db_[a-z]+$/', $sName)
