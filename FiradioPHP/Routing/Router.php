@@ -314,9 +314,15 @@ class Router {
         return true;
     }
 
-    private function error($message, $title = '提示') {
-        $ex = new Exception($message, -2);
-        $ex->title = $title;
+    private function error($message, $param2 = '提示') {
+        $exCode = -2;
+        if (is_numeric($param2)) {
+            $exCode = $param2;
+        }
+        $ex = new Exception($message, $exCode);
+        if (is_string($param2)) {
+            $ex->title = $param2;
+        }
         throw $ex;
     }
 
