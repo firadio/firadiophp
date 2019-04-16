@@ -217,6 +217,10 @@ class Curl {
         return $this->createCurl($sPath);
     }
 
+    public function post_json($sPath, $aPost) {
+        return $this->post($sPath, $aPost);
+    }
+
     private function UriEncode($str) {
         $str = urlencode($str);
         $str = str_replace('+', '%20', $str);
