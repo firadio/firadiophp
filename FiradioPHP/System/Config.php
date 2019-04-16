@@ -13,6 +13,17 @@ class Config {
 
     private $aClass = array();
 
+    public function __get($name) {
+        if ($name === 'aClass') {
+            return $this->aClass;
+        }
+        F::error("cant get property-name=$name", 'Error In FiradioPHP\System\Config');
+    }
+
+    public function __set($name, $value) {
+        F::error("cant set property-name=$name", 'Error In FiradioPHP\System\Config');
+    }
+
     public function __construct($configDir) {
         $dh = \opendir($configDir);
         if (!$dh) {

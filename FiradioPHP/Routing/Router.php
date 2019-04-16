@@ -244,10 +244,19 @@ class Router {
                 //$depend[] = F::$aInstances[$sName];
                 continue;
             }
+            if (isset(F::$oConfig->aClass[$value->name])) {
+                $sName = $value->name;
+                $oInstance = F::$oConfig->getInstance($sName);
+                $getInstance[$sName] = $oInstance;
+                $depend[] = $oInstance;
+                continue;
+            }
+            // 所有的特殊参数都应该在用户参数处理之前
             if (isset($param[$value->name])) {
                 $depend[] = $param[$value->name];
                 continue;
             }
+            // 最后才处理默认值
             if ($value->isDefaultValueAvailable()) {
                 $depend[] = $value->getDefaultValue();
                 continue;

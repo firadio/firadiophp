@@ -17,7 +17,10 @@ class OTS {
 
     public function __construct($conf = array()) {
         // $this->aConfig = $conf['config'];
-        $this->oOTSClient = new OTSClient ($this->aConfig);
+        $config = $conf['config'];
+        $config['DebugLogHandler'] = function () {
+        };
+        $this->oOTSClient = new OTSClient ($config);
     }
 
     public function primary_key_string($len = 8) {
@@ -70,17 +73,17 @@ class OTS {
 
     public function addRow($table_name, $key, $row) {
         // 一般用于添加账号，如果账号已存在肯定要报错
-        return putRow_raw($table_name, $key, $row, RowExistenceExpectationConst::CONST_EXPECT_NOT_EXIST);
+        return $this->putRow_raw($table_name, $key, $row, RowExistenceExpectationConst::CONST_EXPECT_NOT_EXIST);
     }
 
     public function setRow($table_name, $key, $row) {
         // 一般用于修改账号，修改失败肯定要报错
-        return putRow_raw($table_name, $key, $row, RowExistenceExpectationConst::CONST_EXPECT_EXIST);
+        return $this->putRow_raw($table_name, $key, $row, RowExistenceExpectationConst::CONST_EXPECT_EXIST);
     }
 
     public function putRow($table_name, $row) {
         // 像日志一样写入数据，无需判断错与否
-        return putRow_raw($table_name, NULL, $row, RowExistenceExpectationConst::CONST_IGNORE);
+        return $this->putRow_raw($table_name, NULL, $row, RowExistenceExpectationConst::CONST_IGNORE);
     }
 
 }
