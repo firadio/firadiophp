@@ -1,4 +1,6 @@
 @ECHO OFF
+git config --global user.email "xiangxisheng@gmail.com"
+git config --global user.name "Xiang/Xisheng"
 git config --global core.safecrlf false
 git config --global core.autocrlf input
 ECHO =========git diff============
