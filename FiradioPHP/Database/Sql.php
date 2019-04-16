@@ -76,6 +76,7 @@ class Sql {
     }
 
     public function where($where) {
+        $this->aSql['raw_where'] = $where;
         if (is_array($where)) {
             if (!isset($this->aSql['paramData'])) {
                 $this->aSql['paramData'] = array();
@@ -212,7 +213,7 @@ class Sql {
         return $this;
     }
 
-    public function count() {
+    public function count2() {
         $sql = 'SELECT';
         $sql .= ' COUNT(*)';
         $sql .= ' FROM ' . $this->aSql['table'];
@@ -313,6 +314,13 @@ class Sql {
         return $sth->fetch($fetch_style);
     }
 
+    public function count() {
+        $this->field('COUNT(*)');
+        $sth = $this->getSth($this->buildSqlSelect(TRUE));
+        $row = $sth->fetch(\PDO::FETCH_NUM);
+        return empty($row) ? 0 : intval($row[0]);
+    }
+
     public function fetch($fetch_style = \PDO::FETCH_ASSOC) {
         $sth = $this->getSth($this->buildSqlSelect(TRUE));
         return $sth->fetch($fetch_style);
@@ -338,4 +346,13 @@ class Sql {
         return $sth->rowCount();
     }
 
+    public function addsave($data) {
+        $row = $this->lock()->find();
+        if ($row) {
+            $this->save($data);
+        } else {
+            $data = array_merge($data, $this->aSql['raw_where']);
+            $this->add($data);
+        }
+    }
 }

@@ -72,22 +72,25 @@ class Pdo extends \PDO {
     public function beginTransaction() {
         try {
             //Warning: Error while sending QUERY packet. PID=7888 in
-            $ret = parent::beginTransaction();
+            $ret = @parent::beginTransaction();
             $this->errorCount = 0; //重置错误计数
             return $ret;
         } catch (PDOException $ex) {
             //SQLSTATE[HY000]: General error: 2006 MySQL server has gone away
             if ($this->errorCount >= $this->errorCountMax) {
                 $this->errorCount = 0; //重置错误计数
+                echo 'errorCountMax';
                 throw $ex;
             }
             $this->errorCount++;
-            if (!in_array($ex->errorInfo[1], array(2006, 2013))) {
-                throw $ex;
+            $sCode = $ex->getCode();
+            $iErrno = intval($ex->errorInfo[1]);
+            if ($sCode === 'HY000' || in_array($iErrno, array(2006, 2013))) {
+                //服务端断开时重连一次
+                $this->connect();
+                return parent::beginTransaction();
             }
-            //服务端断开时重连一次
-            $this->connect();
-            return parent::beginTransaction();
+            throw $ex;
         }
     }
 
@@ -131,15 +134,23 @@ class Pdo extends \PDO {
         return $sth;
     }
 
-    public function callProc($procName, $params) {
-        $place_holders = implode(',', array_fill(0, count($params), '?'));
-        $sql = "CALL {$procName}({$place_holders})";
+    public function callProc($procName, $params = array()) {
+        $sql = "CALL {$procName}";
+        if (count($params) > 0) {
+            $place_holders = implode(',', array_fill(0, count($params), '?'));
+            $sql .= "({$place_holders})";
+        }
         return $this->sqlexec($sql, $params);
     }
 
     public function callProc_fetchOne($procName, $params) {
         $sth = $this->callProc($procName, $params);
         return $sth->fetch(\PDO::FETCH_ASSOC);
+    }
+
+    public function call($procName, $params = array()) {
+        $sth = $this->callProc($procName, $params);
+        return $sth->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     public function input_parameters($sql, $request = array()) {
