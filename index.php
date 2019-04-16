@@ -51,6 +51,7 @@ header('Access-Control-Allow-Headers: ApiAuth, Content-Type');
 
 try {
     $result = F::$aInstances['router']->getResponse($oRes);
+    $aParam['case'] = isset($aParam['case']) ? $aParam['case'] : 'underline';
     if ($aParam['case'] === 'underline') {
         
     } else {

@@ -58,17 +58,32 @@ class Router {
      * @return type
      */
     public function getResponse($oRes) {
+        $ext = strtolower($oRes->pathinfo['extension']);
         try {
-            //$this->beginTransactionAll();
-            $this->execAction($oRes);
-            //$this->rollbackAll();
+            if ($ext === '' || $ext === 'php' || $ext === 'api') {
+                //$this->beginTransactionAll();
+                $this->execAction($oRes);
+                //$this->rollbackAll();
+            } else if ($ext === 'htm' || $ext === 'html') {
+                $this->execAction($oRes);
+            } else {
+                $this->error('请求的文件扩展名错误', 'Error In FileExtension');
+            }
         } catch (Exception $ex) {
             //$this->rollbackAll();
             $exCode = $ex->getCode();
             $oRes->assign('code', $exCode);
             if ($exCode === -1) {
                 //该异常由$oRes->end();发起
-                throw new Exception($ex->getMessage(), $exCode);
+                //throw new Exception($ex->getMessage(), $exCode);
+                $this->end($ex->getMessage());
+                return $oRes->response;
+            }
+            if ($ext === 'htm' || $ext === 'html') {
+                $html = '<title>' . $ex->title . '</title>';
+                $html .= '<h1>' . $ex->getMessage() . '</h1>';
+                $this->end($html);
+                return $oRes->response;
             }
             $traces = $ex->getTrace();
             $message = $ex->getMessage();
@@ -155,8 +170,20 @@ class Router {
     }
 
     private function load_php_file($file, $oRes) {
-        if (($funcInfo = $this->getFuncInfo($file)) === false) {
+        $path = $this->config['action_dir'] . $file . '.php';
+        if (($funcInfo = $this->getFuncInfo($path)) === false) {
             return false;
+        }
+        $ext = strtolower($oRes->pathinfo['extension']);
+        if ($ext === 'html' || $ext === 'htm') {
+            //把参数列表传给params
+            foreach ($funcInfo['refFunPar'] as $obj) {
+                if (!isset($oRes->refFunPar[$obj->name])) {
+                    $oRes->refFunPar[$obj->name] = array();
+                }
+                $oRes->refFunPar[$obj->name][] = $file;
+            }
+            return true;
         }
         $argv = $oRes->request;
         $fp = $this->getFucntionParameterForAction($funcInfo['refFunPar'], $argv, $oRes);
@@ -263,7 +290,7 @@ class Router {
      */
     private function execAction($oRes) {
         if ($oRes->path === '' || $oRes->path === '/') {
-            return $this->load_php_file($this->config['action_dir'] . '/index.php', $oRes);
+            return $this->load_php_file('/index', $oRes);
         }
         $aPath = explode('/', $oRes->path);
         $sPath = '';
@@ -271,11 +298,18 @@ class Router {
             if ($dir === '') {
                 continue;
             }
-            $sPath .= DS . $dir;
-            $ret = $this->load_php_file($this->config['action_dir'] . $sPath . '.php', $oRes);
+            $sPath .= '/' . $dir;
+            $ret = $this->load_php_file($sPath, $oRes);
             if ($ret === false) {
                 return false;
             }
+        }
+        $ext = strtolower($oRes->pathinfo['extension']);
+        if ($ext === 'html' || $ext === 'htm') {
+            $this->html('api.html', array(
+                'title' => 'API开放接口调用',
+                'refFunPar' => json_encode($oRes->refFunPar),
+            ));
         }
         return true;
     }
