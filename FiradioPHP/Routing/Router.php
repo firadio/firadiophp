@@ -204,10 +204,6 @@ class Router {
         $getInstance = array();
         foreach ($refFunPar as $value) {
             $matches = array();
-            if (isset($param[$value->name])) {
-                $depend[] = $param[$value->name];
-                continue;
-            }
             //这3个都是用户主动传入的，分别是aRequest,aArgv,sRawContent
             if ($value->name === 'request') {
                 $depend[] = $oRes->request;
@@ -246,6 +242,10 @@ class Router {
                 $getInstance[$sName] = $oInstance;
                 $depend[] = $oInstance;
                 //$depend[] = F::$aInstances[$sName];
+                continue;
+            }
+            if (isset($param[$value->name])) {
+                $depend[] = $param[$value->name];
                 continue;
             }
             if ($value->isDefaultValueAvailable()) {
