@@ -38,25 +38,29 @@ class Wechat {
         $out = $pc->decrypt($encrypt, $this->aConfig['appId']);
         $this->sRawContent = $out[1];
         $xml_tree->loadXML($out[1]);
-        $this->request['FromUserName'] = $xml_tree->getElementsByTagName('FromUserName')->item(0)->nodeValue;
-        $this->request['ToUserName'] = $xml_tree->getElementsByTagName('ToUserName')->item(0)->nodeValue;
-        $obj = $xml_tree->getElementsByTagName('Content');
-        $this->request['Content'] = ($obj->length > 0) ? $obj->item(0)->nodeValue : '';
-        $obj = $xml_tree->getElementsByTagName('MediaId');
-        $this->request['MediaId'] = ($obj->length > 0) ? $obj->item(0)->nodeValue : '';
-        $obj = $xml_tree->getElementsByTagName('Recognition');
-        $this->request['Recognition'] = ($obj->length > 0) ? $obj->item(0)->nodeValue : '';
-        $obj = $xml_tree->getElementsByTagName('Event');
-        $this->request['Event'] = ($obj->length > 0) ? $obj->item(0)->nodeValue : '';
-        $obj = $xml_tree->getElementsByTagName('EventKey');
-        $this->request['EventKey'] = ($obj->length > 0) ? $obj->item(0)->nodeValue : '';
+        $field = 'CreateTime,FromUserName,ToUserName';
+        $field .= ',Content,MediaId,Recognition';
+        $field .= ',MsgType,Event,EventKey';
+        $field .= ',Latitude,Longitude,Precision';
+        $aField = explode(',', $field);
+        foreach ($aField as $sField) {
+            $obj = $xml_tree->getElementsByTagName($sField);
+            $this->request[$sField] = ($obj->length > 0) ? $obj->item(0)->nodeValue : '';
+        }
     }
 
     public function getRawContent() {
         return $this->sRawContent;
     }
 
-    public function getResponse($sContent) {
+    public function getResponse($sContent = '') {
+        if (empty($sContent)) {
+            $response = new Response();
+            $response->appendToXml('FromUserName', $this->request['ToUserName']);
+            $response->appendToXml('ToUserName', $this->request['FromUserName']);
+            $response->appendToXml('MsgType', 'transfer_customer_service');
+            return $response->saveXML();
+        } 
         if (strpos($sContent, 'voice:') === 0) {
             $sContent = substr($sContent, 6);
             return $this->getResponse2($sContent, 'voice');
@@ -66,6 +70,24 @@ class Wechat {
             return $this->getResponse2($sContent, 'image');
         }
         return $this->getResponse2($sContent);
+    }
+
+    public function getResponseNews($Title = '图文消息标题', $Description = '图文消息描述', $Url = 'http://wx.anan.cc', $PicUrl = 'http://wx.anan.cc/firadio/images/logo360x200.png') {
+        $response = new Response();
+        $response->appendToXml('FromUserName', $this->request['ToUserName']);
+        $response->appendToXml('ToUserName', $this->request['FromUserName']);
+        $response->appendToXml('MsgType', 'news');
+        $Articles = array();
+        $Article = array();
+        $Article['Title'] = $Title;
+        $Article['Description'] = $Description;
+        $Article['PicUrl'] = $PicUrl;
+        $Article['Url'] = $Url;
+        $Articles[] = $Article;
+        $response->appendToXml('ArticleCount', count($Articles));
+        $response->appendItems('Articles', $Articles);
+        $ret = $response->saveXML();
+        return $ret;
     }
 
     public function getResponse2($sContent, $MsgType = 'Text') {
@@ -139,5 +161,4 @@ class Wechat {
         $jsonArr = json_decode($jsonStr, TRUE);
         return $jsonArr;
     }
-
 }

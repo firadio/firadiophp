@@ -35,6 +35,21 @@ class Response {
         }
     }
 
+    public function appendItems($pLabel, $rows) {
+        $child = $this->dom_xml->appendChild($this->dom_root->createElement($pLabel));
+        foreach ($rows as $row) {
+            $item = $child->appendChild($this->dom_root->createElement('item'));
+            $this->appendItem($item, $row);
+        }
+    }
+
+    public function appendItem($item, $row) {
+        foreach ($row as $name => $value) {
+            $child = $item->appendChild($this->dom_root->createElement($name));
+            $child->appendChild($this->dom_root->createCDATASection($value));
+        }
+    }
+
     public function saveXML() {
         $out = $this->dom_root->saveXML();
         //var_dump($out);
