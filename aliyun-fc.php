@@ -5,13 +5,21 @@ function initializer($context) {
     if (!defined('DS')) define('DS', DIRECTORY_SEPARATOR);
     if (!defined('APP_ROOT')) define('APP_ROOT', __DIR__);
     //define('DATA_DIR', APP_ROOT . DS . 'data');
-    $pRequire = __DIR__ . DS . 'vendor' . DS . 'autoload.php';
-    if (!file_exists($pRequire)) {
-        $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
+    if (!class_exists('FiradioPHP\\F')) {
+        $pRequire = __DIR__ . DS . 'vendor' . DS . 'autoload.php';
+        if (!file_exists($pRequire)) {
+            $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
+        }
+        if (!file_exists($pRequire)) {
+            die('not find FiradioPHP');
+            return;
+        }
+        require_once $pRequire;
     }
-    require_once $pRequire;
-    // 初始化F框架，参数是config根目录
-    \FiradioPHP\F::init(APP_ROOT . DS . 'config');
+    if (empty(\FiradioPHP\F::$oConfig)) {
+        // 初始化F框架，参数是config根目录
+        \FiradioPHP\F::init(APP_ROOT . DS . 'config');
+    }
     var_dump($context);
 }
 
