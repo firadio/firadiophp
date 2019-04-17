@@ -14,7 +14,7 @@ class Response {
     private $sessionId = ''; //会话ID
     private $APICOOKID = ''; //会话ID
     private $request = ''; //输入用户请求数据
-    private $response = array(); //输出的结果
+    private $aResponse = array(); //输出的结果
     private $aArgv = array(); //来自命令行
     public $oRequest; //来自于Swoole\Http\Server
     public $oResponse; //来自于Swoole\Http\Server
@@ -52,7 +52,7 @@ class Response {
             return $this->request;
         }
         if ($name === 'response') {
-            return $this->response;
+            return $this->aResponse;
         }
         if ($name === 'aArgv') {
             return $this->aArgv;
@@ -63,7 +63,7 @@ class Response {
     public function __set($name, $value) {
         if ($name === 'ipaddr') {
             $this->ipaddr = $value;
-            $this->response['ipaddr'] = $this->ipaddr;
+            $this->aResponse['ipaddr'] = $this->ipaddr;
             return;
         }
         if ($name === 'path') {
@@ -93,16 +93,16 @@ class Response {
     }
 
     private function initResponse() {
-        $this->response = array();
-        $this->response['time'] = microtime(TRUE);
+        $this->aResponse = array();
+        $this->aResponse['time'] = microtime(TRUE);
     }
 
     public function assign($name, $value) {
-        $this->response[$name] = $value;
+        $this->aResponse[$name] = $value;
     }
 
     public function response($name) {
-        return $this->response[$name];
+        return $this->aResponse[$name];
     }
 
     /**
@@ -110,12 +110,12 @@ class Response {
      * @param type $newResult
      */
     public function mergeResponse($newResult) {
-        $this->response = array_merge($this->response, $newResult);
+        $this->aResponse = array_merge($this->aResponse, $newResult);
     }
 
     public function message($message, $title = '提示') {
-        $this->response['message'] = $message;
-        $this->response['title'] = $title;
+        $this->aResponse['message'] = $message;
+        $this->aResponse['title'] = $title;
     }
 
     public function setParam($name, $value) {
