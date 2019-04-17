@@ -23,6 +23,11 @@ class OTS {
             $dateStr = date('Y-m-d H:i:s', time());
             print "OTS DEBUG $dateStr $message\n";
         };
+        $config['ErrorLogHandler'] = function () {
+            return;
+            $dateStr = date('Y-m-d H:i:s', time());
+            print "OTS ERROR $dateStr $message\n";
+        };
         $this->oOTSClient = new OTSClient ($config);
     }
 

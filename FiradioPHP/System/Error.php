@@ -17,6 +17,9 @@ class Error {
         // 对于PHP Fatal error:  Uncaught Error: Call to undefined method
         // 只能通过shutdown_function拦截，仅适用于index.php方式
         $e = error_get_last();
+        if (empty($e)) {
+            return;
+        }
         if ($this->is_cli()) {
             print_r($e);
             return;

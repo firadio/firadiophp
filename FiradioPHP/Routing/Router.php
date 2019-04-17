@@ -65,6 +65,11 @@ class Router {
         } catch (Exception $ex) {
             //$this->rollbackAll();
             $exCode = $ex->getCode();
+            // code >= 0 无异常
+            // code = -1 用于输出特殊格式资料
+            // code = -2 自定义错误
+            // code = -3 其他未知错误
+            if ($exCode === 0) $exCode = -3;
             $oRes->assign('code', $exCode);
             if ($exCode === -1) {
                 //该异常由$oRes->end();发起
@@ -88,6 +93,9 @@ class Router {
                 if (!isset($trace['file'])) {
                     continue;
                 }
+                if (!isset($trace['class'])) {
+                    continue;
+                }
                 if (0 !== strpos($trace['file'], APP_ROOT)) {
                     continue;
                 }
@@ -98,9 +106,16 @@ class Router {
                     continue;
                 }
                 $file = substr($trace['file'], strlen(APP_ROOT));
+                $file = str_replace('\\', '/', $file);
                 $debug = array();
-                $debug['msg'] = '' . $file . '(' . $trace['line'] . '):';
-                $debug['msg'] .= '' . $trace['class'] . $trace['type'] . $trace['function'] . '()';
+                $debug['file'] = $file . '(' . $trace['line'] . ')';
+                $debug['func'] = call_user_func(function () use ($trace) {
+                    $sFunc = '';
+                    if (isset($trace['class'])) $sFunc .= $trace['class'];
+                    if (isset($trace['type'])) $sFunc .= $trace['type'];
+                    $sFunc .= $trace['function'] . '()';
+                    return $sFunc;
+                });
                 if (0) {
                     $debug['args'] = $trace['args'];
                 }

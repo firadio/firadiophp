@@ -28,6 +28,10 @@ class Response {
     public $channels = array();
     public $refFunPar = array();
 
+    public function __construct() {
+        $this->initResponse();
+    }
+
     public function __get($name) {
         if ($name === 'ipaddr') {
             return $this->ipaddr;
@@ -76,18 +80,18 @@ class Response {
         }
         if ($name === 'request') {
             $this->request = $value;
-            $this->initResponse();
+            // $this->initResponse();
             return;
         }
         if ($name === 'aArgv') {
             $this->aArgv = $value;
-            $this->initResponse();
+            // $this->initResponse();
             return;
         }
         throw new Exception("dont have property name=$name");
     }
 
-    public function initResponse() {
+    private function initResponse() {
         $this->response = array();
         $this->response['time'] = microtime(TRUE);
     }
