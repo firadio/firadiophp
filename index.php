@@ -1,6 +1,6 @@
 <?php
 
-//error_reporting(0);
+error_reporting(0);
 
 use FiradioPHP\F;
 use FiradioPHP\System\ConvertCase;
@@ -49,6 +49,7 @@ F::headerAllowOrigin(filter_input(INPUT_SERVER, 'HTTP_ORIGIN'));
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Headers: ApiAuth, Content-Type');
 
+$result = array();
 try {
     $result = F::$aInstances['router']->getResponse($oRes);
     $aParam['case'] = isset($aParam['case']) ? $aParam['case'] : 'underline';
@@ -57,13 +58,14 @@ try {
     } else {
         $result = ConvertCase::toCamel($result);
     }
-    echo json_encode($result);
-} catch (Exception $ex) {
-    $iCode = $ex->getCode();
-    if ($iCode === -1) {
-        exit($ex->getMessage());
+} catch (\Exception $ex) {
+    $result['code'] = $ex->getCode();
+    $result['message'] = $ex->getMessage();
+    if ($result['code'] === -1) {
+        exit($result['message']);
     }
 }
+echo json_encode($result);
 
 function getIpAddrIgnoreCase($array, $key) {
     if (isset($array[$key])) {
