@@ -63,6 +63,7 @@ class Response {
     public function __set($name, $value) {
         if ($name === 'ipaddr') {
             $this->ipaddr = $value;
+            $this->response['ipaddr'] = $this->ipaddr;
             return;
         }
         if ($name === 'path') {
