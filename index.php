@@ -5,15 +5,32 @@ error_reporting(0);
 use FiradioPHP\F;
 use FiradioPHP\System\ConvertCase;
 
-define('DS', DIRECTORY_SEPARATOR);
-define('APP_ROOT', __DIR__);
-define('DATA_DIR', APP_ROOT . DS . 'data');
-
-require_once __DIR__ . DS . 'vendor' . DS . 'autoload.php';
-
-//初始化F框架，参数是config根目录
-F::init(APP_ROOT . DS . 'config');
-
+function initializer() {
+    // if you open the initializer feature, please implement the initializer function, as below:
+    if (!defined('DS')) define('DS', DIRECTORY_SEPARATOR);
+    if (!defined('APP_ROOT')) define('APP_ROOT', __DIR__);
+    //define('DATA_DIR', APP_ROOT . DS . 'data');
+    if (!class_exists('FiradioPHP\\F')) {
+        $pRequire = __DIR__ . DS . 'vendor' . DS . 'autoload.php';
+        if (!file_exists($pRequire)) {
+            $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
+        }
+        if (!file_exists($pRequire)) {
+            die('not find file FiradioPHP');
+            return;
+        }
+        require_once $pRequire;
+    }
+    if (!class_exists('FiradioPHP\\F')) {
+        die('not load class FiradioPHP');
+        return;
+    }
+    if (empty(\FiradioPHP\F::$oConfig)) {
+        // 初始化F框架，参数是config根目录
+        \FiradioPHP\F::init(APP_ROOT . DS . 'config');
+    }
+}
+initializer();
 
 $oRes = new \FiradioPHP\Routing\Response();
 $oRes->fBeginTime = microtime(TRUE);
