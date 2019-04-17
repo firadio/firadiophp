@@ -2,10 +2,14 @@
 
 function initializer($context) {
     // if you open the initializer feature, please implement the initializer function, as below:
-    define('DS', DIRECTORY_SEPARATOR);
-    define('APP_ROOT', __DIR__);
+    if (!defined('DS')) define('DS', DIRECTORY_SEPARATOR);
+    if (!defined('APP_ROOT')) define('APP_ROOT', __DIR__);
     //define('DATA_DIR', APP_ROOT . DS . 'data');
-    require_once __DIR__ . DS . 'vendor' . DS . 'autoload.php';
+    $pRequire = __DIR__ . DS . 'vendor' . DS . 'autoload.php';
+    if (!file_exists($pRequire)) {
+        $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
+    }
+    require_once $pRequire;
     // 初始化F框架，参数是config根目录
     \FiradioPHP\F::init(APP_ROOT . DS . 'config');
     var_dump($context);
