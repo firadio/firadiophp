@@ -17,6 +17,7 @@ class Response {
     //aRequest的存储优先级，1：HTTP_RAW_POST_DATA为JSON字符串时，2：存在POST时，3：GET请求
     private $aRequest = array(); //输入用户请求数据
     private $aResponse = array(); //输出的结果
+    private $aResponseHeader = array(); //输出的Header
     private $aArgv = array(); //来自命令行
     public $oRequest; //来自于Swoole\Http\Server
     public $oResponse; //来自于Swoole\Http\Server
@@ -60,6 +61,9 @@ class Response {
         if ($name === 'aResponse' || $name === 'response') {
             // 提供给Router.php的getResponse获取传回数据用的
             return $this->aResponse;
+        }
+        if ($name === 'aResponseHeader') {
+            return $this->aResponseHeader;
         }
         throw new Exception("cannot get property name=$name");
     }
@@ -107,6 +111,10 @@ class Response {
 
     public function assign($name, $value) {
         $this->aResponse[$name] = $value;
+    }
+
+    public function header($name, $value) {
+        $this->aResponseHeader[$name] = $value;
     }
 
     public function response($name) {

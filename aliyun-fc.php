@@ -10,6 +10,10 @@ function initializer($context) {
         if (!file_exists($pRequire)) {
             $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
         }
+        if (class_exists('Aliyun\\OTS\\OTSClient')) {
+            // 如果阿里云已经自带了，就没必要导入autoload.php了
+            $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
+        }
         if (!file_exists($pRequire)) {
             die('not find file FiradioPHP');
             return;
@@ -28,6 +32,7 @@ function initializer($context) {
 }
 
 function handler($request, $context): \RingCentral\Psr7\Response{
+    $fBeginTime = microtime(TRUE);
     /*
     $body       = $request->getBody()->getContents();
     $queries    = $request->getQueryParams();
@@ -38,7 +43,7 @@ function handler($request, $context): \RingCentral\Psr7\Response{
     $clientIP   = $request->getAttribute('clientIP');
     */
     $oRes = new \FiradioPHP\Routing\Response();
-    $oRes->fBeginTime = microtime(TRUE); //1：执行的开始时间
+    $oRes->fBeginTime = $fBeginTime; //1：执行的开始时间
     $oRes->ipaddr = $request->getAttribute('clientIP'); //2：用户IP地址
     $oRes->path = $request->getAttribute('path'); //3：用户请求路径
     $aRequest = $request->getQueryParams(); //4：用户请求参数
@@ -56,22 +61,21 @@ function handler($request, $context): \RingCentral\Psr7\Response{
         }
     }
     $oRes->aRequest = $aRequest;
-    $result = '';
+    $result = $oRes->aResponse;
     try {
         $result = \FiradioPHP\F::$aInstances['router']->getResponse($oRes);
-        $result = json_encode($result);
     } catch (Exception $ex) {
-        $iCode = $ex->getCode();
+        $result['code'] = $ex->getCode();
+        $result['message'] = $ex->getMessage();
         if ($iCode === -1) {
-            $result = $ex->getMessage();
+            return new \RingCentral\Psr7\Response(200, $oRes->aResponseHeader, $ex->getMessage());
         }
     }
-    return new \RingCentral\Psr7\Response(
-        200,
-        array(
-            'custom_header1' => 'v1',
-            'custom_header2' => ['v2', 'v3'],
-        ),
-        $result
-    );
+    $result['duration'] = call_user_func(function () use ($fBeginTime) {
+        $d = microtime(TRUE) - $fBeginTime; // 计算出执行间隔
+        $ms = $d * 1000; // 转换成毫秒
+        $ms = intval($ms * 100) / 100; // 保留2位小数
+        return $ms . ' ms';
+    });
+    return new \RingCentral\Psr7\Response(200, $oRes->aResponseHeader, json_encode($result));
 }
