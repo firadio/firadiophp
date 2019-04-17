@@ -86,7 +86,7 @@ class Router {
                 //自定义异常无需debug调试
                 //该异常由$this->error($message)发起
                 $oRes->assign('errno', 2);
-                return $oRes->response;
+                return $oRes->aResponse;
             }
             $debugArr = array();
             foreach ($traces as $trace) {
@@ -123,7 +123,7 @@ class Router {
             }
             $oRes->assign('debug', $debugArr);
         }
-        return $oRes->response;
+        return $oRes->aResponse;
     }
 
     private function end($html) {
@@ -173,7 +173,7 @@ class Router {
         if (($funcInfo = $this->getFuncInfo($file)) === false) {
             return false;
         }
-        $argv = $oRes->request;
+        $argv = $oRes->aParam;
         $fp = $this->getFucntionParameterForAction($funcInfo['refFunPar'], $argv, $oRes);
         try {
             call_user_func_array($funcInfo['func'], $fp[0]);
@@ -221,11 +221,11 @@ class Router {
             $matches = array();
             //这3个都是用户主动传入的，分别是aRequest,aArgv,sRawContent
             if ($value->name === 'request') {
-                $depend[] = $oRes->request;
+                $depend[] = $oRes->aParam;
                 continue;
             }
             if ($value->name === 'aArgv') {
-                $depend[] = $oRes->aArgv;
+                $depend[] = $oRes->aParam;
                 continue;
             }
             if ($value->name === 'sRawContent') {

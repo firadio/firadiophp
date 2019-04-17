@@ -13,7 +13,9 @@ class Response {
     private $pathinfo = ''; //输入用户请求路径
     private $sessionId = ''; //会话ID
     private $APICOOKID = ''; //会话ID
-    private $request = ''; //输入用户请求数据
+    private $aParam = array(); // 用于提供给action函数进行处理的参数
+    //aRequest的存储优先级，1：HTTP_RAW_POST_DATA为JSON字符串时，2：存在POST时，3：GET请求
+    private $aRequest = array(); //输入用户请求数据
     private $aResponse = array(); //输出的结果
     private $aArgv = array(); //来自命令行
     public $oRequest; //来自于Swoole\Http\Server
@@ -21,9 +23,6 @@ class Response {
     public $oServer; //来自于Swoole的onConn
     public $isWebsocket = false;
     public $aHeader = array(); //$_SERVER['HTTP_AUTHORIZATION']
-    //aRequest的存储优先级，1：HTTP_RAW_POST_DATA为JSON字符串时，2：存在POST时，3：GET请求
-    public $aRequest = array();
-    public $aParam = array();
     public $sRawContent; //保存原始的HTTP_RAW_POST_DATA
     public $channels = array();
     public $refFunPar = array();
@@ -48,14 +47,19 @@ class Response {
         if ($name === 'APICOOKID') {
             return $this->APICOOKID;
         }
-        if ($name === 'request') {
-            return $this->request;
+        if ($name === 'aParam') {
+            // 提供给Router.php的load_php_file获取参数用的
+            return $this->aParam;
         }
-        if ($name === 'response') {
-            return $this->aResponse;
+        if ($name === 'aRequest' || $name === 'request') {
+            return $this->aRequest;
         }
         if ($name === 'aArgv') {
             return $this->aArgv;
+        }
+        if ($name === 'aResponse' || $name === 'response') {
+            // 提供给Router.php的getResponse获取传回数据用的
+            return $this->aResponse;
         }
         throw new Exception("cannot get property name=$name");
     }
@@ -79,14 +83,18 @@ class Response {
             $this->APICOOKID = $value;
             return;
         }
-        if ($name === 'request') {
-            $this->request = $value;
-            // $this->initResponse();
+        if ($name === 'aParam') {
+            $this->aParam = $value;
+            return;
+        }
+        if ($name === 'aRequest' || $name === 'request') {
+            $this->aRequest = $value;
+            $this->aParam = $value;
             return;
         }
         if ($name === 'aArgv') {
             $this->aArgv = $value;
-            // $this->initResponse();
+            $this->aParam = $value;
             return;
         }
         throw new Exception("dont have property name=$name");
@@ -119,7 +127,7 @@ class Response {
     }
 
     public function setParam($name, $value) {
-        $this->request[$name] = $value;
+        $this->aRequest[$name] = $value;
     }
 
     public function end($str) {
