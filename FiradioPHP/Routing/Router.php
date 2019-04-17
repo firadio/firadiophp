@@ -266,8 +266,9 @@ class Router {
                 $depend[] = $oInstance;
                 continue;
             }
-            // 所有的特殊参数都应该在用户参数处理之前
+            // 到这里已经完成了特殊参数，可以开始处理用户参数了
             if (isset($param[$value->name])) {
+                // 开始获取用户的参数
                 $depend[] = $param[$value->name];
                 continue;
             }
