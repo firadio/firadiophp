@@ -18,7 +18,10 @@ class OTS {
     public function __construct($conf = array()) {
         // $this->aConfig = $conf['config'];
         $config = $conf['config'];
-        $config['DebugLogHandler'] = function () {
+        $config['DebugLogHandler'] = function ($message) {
+            return;
+            $dateStr = date('Y-m-d H:i:s', time());
+            print "OTS DEBUG $dateStr $message\n";
         };
         $this->oOTSClient = new OTSClient ($config);
     }
