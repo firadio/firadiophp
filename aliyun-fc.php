@@ -11,10 +11,14 @@ function initializer($context) {
             $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
         }
         if (!file_exists($pRequire)) {
-            die('not find FiradioPHP');
+            die('not find file FiradioPHP');
             return;
         }
         require_once $pRequire;
+    }
+    if (!class_exists('FiradioPHP\\F')) {
+        die('not load class FiradioPHP');
+        return;
     }
     if (empty(\FiradioPHP\F::$oConfig)) {
         // 初始化F框架，参数是config根目录
