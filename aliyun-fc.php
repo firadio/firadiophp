@@ -25,8 +25,21 @@ function handler($request, $context): \RingCentral\Psr7\Response{
     $oRes->fBeginTime = microtime(TRUE); //1：执行的开始时间
     $oRes->ipaddr = $request->getAttribute('clientIP'); //2：用户IP地址
     $oRes->path = $request->getAttribute('path'); //3：用户请求路径
-    $oRes->aRequest = $request->getQueryParams(); //4：用户请求参数
-    //$oRes->sRawContent = $body; // 5：提交内容
+    $aRequest = $request->getQueryParams(); //4：用户请求参数
+    $sRawContent = $request->getBody()->getContents();
+    if (!empty($sRawContent)) {
+         // 5：POST提交内容
+        $oRes->sRawContent = $sRawContent;
+        $post = array();
+        parse_str($sRawContent, $post);
+        if (is_array($post)) {
+            $oRes->aParam = $post;
+            foreach ($post as $k => $v) {
+                $aRequest[$k] = $v;
+            }
+        }
+    }
+    $oRes->aRequest = $aRequest;
     $result = '';
     try {
         $result = \FiradioPHP\F::$aInstances['router']->getResponse($oRes);
