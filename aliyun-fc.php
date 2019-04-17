@@ -1,18 +1,17 @@
 <?php
 
-define('DS', DIRECTORY_SEPARATOR);
-define('APP_ROOT', __DIR__);
-define('DATA_DIR', APP_ROOT . DS . 'data');
-
 function initializer($context) {
     // if you open the initializer feature, please implement the initializer function, as below:
+    define('DS', DIRECTORY_SEPARATOR);
+    define('APP_ROOT', __DIR__);
+    //define('DATA_DIR', APP_ROOT . DS . 'data');
     require_once __DIR__ . DS . 'vendor' . DS . 'autoload.php';
     // 初始化F框架，参数是config根目录
     \FiradioPHP\F::init(APP_ROOT . DS . 'config');
+    var_dump($context);
 }
 
 function handler($request, $context): \RingCentral\Psr7\Response{
-    // var_dump($context);
     /*
     $body       = $request->getBody()->getContents();
     $queries    = $request->getQueryParams();
