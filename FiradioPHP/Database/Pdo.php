@@ -88,7 +88,23 @@ class Pdo extends \PDO {
             if ($sCode === 'HY000' || in_array($iErrno, array(2006, 2013))) {
                 //服务端断开时重连一次
                 $this->connect();
-                return parent::beginTransaction();
+                return $this->beginTransaction();
+            }
+            throw $ex;
+        } catch (Exception $ex) {
+            if ($this->errorCount >= $this->errorCountMax) {
+                $this->errorCount = 0; //重置错误计数
+                echo 'errorCountMax';
+                throw $ex;
+            }
+            $this->errorCount++;
+            if (1
+                && $ex->getCode() === 0
+                && $ex->getMessage() === 'PDO::beginTransaction(): MySQL server has gone away'
+            ) {
+                //服务端断开时重连一次
+                $this->connect();
+                return $this->beginTransaction();
             }
             throw $ex;
         }
