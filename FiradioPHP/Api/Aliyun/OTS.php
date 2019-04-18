@@ -6,6 +6,7 @@ use Aliyun\OTS\Consts\ColumnTypeConst;
 use Aliyun\OTS\Consts\PrimaryKeyTypeConst;
 use Aliyun\OTS\Consts\RowExistenceExpectationConst;
 use Aliyun\OTS\OTSClient as OTSClient;
+use Aliyun\OTS\OTSServerException as OTSServerException;
 
 /**
  * https://github.com/aliyun/aliyun-tablestore-php-sdk/
@@ -92,6 +93,35 @@ class OTS {
     public function putRow($table_name, $row) {
         // 像日志一样写入数据，无需判断错与否
         return $this->putRow_raw($table_name, NULL, $row, RowExistenceExpectationConst::CONST_IGNORE);
+    }
+
+    public function getRow($table_name, $PK0) {
+        $request = array (
+            'table_name' => $table_name,
+            'primary_key' => array ( // 主键
+                array('PK0', $PK0)
+            ),
+            'max_versions' => 1
+        );
+        try {
+            $response = $this->oOTSClient->getRow($request);
+            if (empty($response['attribute_columns'])) {
+                return FALSE; // 未找到
+            }
+            $row = array();
+            foreach ($response['attribute_columns'] as $col) {
+                $row[$col[0]] = $col[1];
+            }
+            return $row;
+        } catch (OTSServerException $e) {
+            // 按照你的需要处理这个异常
+            $code = intval($e->getOTSErrorCode());
+            if ($code === 19) {
+                // Request table not exist 
+                return FALSE;
+            }
+        }
+        return FALSE;
     }
 
 }
