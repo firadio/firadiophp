@@ -88,40 +88,7 @@ class Router {
                 $oRes->assign('errno', 2);
                 return $oRes->aResponse;
             }
-            $debugArr = array();
-            foreach ($traces as $trace) {
-                if (!isset($trace['file'])) {
-                    continue;
-                }
-                if (!isset($trace['class'])) {
-                    continue;
-                }
-                if (0 !== strpos($trace['file'], APP_ROOT)) {
-                    continue;
-                }
-                if ($trace['class'] === 'FiradioPHP\\F' && $trace['function'] === 'start') {
-                    continue;
-                }
-                if ($trace['class'] === 'Workerman\\Worker' && $trace['function'] === 'runAll') {
-                    continue;
-                }
-                $file = substr($trace['file'], strlen(APP_ROOT));
-                $file = str_replace('\\', '/', $file);
-                $debug = array();
-                $debug['file'] = $file . '(' . $trace['line'] . ')';
-                $debug['func'] = call_user_func(function () use ($trace) {
-                    $sFunc = '';
-                    if (isset($trace['class'])) $sFunc .= $trace['class'];
-                    if (isset($trace['type'])) $sFunc .= $trace['type'];
-                    $sFunc .= $trace['function'] . '()';
-                    return $sFunc;
-                });
-                if (0) {
-                    $debug['args'] = $trace['args'];
-                }
-                $debugArr[] = $debug;
-            }
-            $oRes->assign('debug', $debugArr);
+            $oRes->assign('debug', \FiradioPHP\System\Log::getDebugArr($traces));
         }
         return $oRes->aResponse;
     }

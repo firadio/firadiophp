@@ -129,7 +129,7 @@ class F {
         if (isset(F::$aInstances['log'])) {
             F::$aInstances['log']->error($aMessage, $ex);
         }
-        throw new Exception($aMessage['message']);
+        throw new Exception($aMessage['message'], -2);
     }
 
     public static function setcookie($name, $value = "", $expire = 0, $path = '', $domain = '') {

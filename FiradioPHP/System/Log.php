@@ -21,6 +21,43 @@ class Log {
         $this->config = $config;
     }
 
+    public static function getDebugArr($traces) {
+        $debugArr = array();
+        foreach ($traces as $trace) {
+            if (!isset($trace['file'])) {
+                continue;
+            }
+            if (!isset($trace['class'])) {
+                continue;
+            }
+            if (0 !== strpos($trace['file'], APP_ROOT)) {
+                continue;
+            }
+            if ($trace['class'] === 'FiradioPHP\\F' && $trace['function'] === 'start') {
+                continue;
+            }
+            if ($trace['class'] === 'Workerman\\Worker' && $trace['function'] === 'runAll') {
+                continue;
+            }
+            $file = substr($trace['file'], strlen(APP_ROOT));
+            $file = str_replace('\\', '/', $file);
+            $debug = array();
+            $debug['file'] = $file . '(' . $trace['line'] . ')';
+            $debug['func'] = call_user_func(function () use ($trace) {
+                $sFunc = '';
+                if (isset($trace['class'])) $sFunc .= $trace['class'];
+                if (isset($trace['type'])) $sFunc .= $trace['type'];
+                $sFunc .= $trace['function'] . '()';
+                return $sFunc;
+            });
+            if (0) {
+                $debug['args'] = $trace['args'];
+            }
+            $debugArr[] = $debug;
+        }
+        return $debugArr;
+    }
+
     public function debug($aMessage) {
         $this->write('debug', $aMessage);
     }
@@ -39,34 +76,16 @@ class Log {
         } else {
             $traces = debug_backtrace();
         }
-        $debugArr = array();
-        foreach ($traces as $trace) {
-            if (!isset($trace['file'])) {
-                continue;
-            }
-            if (0 !== strpos($trace['file'], APP_ROOT)) {
-                continue;
-            }
-            if ($trace['class'] === 'FiradioPHP\\F' && $trace['function'] === 'start') {
-                continue;
-            }
-            if ($trace['class'] === 'Workerman\\Worker' && $trace['function'] === 'runAll') {
-                continue;
-            }
-            $file = substr($trace['file'], strlen(APP_ROOT));
-            $debug = array();
-            $debug['msg'] = '' . $file . '(' . $trace['line'] . '):';
-            $debug['msg'] .= '' . $trace['class'] . $trace['type'] . $trace['function'] . '()';
-            if (0) {
-                $debug['args'] = $trace['args'];
-            }
-            $debugArr[] = $debug;
-        }
-        $aMessage[] = $debugArr;
+        $aMessage[] = self::getDebugArr($traces);
         $this->write('error', $aMessage);
     }
 
     public function write($sLevel, $aMessage) {
+         // 默认不写入文件(FALSE)
+        $writeable = isset($this->config['writeable']) ? $this->config['writeable'] : FALSE;
+        if (!$writeable) {
+            return;
+        }
         if (!is_array($aMessage)) {
             $aMessage = array('message' => $aMessage);
         }
