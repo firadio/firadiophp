@@ -24,13 +24,7 @@ class F {
         try {
             spl_autoload_register('\FiradioPHP\F::loadByNamespace');
             self::$oError = new System\Error();
-            if ($configDir) {
-                if (!is_dir($configDir)) {
-                    self::error('not find configDir');
-                    return FALSE;
-                }
-                self::$oConfig = new System\Config($configDir);
-            }
+            self::$oConfig = new System\Config($configDir);
         } catch (Exception $ex) {
             switch ($ex->getCode()) {
                 case(1045):

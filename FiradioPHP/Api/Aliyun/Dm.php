@@ -31,12 +31,20 @@ class Dm {
         $request->setHtmlBody($HtmlBody); // 邮件正文
         try {
             $response = $client->getAcsResponse($request);
-            print_r($response);
-            return TRUE; // 发信成功
+/*
+    stdClass Object
+    (
+        [EnvId] => 58826718292
+        [RequestId] => 67C4A5EB-B626-4CB0-B011-5884EE46A3FC
+    )
+*/
+            if (!empty($response->EnvId) && !empty($response->RequestId)) {
+                return TRUE; // 发信成功
+            }
         } catch (\ClientException $e) {
             $code = $e->getErrorCode();
             if ($code === 'Forbidden') {
-                F::error('指定的RAM权限不足，需要');
+                F::error('指定的RAM权限不足，需要AliyunDirectMailFullAccess(管理邮件推送(DirectMail)的权限)');
             }
             F::error($e->getErrorMessage());
         }
