@@ -17,7 +17,7 @@ class Dm {
         $this->aConfig = $config;
     }
 
-    function sendMail($ToAddress, $HtmlBody, $Subject = ''){
+    function sendMail($ToAddress, $HtmlBody, $Subject = '') {
         $iClientProfile = \DefaultProfile::getProfile($this->aConfig['Region'], $this->aConfig['AccessKeyID'], $this->aConfig['AccessKeySecret']);
         $client = new \DefaultAcsClient($iClientProfile);
         $request = new SingleSendMailRequest();
@@ -32,14 +32,15 @@ class Dm {
         try {
             $response = $client->getAcsResponse($request);
             print_r($response);
-        }
-        catch (\ClientException  $e) {
+            return TRUE; // 发信成功
+        } catch (\ClientException $e) {
             $code = $e->getErrorCode();
             if ($code === 'Forbidden') {
-                F::error('指定的RAM权限不足');
+                F::error('指定的RAM权限不足，需要');
             }
-            var_dump($e->getErrorMessage());
+            F::error($e->getErrorMessage());
         }
+        return FALSE;
     }
 
 }

@@ -20,10 +20,22 @@ class Error {
         if (empty($e)) {
             return;
         }
+        if (isset($e['message'])) {
+            $aMsg = explode("\n", $e['message']);
+            $e['message'] = $aMsg[0];
+            $i = strpos($e['message'], APP_ROOT);
+            if ($i > 0) {
+                $e['message'] = substr($e['message'], 0, $i - 4);
+            }
+        }
+        if (isset($e['file'])) {
+            $e['file'] = substr($e['file'], strlen(APP_ROOT));
+        }
         if ($this->is_cli()) {
             print_r($e);
             return;
         }
+        $e['title'] = 'Uncaught Error'; // 无法捕获的错误
         $e['time'] = microtime(true);
         exit(json_encode($e));
     }
