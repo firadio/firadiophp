@@ -10,8 +10,8 @@ function initializer($context) {
         if (!file_exists($pRequire)) {
             $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
         }
-        if (class_exists('Aliyun\\OTS\\OTSClient')) {
-            // 如果阿里云已经自带了，就没必要导入autoload.php了
+        if (FALSE && class_exists('Aliyun\\OTS\\OTSClient')) {
+            // 阿里云已经自带OTSClient了
             $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
         }
         if (!file_exists($pRequire)) {
@@ -26,9 +26,12 @@ function initializer($context) {
     }
     if (empty(\FiradioPHP\F::$oConfig)) {
         // 初始化F框架，参数是config根目录
-        \FiradioPHP\F::init(APP_ROOT . DS . 'config');
+        $sConfigs = array();
+        $sConfigs[] = APP_ROOT . DS . 'config';
+        $sConfigs[] = APP_ROOT . DS . 'config~';
+        \FiradioPHP\F::init($sConfigs);
     }
-    var_dump($context);
+    // var_dump($context);
 }
 
 function handler($request, $context): \RingCentral\Psr7\Response{
