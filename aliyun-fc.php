@@ -26,10 +26,7 @@ function initializer($context) {
     }
     if (empty(\FiradioPHP\F::$oConfig)) {
         // 初始化F框架，参数是config根目录
-        $sConfigs = array();
-        $sConfigs[] = APP_ROOT . DS . 'config' . DS . 'default';
-        $sConfigs[] = APP_ROOT . DS . 'config';
-        \FiradioPHP\F::init($sConfigs);
+        \FiradioPHP\F::init(APP_ROOT . DS . 'config');
     }
     // var_dump($context);
 }

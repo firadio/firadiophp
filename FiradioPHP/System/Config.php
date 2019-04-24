@@ -40,7 +40,7 @@ class Config {
                 F::error('not exist configDir');
                 return FALSE;
             }
-            $this->loadConfig($configDir);
+            $this->loadConfig1($configDir);
         } else {
             F::error('wrong type in configDir');
             return;
@@ -50,7 +50,45 @@ class Config {
         }
     }
 
-    private function loadConfig($configDir) {
+    private function getDirArrOfDir($dir) {
+        $dh = \opendir($dir);
+        $arr = array();
+        if (!$dh) {
+            return $arr;
+        }
+        while (($file = \readdir($dh)) !== false) {
+            if ($file === '..' || $file === '.') {
+                // 跳过一些..或.的文件夹
+                continue;
+            }
+            $path = $dir . DS . $file;
+            if (!is_dir($path)) {
+                // 跳过非文件夹，只要文件夹
+                continue;
+            }
+            $arr[$file] = $path;
+        }
+        closedir($dh);
+        return $arr;
+    }
+
+    private function loadConfig1($configDir) {
+        $dirs = $this->getDirArrOfDir($configDir);
+        if (!isset($dirs['default'])) {
+            // 当没有默认文件夹的情况下，就用原来的方式导入一个配置文件夹
+            $this->loadConfig2($configDir);
+            return;
+        }
+        // 当有default的默认文件夹时，先导入默认文件夹
+        $this->loadConfig1($dirs['default']);
+        unset($dirs['default']);
+        // 然后导入其他文件夹
+        foreach ($dirs as $path) {
+            $this->loadConfig2($path);
+        }
+    }
+
+    private function loadConfig2($configDir) {
         $dh = \opendir($configDir);
         if (!$dh) {
             return;
