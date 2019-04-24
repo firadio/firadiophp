@@ -10,4 +10,3 @@ composer.phar
 /nbproject/
 *~
 ~*
-/config/*.php
