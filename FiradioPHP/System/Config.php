@@ -80,7 +80,7 @@ class Config {
             return;
         }
         // 当有default的默认文件夹时，先导入默认文件夹
-        $this->loadConfig1($dirs['default']);
+        $this->loadConfig2($dirs['default']);
         unset($dirs['default']);
         // 然后导入其他文件夹
         foreach ($dirs as $path) {
