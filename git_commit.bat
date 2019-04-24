@@ -1,5 +1,4 @@
 @ECHO OFF
-git ls-files --others --exclude-from=config/secret
 git config --global user.email "xiangxisheng@gmail.com"
 git config --global user.name "Xiang/Xisheng"
 git config --global core.safecrlf false
