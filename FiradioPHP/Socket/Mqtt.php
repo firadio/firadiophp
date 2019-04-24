@@ -9,7 +9,8 @@ class Mqtt {
     private $config = array();
 
     public function __construct($config) {
-
+        $this->config = $config['config'];
     }
+
 
 }
