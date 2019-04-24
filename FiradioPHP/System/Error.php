@@ -37,6 +37,11 @@ class Error {
         }
         $e['title'] = 'Uncaught Error'; // 无法捕获的错误
         $e['time'] = microtime(true);
+        ob_clean();
+        $filename = __DIR__ . 'error.log';
+        if (is_writable($filename)) {
+            file_put_contents($filename, json_encode($e) . PHP_EOL, FILE_APPEND);
+        }
         exit(json_encode($e));
     }
 

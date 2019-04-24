@@ -135,7 +135,7 @@ class Response {
     }
 
     public function setParam($name, $value) {
-        $this->aRequest[$name] = $value;
+        $this->aParam[$name] = $value;
     }
 
     public function end($str) {
