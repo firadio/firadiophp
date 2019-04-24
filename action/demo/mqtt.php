@@ -1,7 +1,7 @@
 <?php
 
 return function($oRes, $mqtt, $a = 'Hello World') {
-    // $rows = ;
-    // $oRes->assign('rows', $rows);
+    $message = date('Y-m-d H:i:s');
+    $mqtt->publish('topic', $message);
     $oRes->message($a);
 };

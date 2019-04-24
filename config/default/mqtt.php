@@ -3,8 +3,9 @@
 return array(
     'class' => '\FiradioPHP\Socket\Mqtt',
     'config' => array(
-        'Region' => 'cn-hangzhou', // 地域
-        'AccessKeyID' => '',
-        'AccessKeySecret' => '',
+        'host' => 'hz.fm20.cn',
+        'port' => 1883,
+        'username' => '',
+        'password' => '',
     )
 );
