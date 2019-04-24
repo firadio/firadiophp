@@ -1,8 +1,8 @@
 <?php
 
-namespace FiradioPHP\System;
+namespace FiradioPHP\Math;
 
-class BcMath {
+class Bc {
 
     public function __construct() {
         register_shutdown_function(array($this, 'shutdown_function'));
