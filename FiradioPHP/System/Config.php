@@ -86,6 +86,8 @@ class Config {
         foreach ($dirs as $path) {
             $this->loadConfig2($path);
         }
+        // 最后才导入原本的文件夹
+        $this->loadConfig2($configDir);
     }
 
     private function loadConfig2($configDir) {
