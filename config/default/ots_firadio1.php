@@ -9,8 +9,8 @@ return array(
     'class' => '\FiradioPHP\Api\Aliyun\OTS',
     'config' => array(
         'EndPoint' => $EndPoint, // 挂载点
-        'AccessKeyID' => 'LTAIFbrH56tJaO6m',
-        'AccessKeySecret' => 'zI3OrWXG99z2Xagx6b6WeRGr3gpm5T',
+        'AccessKeyID' => 'LTAIw5QTXbigWhbY',
+        'AccessKeySecret' => 'H8iR96LLgTbuxocJH9ynINWHxTP54y',
         'InstanceName' => $InstanceName
     )
 );
