@@ -31,7 +31,7 @@ class F {
                     throw new Exception('[1045]数据库登录失败');
                 default:
             }
-            throw new Exception($ex->getMessage());
+            throw $ex;
         }
     }
 
