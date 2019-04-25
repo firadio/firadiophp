@@ -27,6 +27,7 @@ class Qyapi {
 
     private function post($path, $aPost = array()) {
         $path .= '?access_token=' . $this->gettoken();
+        $this->oCurl->setHeader('Content-Type', 'application/json');
         $ret = $this->oCurl->post($path, $aPost);
         $ret = json_decode($ret, true);
         return $ret;
@@ -57,12 +58,24 @@ class Qyapi {
     public function appchat_create($chatid = 'feieryun') {
         $aPost = array();
         $aPost['name'] = '飞儿云平台的群';
-        $aPost['owner'] = 'XiangXiSheng';
-        $aPost['userlist'] = 'XiangXiSheng,XiangXiSheng';
+        $aPost['owner'] = 'ASheng';
+        $aPost['userlist'] = array('ASheng', 'XiangXiSheng');
         $aPost['chatid'] = $chatid;
         $ret = $this->post('/appchat/create', $aPost);
         return $ret;
     }
+
+    public function appchat_send_text($chatid = 'feieryun', $content = '测试', $safe = 0) {
+        $aPost = array();
+        $aPost['chatid'] = $chatid;
+        $aPost['msgtype'] = 'text';
+        $aPost['text'] = array('content' => $content);
+        $aPost['safe'] = $safe;
+        $ret = $this->post('/appchat/send', $aPost);
+        return $ret;
+    }
+
+
 
 
 }
