@@ -181,6 +181,7 @@ class Config {
             F::error('The class does not exist in the ' . $aConfig['class']);
             return;
         }
+        $aConfig['name'] = $sName; // 可供类获取唯一的配置名称
         if (in_array($sName, array('router', 'log'))) {
             $class = $aConfig['class'];
             F::$aInstances[$sName] = new $class($aConfig);
