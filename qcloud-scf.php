@@ -73,10 +73,6 @@ function Response($statusCode, $headers, $body) {
 }
 
 function main_handler($event, $context) {
-    if (extension_loaded('protobuf')) {
-        $msg = '检测到会与本系统冲突的 protobuf 扩展，请先移除该扩展';
-        return Response(200, $oRes->aResponseHeader, $msg);
-    }
     $fBeginTime = microtime(TRUE);
     $oRes = new \FiradioPHP\Routing\Response();
     $oRes->fBeginTime = $fBeginTime; //1：执行的开始时间

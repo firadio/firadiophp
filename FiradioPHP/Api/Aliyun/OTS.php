@@ -17,6 +17,10 @@ class OTS {
     public $oOTSClient;
 
     public function __construct($conf = array()) {
+        if (extension_loaded('protobuf')) {
+            $msg = '检测到会与本系统冲突的 protobuf 扩展，请先移除该扩展';
+            throw new \Exception($msg);
+        }
         // $this->aConfig = $conf['config'];
         $config = $conf['config'];
         $config['DebugLogHandler'] = function ($message) {
