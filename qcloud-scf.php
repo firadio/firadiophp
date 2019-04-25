@@ -26,14 +26,30 @@ function initializer() {
     }
 }
 
+function getUserPath($path) {
+    $aPath = explode('/', $path);
+    $aNewPath = array();
+    foreach ($aPath as $name) {
+        // 过滤不对的路径
+        if (empty($name)) {
+            continue;
+        }
+        $aNewPath[] = $name;
+    }
+    // 删除$aNewPath数组中第一个元素
+    array_shift($aNewPath);
+    // 返回新路径
+    return '/' . implode('/', $aNewPath);
+}
+
 function main_handler($event, $context) {
     $fBeginTime = microtime(TRUE);
     $oRes = new \FiradioPHP\Routing\Response();
     $oRes->fBeginTime = $fBeginTime; //1：执行的开始时间
-    $oRes->ipaddr = $event['requestContext']['sourceIp']; //2：用户IP地址
-    $oRes->path = $event['path']; //3：用户请求路径
-    $aRequest = $event['queryString']; //4：用户请求参数
-    $sRawContent = $event['body'];
+    $oRes->ipaddr = $event->requestContext->sourceIp; //2：用户IP地址
+    $oRes->path = getUserPath($event->path); //3：用户请求路径
+    $aRequest = $event->queryString; //4：用户请求参数
+    $sRawContent = $event->body;
     if (!empty($sRawContent)) {
          // 5：POST提交内容
         $oRes->sRawContent = $sRawContent;
@@ -63,5 +79,5 @@ function main_handler($event, $context) {
         $ms = intval($ms * 100) / 100; // 保留2位小数
         return $ms . ' ms';
     });
-    return json_encode($result);
+    return ($result);
 }
