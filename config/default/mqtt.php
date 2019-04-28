@@ -3,9 +3,9 @@
 return array(
     'class' => '\FiradioPHP\Socket\Mqtt',
     'config' => array(
-        'host' => 'hz.fm20.cn',
+        'host' => 'vps.firadio.net',
         'port' => 1883,
-        'username' => '',
+        'username' => 'admin',
         'password' => '',
     )
 );
