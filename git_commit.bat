@@ -7,7 +7,7 @@ ECHO =========git diff============
 git diff
 ECHO =========git pull ^&^& git commit============
 PAUSE
-git pull
+git pull origin master
 git commit
 ECHO =========git add *============
 PAUSE
@@ -17,7 +17,7 @@ PAUSE
 git commit
 ECHO =========git push============
 PAUSE
-git push
+git push origin master
 ECHO =========EXIT============
 PAUSE
 EXIT
