@@ -297,6 +297,14 @@ class Sql {
         return $sql;
     }
 
+    public function buildSqlDelete() {
+        $sql = 'DELETE FROM ' . $this->aSql['table'];
+        if (isset($this->aSql['where']) && !empty($this->aSql['where'])) {
+            $sql .= ' WHERE ' . $this->aSql['where'];
+        }
+        return $sql;
+    }
+
     private function getSth($sql) {
         $request = isset($this->aSql['paramData']) ? $this->aSql['paramData'] : array();
         $input_parameters = $this->link->input_parameters($sql, $request);
@@ -355,4 +363,9 @@ class Sql {
             $this->add($data);
         }
     }
+
+    public function delete() {
+        $this->getSth($this->buildSqlDelete());
+    }
+
 }
