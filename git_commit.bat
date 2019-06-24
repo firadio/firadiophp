@@ -15,7 +15,7 @@ git add --all
 ECHO =========git commit============
 PAUSE
 git commit
-ECHO =========git push============
+ECHO =========git push origin master============
 PAUSE
 git push origin master
 ECHO =========EXIT============
