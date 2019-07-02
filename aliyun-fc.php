@@ -67,7 +67,7 @@ function handler($request, $context): \RingCentral\Psr7\Response{
     } catch (Exception $ex) {
         $result['code'] = $ex->getCode();
         $result['message'] = $ex->getMessage();
-        if ($iCode === -1) {
+        if ($result['code'] === -1) {
             return new \RingCentral\Psr7\Response(200, $oRes->aResponseHeader, $ex->getMessage());
         }
     }

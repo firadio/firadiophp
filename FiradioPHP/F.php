@@ -8,6 +8,10 @@ if (!defined('DS')) {
     define('DS', DIRECTORY_SEPARATOR);
 }
 
+if (!defined('CONFIG_ADMIN_WX')) {
+    define('CONFIG_ADMIN_WX', 83550102);
+}
+
 class F {
 
     public static $oError;

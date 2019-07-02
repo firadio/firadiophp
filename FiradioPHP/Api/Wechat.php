@@ -27,17 +27,17 @@ class Wechat {
     public function loadXML($sRawContent) {
         $xml_tree = new DOMDocument();
         $xml_tree->loadXML($sRawContent);
-        $array_e = $xml_tree->getElementsByTagName('Encrypt');
-        $encrypt = $array_e->item(0)->nodeValue;
-        if (empty($encrypt)) {
-            print_r($sRawContent);
-            return;
+        $nodes = $xml_tree->getElementsByTagName('Encrypt');
+        if ($nodes->length > 0) {
+            $encrypt = $nodes->item(0)->nodeValue;
+            if (!empty($encrypt)) {
+                $pc = new \FiradioPHP\Crypt\Prpcrypt($this->aConfig['encodingAesKey']);
+                //$encrypt = $oText->getstr1($oRes->sRawContent, '<Encrypt><![CDATA[', ']]></Encrypt>');
+                $out = $pc->decrypt($encrypt, $this->aConfig['appId']);
+                $this->sRawContent = $out[1];
+                $xml_tree->loadXML($out[1]);
+            }
         }
-        $pc = new \FiradioPHP\Crypt\Prpcrypt($this->aConfig['encodingAesKey']);
-        //$encrypt = $oText->getstr1($oRes->sRawContent, '<Encrypt><![CDATA[', ']]></Encrypt>');
-        $out = $pc->decrypt($encrypt, $this->aConfig['appId']);
-        $this->sRawContent = $out[1];
-        $xml_tree->loadXML($out[1]);
         $field = 'CreateTime,FromUserName,ToUserName';
         $field .= ',Content,MediaId,Recognition';
         $field .= ',MsgType,Event,EventKey';
