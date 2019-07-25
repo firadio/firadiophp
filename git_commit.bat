@@ -1,4 +1,7 @@
 @ECHO OFF
+SET path=%path%;P:\data\code\PortableGit\bin\
+SET path=%path%;X:\program\PortableGit\bin\
+SET path=%path%;E:\data\program\PortableGit\bin\
 git config --global user.email "xiangxisheng@gmail.com"
 git config --global user.name "Xiang/Xisheng"
 git config --global core.safecrlf false
