@@ -73,7 +73,7 @@ class Dnspod {
         if ($statusCode != 200) {
             $this->error("\r\nstatusCode={$statusCode}");
         }
-        return $data['records'];
+        return isset($data['records']) ? $data['records'] : array();
     }
 
     public function setRecordIPs($domain, $sub_domain, $aSets) {
@@ -124,14 +124,15 @@ class Dnspod {
         $aPost = array();
         $aPost['domain'] = $domain;
         $aPost['record_id'] = $record_id;
-        $aPost['sub_domain'] = $aNewSet['name'];
-        $aPost['record_type'] = $aNewSet['type'];
+        if (isset($aNewSet['name'])) $aPost['sub_domain'] = $aNewSet['name'];
+        if (isset($aNewSet['sub_domain'])) $aPost['sub_domain'] = $aNewSet['sub_domain'];
+        if (isset($aNewSet['type'])) $aPost['record_type'] = $aNewSet['type'];
+        if (isset($aNewSet['record_type'])) $aPost['record_type'] = $aNewSet['record_type'];
         $aPost['record_line_id'] = 0;
         $aPost['value'] = $aNewSet['value'];
-        $aPost['status'] = $aNewSet['status'];
+        if (isset($aNewSet['status'])) $aPost['status'] = $aNewSet['status'];
         $data = $this->post('/Record.Modify', $aPost);
-        print_r($data);
-        return $data;
+        return $data['status']['code'];
     }
 
     public function RecordStatus($domain, $record_id, $status) {
@@ -143,5 +144,14 @@ class Dnspod {
         print_r($data);
         return $data;
     }
+
+    public function RecordCreate($domain, $aSet) {
+        $aPost = $aSet;
+        $aPost['domain'] = $domain;
+        $aPost['record_line'] = '默认';
+        $data = $this->post('/Record.Create', $aPost);
+        return $data['status']['code'];
+    }
+
 
 }

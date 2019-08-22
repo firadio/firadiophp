@@ -16,6 +16,7 @@ class Sql {
 
     public function __construct($link) {
         $this->link = $link;
+        $this->aSql['ignore'] = FALSE;
     }
 
     public function field($field) {
@@ -75,8 +76,13 @@ class Sql {
         return $this;
     }
 
-    public function where($where) {
+    public function where($where, $sql = '') {
         $this->aSql['raw_where'] = $where;
+        if (is_array($where) && is_string($sql) && !empty($sql)) {
+            $this->aSql['paramData'] = $where;
+            $this->aSql['where'] = $sql;
+            return $this;
+        }
         if (is_array($where)) {
             if (!isset($this->aSql['paramData'])) {
                 $this->aSql['paramData'] = array();
@@ -293,7 +299,9 @@ class Sql {
             $fields[] = '`' . $field . '`';
             $values[] = $val;
         }
-        $sql = 'INSERT ' . $this->aSql['table'] . '(' . implode(',', $fields) . ')VALUES(' . implode(',', $values) . ')';
+        $sql = 'INSERT';
+        if ($this->aSql['ignore']) $sql .= ' IGNORE';
+        $sql .= ' ' . $this->aSql['table'] . '(' . implode(',', $fields) . ')VALUES(' . implode(',', $values) . ')';
         return $sql;
     }
 
@@ -342,6 +350,11 @@ class Sql {
     public function insert($data = NULL) {
         $this->getSth($this->buildSqlInsert($data));
         return $this->link->lastInsertId();
+    }
+
+    public function ignore($bool = TRUE) {
+        $this->aSql['ignore'] = $bool;
+        return $this;
     }
 
     public function add($data = NULL) {

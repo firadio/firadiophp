@@ -110,7 +110,9 @@ class IKuai3 {
         if ($aJson['Result'] == '10014' || $aJson['ErrMsg'] == 'no login authentication') {
             echo 'start login authentication....';
             $this->login();
-            return $data;
+            sleep(1);
+            return $this->downloadPortmap($file);
+            //return $data;
             // $this->error('[ErrMsg] => no login authentication');
         }
         if (isset($aJson['Filename'])) {

@@ -1,6 +1,6 @@
 <?php
 
-namespace FiradioPHP\Access;
+namespace FiradioPHP\Socket;
 
 class Ldap {
 

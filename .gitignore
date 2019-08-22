@@ -11,3 +11,5 @@ composer.phar
 /nbproject/
 *~
 ~*
+cookie.*
+*.log
