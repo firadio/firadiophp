@@ -30,19 +30,22 @@ class Swift {
 
     private function init() {
         // Create the Transport
-        $transport = Swift_SmtpTransport::newInstance();
+        //$transport = Swift_SmtpTransport::newInstance();
+        $transport = new Swift_SmtpTransport();
         $transport->setHost($this->config['host']);
         $transport->setPort($this->config['port']);
         $transport->setEncryption($this->config['encryption']);
         $transport->setUsername($this->config['username']);
         $transport->setPassword($this->config['password']);
         // Create the Mailer using your created Transport
-        $this->mailer = Swift_Mailer::newInstance($transport);
+        //$this->mailer = Swift_Mailer::newInstance($transport);
+        $this->mailer = new Swift_Mailer($transport);
     }
 
     public function send($to, $subject, $body) {
         // Create the message
-        $message = Swift_Message::newInstance();
+        // $message = Swift_Message::newInstance();
+        $message = new Swift_Message();
         // Give the message a subject
         $message->setSubject($subject);
         // Set the From address with an associative array
