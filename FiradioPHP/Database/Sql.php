@@ -25,12 +25,15 @@ class Sql {
     }
 
     public function table($table) {
-        if (strpos($table, '{tablepre}') === FALSE) {
+        if (strpos($table, '{tablepre}') !== FALSE) {
+            //有{tablepre}的就替换好
+            $this->aSql['table'] = str_replace('{tablepre}', $this->link->tablepre, $table);
+            return $this;
+        }
+        if (preg_match('/^[A-Za-z0-9_]+$/u', $table)) {
             //如果没有带上前缀标记就自动加上
-            $table = $this->link->tablepre . $table;
-        } else {
-            //有了的就替换好
-            $table = str_replace('{tablepre}', $this->link->tablepre, $table);
+            $this->aSql['table'] = $this->link->tablepre . $table;
+            return $this;
         }
         $this->aSql['table'] = $table;
         return $this;
