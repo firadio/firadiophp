@@ -6,6 +6,8 @@ git config --global user.email "xiangxisheng@gmail.com"
 git config --global user.name "Xiang/Xisheng"
 git config --global core.safecrlf false
 git config --global core.autocrlf input
+git remote rm origin
+git remote add origin https://github.com/firadio/firadiophp.git
 ECHO =========git diff============
 git diff
 ECHO =========git pull ^&^& git commit============
