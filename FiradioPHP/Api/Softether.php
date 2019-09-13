@@ -52,4 +52,15 @@ class Softether {
         return $this->api('GetUser', $params);
     }
 
+    public function CreateUser($Name_str, $HubName_str = 'DEFAULT') {
+        $params = array();
+        $params['HubName_str'] = $HubName_str;
+        $params['Name_str'] = $Name_str;
+        $params['AuthType_u32'] = 1;
+        $params['Auth_Password_str'] = $Name_str;
+        $params['GroupName_str'] = 'user';
+        $params['ExpireTime_dt'] = gmdate('c', time() + 365 * 86400);
+        return $this->api('CreateUser', $params);
+    }
+
 }
