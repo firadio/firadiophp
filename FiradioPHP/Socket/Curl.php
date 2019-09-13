@@ -82,6 +82,9 @@ class Curl {
     }
 
     private function urlAddParams($urlpre, $params) {
+        if ($params === '' || $params === NULL) {
+            return $urlpre;
+        }
         if (is_string($params)) {
             if (substr($params, 0, 1) === '/') {
                 return $urlpre . $params;
@@ -195,7 +198,13 @@ class Curl {
         return $this->createCurl($sPath);
     }
 
-    public function post($sPath, $aPost) {
+    public function post($_param1, $_param2 = array()) {
+        $sPath = $_param1;
+        $aPost = $_param2;
+        if (is_array($_param1)) {
+            $sPath = '';
+            $aPost = $_param1;
+        }
         if ($this->_upload || is_string($aPost)) {
             $this->setPost($aPost);
             return $this->createCurl($sPath);
@@ -218,6 +227,7 @@ class Curl {
     }
 
     public function post_json($sPath, $aPost) {
+        $this->setHeader('Content-Type', 'application/json');
         return $this->post($sPath, $aPost);
     }
 
