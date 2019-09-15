@@ -12,7 +12,7 @@ class Softether {
     private $aCache = array();
 
     public function __construct($conf) {
-        $this->aConfig = $conf['config'];
+        $this->aConfig = $conf;
         $url = 'https://' . $this->aConfig['host'] . ':' . $this->aConfig['port'] . $this->aConfig['path'];
         echo $url . "\r\n";
         $this->oCurl = new Curl($url);
