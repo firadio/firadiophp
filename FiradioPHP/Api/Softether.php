@@ -96,14 +96,24 @@ class Softether {
         return $this->api('GetUser', $params);
     }
 
-    public function CreateUser($Name_str, $Auth_Password_str, $dayLength = 30) {
+    public function CreateUser($Name_str, $Auth_Password_str, $GroupName_str = NULL, $dayLength = 0) {
         $params = $this->GetDefaParams();
         $params['Name_str'] = $Name_str;
         $params['AuthType_u32'] = 1;
         $params['Auth_Password_str'] = $Auth_Password_str;
-        $params['GroupName_str'] = 'user';
-        $params['ExpireTime_dt'] = gmdate('c', time() + $dayLength * 86400);
+        if ($GroupName_str) $params['GroupName_str'] = $GroupName_str;
+        if ($dayLength) $params['ExpireTime_dt'] = gmdate('c', time() + $dayLength * 86400);
         return $this->api('CreateUser', $params);
+    }
+
+    public function SetUser($Name_str, $Auth_Password_str, $GroupName_str = NULL, $ExpireTime = 0) {
+        $params = $this->GetDefaParams();
+        $params['Name_str'] = $Name_str;
+        $params['AuthType_u32'] = 1;
+        $params['Auth_Password_str'] = $Auth_Password_str;
+        if ($GroupName_str) $params['GroupName_str'] = $GroupName_str;
+        if ($ExpireTime) $params['ExpireTime_dt'] = gmdate('c', $ExpireTime);
+        return $this->api('SetUser', $params);
     }
 
 }
