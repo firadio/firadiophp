@@ -63,6 +63,13 @@ class Softether {
         return $this->api('CreateHub', $params);
     }
 
+    public function SetHubLog($HubName_str = NULL) {
+        $params = $this->GetDefaParams($HubName_str);
+        $params['SaveSecurityLog_bool'] = false;
+        $params['SavePacketLog_bool'] = false;
+        return $this->api('SetHubLog', $params);
+    }
+
     public function CreateGroup($Name_str) {
         $params = $this->GetDefaParams();
         $params['Name_str'] = $Name_str;
@@ -70,23 +77,28 @@ class Softether {
     }
 
     public function SetGroup($Name_str) {
+        $MultiLogins_u32 = 10;
         $params = $this->GetDefaParams();
         $params['Name_str'] = $Name_str;
         $params['UsePolicy_bool'] = true;
         $params['policy:Access_bool'] = true;
-        //$params['policy:DHCPFilter_bool'] = true;
-        $params['policy:DHCPNoServer_bool'] = true;
-        $params['policy:DHCPForce_bool'] = true;
-        $params['policy:NoRouting_bool'] = true;
+        $params['policy:ArpDhcpOnly_bool'] = true;
+        $params['policy:CheckIP_bool'] = true;
+        $params['policy:CheckIPv6_bool'] = true;
         $params['policy:CheckMac_bool'] = true;
-        $params[''] = true;
-        $params[''] = true;
-        $params[''] = true;
-        $params[''] = true;
-        $params[''] = true;
-        $params[''] = true;
-        $params[''] = true;
-        $params[''] = true;
+        $params['policy:DHCPNoServer_bool'] = true;
+        $params['policy:DHCPv6NoServer_bool'] = true;
+        $params['policy:DHCPForce_bool'] = true;
+        $params['policy:FilterNonIP_bool'] = true;
+        $params['policy:MaxMac_u32'] = $MultiLogins_u32;
+        $params['policy:MaxIP_u32'] = $MultiLogins_u32;
+        $params['policy:MaxIPv6_u32'] = $MultiLogins_u32;
+        $params['policy:MultiLogins_u32'] = $MultiLogins_u32;
+        $params['policy:MaxUpload_u32'] = 10 * 1024 * 1024;
+        $params['policy:MaxDownload_u32'] = 100 * 1024 * 1024;
+        $params['policy:NoBridge_bool'] = true;
+        $params['policy:NoRouting_bool'] = true;
+        $params['policy:NoRoutingV6_bool'] = true;
         return $this->api('SetGroup', $params);
     }
 
