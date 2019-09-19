@@ -18,6 +18,8 @@ class Sql {
     public function __construct($link) {
         $this->link = $link;
         $this->aSql['ignore'] = FALSE;
+        $this->aSql['where'] = array();
+        $this->aSql['paramData'] = array();
     }
 
     public function field($field) {
@@ -81,52 +83,73 @@ class Sql {
         return $this;
     }
 
-    public function where($where, $sql = '') {
-        $this->aSql['raw_where'] = $where;
+    private function getWhereKey(&$key) {
+        $table = NULL;
+        $field = $key;
+        $posi = strpos($key, '.');
+        if ($posi !== FALSE) {
+            $table = substr($key, 0, $posi);
+            if (!preg_match('/^[a-z][0-9a-z_]{0,10}$/i', $table)) {
+                return FALSE;
+            }
+            // 在包含小数点的时候，取小数点后的为字段
+            $field = substr($key, $posi + 1);
+            $key = $table . '_' . $field;
+        }
+        if (!preg_match('/^[a-z][0-9a-z_]{0,19}$/i', $field)) {
+            //必须字母开头，可以包含字母和数字还有下划线
+            return FALSE;
+        }
+        $str = '`' . $field . '`';
+        if ($table) {
+            $str = '`' . $table . '`.' . $str;
+        }
+        return $str;
+    }
+
+    private function buildSqlWhere() {
+        $where = $this->aSql['where'];
+        $where_keys = array();
+        foreach ($where as $key => $val) {
+            $str = $this->getWhereKey($key);
+            if ($str === FALSE) continue;
+            if ($val === NULL) {
+                $str = 'ISNULL(' . $str . ')';
+                $where_keys[] = $str;
+                continue;
+            }
+            $str .= '=:' . $key;
+            $where_keys[] = $str;
+            $this->aSql['paramData'][$key] = $val;
+        }
+        $this->aSql['sql_where'] = implode(' AND ', $where_keys);
+    }
+
+    private function checkConditionName($fieldName) {
+        if (!is_string($fieldName)) return FALSE;
+        if (!preg_match('/^[a-z][0-9a-z_.]{0,50}$/i', $fieldName)) {
+            return FALSE;
+        }
+        return TRUE;
+    }
+
+    public function where($where, $sql = NULL) {
+        if ($this->checkConditionName($where)) {
+            $this->aSql['where'][$where] = $sql;
+            $this->buildSqlWhere();
+            return $this;
+        }
         if (is_array($where) && is_string($sql) && !empty($sql)) {
             $this->aSql['paramData'] = $where;
-            $this->aSql['where'] = $sql;
+            $this->aSql['sql_where'] = $sql;
             return $this;
         }
         if (is_array($where)) {
-            if (!isset($this->aSql['paramData'])) {
-                $this->aSql['paramData'] = array();
-            }
-            $where_keys = array();
-            foreach ($where as $key => $val) {
-                $table = '';
-                $field = $key;
-                $posi = strpos($key, '.');
-                if ($posi !== FALSE) {
-                    $table = substr($key, 0, $posi);
-                    if (!preg_match('/^[a-z][0-9a-z_]{0,10}$/i', $table)) {
-                        continue;
-                    }
-                    // 在包含小数点的时候，取小数点后的为字段
-                    $field = substr($key, $posi + 1);
-                    $key = $table . '_' . $field;
-                }
-                if (!preg_match('/^[a-z][0-9a-z_]{1,19}$/i', $field)) {
-                    //必须字母开头，可以包含字母和数字还有下划线
-                    continue;
-                }
-                $str = '`' . $field . '`';
-                if ($table) {
-                    $str = '`' . $table . '`.' . $str;
-                }
-                if ($val === NULL) {
-                    $str = 'ISNULL(' . $str . ')';
-                    $where_keys[] = $str;
-                    continue;
-                }
-                $str .= '=:' . $key;
-                $where_keys[] = $str;
-                $this->aSql['paramData'][$key] = $val;
-            }
-            $this->aSql['where'] = implode(' AND ', $where_keys);
+            $this->aSql['where'] = $where;
+            $this->buildSqlWhere();
             return $this;
         }
-        $this->aSql['where'] = $where;
+        $this->aSql['sql_where'] = $where;
         return $this;
     }
 
@@ -228,8 +251,8 @@ class Sql {
         $sql = 'SELECT';
         $sql .= ' COUNT(*)';
         $sql .= ' FROM ' . $this->aSql['table'];
-        if (isset($this->aSql['where']) && !empty($this->aSql['where'])) {
-            $sql .= ' WHERE ' . $this->aSql['where'];
+        if (isset($this->aSql['sql_where']) && !empty($this->aSql['sql_where'])) {
+            $sql .= ' WHERE ' . $this->aSql['sql_where'];
         }
         $sth = $this->getSth($sql);
         $row = $sth->fetch(\PDO::FETCH_NUM);
@@ -253,8 +276,8 @@ class Sql {
             $sql .= ' *';
         }
         $sql .= ' FROM ' . $this->aSql['table'];
-        if (isset($this->aSql['where']) && !empty($this->aSql['where'])) {
-            $sql .= ' WHERE ' . $this->aSql['where'];
+        if (isset($this->aSql['sql_where']) && !empty($this->aSql['sql_where'])) {
+            $sql .= ' WHERE ' . $this->aSql['sql_where'];
         }
         if (isset($this->aSql['group_fields'])) {
             $sql .= ' GROUP BY ' . $this->aSql['group_fields'];
@@ -289,8 +312,8 @@ class Sql {
             $sSets[] = '`' . $field . '`=' . $val;
         }
         $sql = 'UPDATE ' . $this->aSql['table'] . ' SET ' . implode(',', $sSets);
-        if (isset($this->aSql['where']) && !empty($this->aSql['where'])) {
-            $sql .= ' WHERE ' . $this->aSql['where'];
+        if (isset($this->aSql['sql_where']) && !empty($this->aSql['sql_where'])) {
+            $sql .= ' WHERE ' . $this->aSql['sql_where'];
         }
         return $sql;
     }
@@ -312,8 +335,8 @@ class Sql {
 
     public function buildSqlDelete() {
         $sql = 'DELETE FROM ' . $this->aSql['table'];
-        if (isset($this->aSql['where']) && !empty($this->aSql['where'])) {
-            $sql .= ' WHERE ' . $this->aSql['where'];
+        if (isset($this->aSql['sql_where']) && !empty($this->aSql['sql_where'])) {
+            $sql .= ' WHERE ' . $this->aSql['sql_where'];
         }
         return $sql;
     }
@@ -377,7 +400,7 @@ class Sql {
         if ($row) {
             $this->save($data);
         } else {
-            $data = array_merge($data, $this->aSql['raw_where']);
+            $data = array_merge($data, $this->aSql['where']);
             $this->add($data);
         }
     }
