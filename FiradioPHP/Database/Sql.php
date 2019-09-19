@@ -314,6 +314,8 @@ class Sql {
         $sql = 'UPDATE ' . $this->aSql['table'] . ' SET ' . implode(',', $sSets);
         if (isset($this->aSql['sql_where']) && !empty($this->aSql['sql_where'])) {
             $sql .= ' WHERE ' . $this->aSql['sql_where'];
+        } else {
+            $this->error('已禁止无条件的更新语句');
         }
         return $sql;
     }
@@ -337,6 +339,8 @@ class Sql {
         $sql = 'DELETE FROM ' . $this->aSql['table'];
         if (isset($this->aSql['sql_where']) && !empty($this->aSql['sql_where'])) {
             $sql .= ' WHERE ' . $this->aSql['sql_where'];
+        } else {
+            $this->error('已禁止无条件的删除语句');
         }
         return $sql;
     }
