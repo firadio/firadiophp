@@ -7,6 +7,7 @@
  */
 
 namespace FiradioPHP\Database;
+use \Exception;
 
 class Sql {
 
@@ -25,6 +26,7 @@ class Sql {
     }
 
     public function table($table) {
+        $this->aSql['table_raw'] = $table;
         if (strpos($table, '{tablepre}') !== FALSE) {
             //有{tablepre}的就替换好
             $this->aSql['table'] = str_replace('{tablepre}', $this->link->tablepre, $table);
@@ -352,6 +354,7 @@ class Sql {
 
     public function insert($data = NULL) {
         $this->getSth($this->buildSqlInsert($data));
+        $this->check_autoid();
         return $this->link->lastInsertId();
     }
 
@@ -361,8 +364,7 @@ class Sql {
     }
 
     public function add($data = NULL) {
-        $this->getSth($this->buildSqlInsert($data));
-        return $this->link->lastInsertId();
+        return $this->insert($data);
     }
 
     public function save($data = NULL) {
@@ -384,4 +386,46 @@ class Sql {
         $this->getSth($this->buildSqlDelete());
     }
 
+    private function check_autoid_enable($tableName) {
+        $setting = $this->link->setting;
+        $check_autoid_enable = isset($setting['check_autoid_enable']) ? $setting['check_autoid_enable'] : FALSE;
+        if (!isset($setting['Tables'])) {
+            return $check_autoid_enable;
+        }
+        $Tables = $setting['Tables'];
+        if (!isset($Tables[$tableName])) {
+            return $check_autoid_enable;
+        }
+        if (!isset($Tables[$tableName]['check_autoid_enable'])) {
+            return $check_autoid_enable;
+        }
+        return $Tables[$tableName]['check_autoid_enable'];
+    }
+
+    private function check_autoid() {
+        $tableName = $this->aSql['table'];
+        if (!$this->check_autoid_enable($this->aSql['table_raw'])) return;
+        $fieldName = 'id';
+        $sql = "SELECT {$fieldName} FROM {$tableName} ORDER BY {$fieldName} DESC LIMIT 2";
+        $sth = $this->getSth($sql);
+        $rows = $sth->fetchAll(\PDO::FETCH_ASSOC);
+        if (count($rows) < 2) {
+            return;
+        }
+        if ($rows[0][$fieldName] - $rows[1][$fieldName] > 1) {
+            $this->error("[ID异常] 在[{$tableName}]表");
+        }
+    }
+
+    private function error($message, $param2 = '提示') {
+        $exCode = -2;
+        if (is_numeric($param2)) {
+            $exCode = $param2;
+        }
+        $ex = new Exception($message, $exCode);
+        if (is_string($param2)) {
+            $ex->title = $param2;
+        }
+        throw $ex;
+    }
 }
