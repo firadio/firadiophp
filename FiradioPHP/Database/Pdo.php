@@ -69,9 +69,17 @@ class Pdo extends \PDO {
         }
     }
 
+    public function begin() {
+        return $this->beginTransaction();
+    }
+
     public function beginTransaction() {
+        $ret = null;
         try {
             //Warning: Error while sending QUERY packet. PID=7888 in
+            if ($this->inTransaction()) {
+                return $ret;
+            }
             $ret = @parent::beginTransaction();
             $this->errorCount = 0; //重置错误计数
             return $ret;
@@ -108,6 +116,7 @@ class Pdo extends \PDO {
             }
             throw $ex;
         }
+        return $ret;
     }
 
     public function rollback() {
