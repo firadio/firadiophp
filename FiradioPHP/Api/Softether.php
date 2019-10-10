@@ -14,7 +14,7 @@ class Softether {
     public function __construct($conf) {
         $this->aConfig = $conf;
         $url = 'https://' . $this->aConfig['host'] . ':' . $this->aConfig['port'] . $this->aConfig['path'];
-        echo $url . "\r\n";
+        //echo $url . "\r\n";
         $this->oCurl = new Curl($url);
         //$this->oCurl->setHeader('Content-Type', 'application/json');
         $this->oCurl->setHeader('X-VPNADMIN-HUBNAME', $this->aConfig['hubname']);
@@ -127,5 +127,12 @@ class Softether {
         if ($ExpireTime) $params['ExpireTime_dt'] = gmdate('c', $ExpireTime);
         return $this->api('SetUser', $params);
     }
+
+    public function EnumUser() {
+        $params = $this->GetDefaParams();
+        return $this->api('EnumUser', $params);
+    }
+
+
 
 }
