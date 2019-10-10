@@ -69,6 +69,14 @@ class Pdo extends \PDO {
         }
     }
 
+    public function begin() {
+        $this->beginTransaction();
+    }
+
+    public function beginTrans() {
+        $this->beginTransaction();
+    }
+
     public function beginTransaction() {
         try {
             //Warning: Error while sending QUERY packet. PID=7888 in
