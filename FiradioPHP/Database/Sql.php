@@ -13,6 +13,7 @@ class Sql {
 
     private $aSql = array();
     private $aPage = array();
+    public $aConfig = array();
     public $link;
 
     public function __construct($link) {
@@ -20,6 +21,7 @@ class Sql {
         $this->aSql['ignore'] = FALSE;
         $this->aSql['where'] = array();
         $this->aSql['paramData'] = array();
+        $this->aConfig['check_field_name'] = TRUE;
     }
 
     public function field($field) {
@@ -168,7 +170,7 @@ class Sql {
             $this->aSql['paramData'] = array();
         }
         foreach ($data as $key => $val) {
-            if (!preg_match('/^[a-z][0-9a-z_]{1,19}$/i', $key)) {
+            if ($this->aConfig['check_field_name'] && !preg_match('/^[a-z][0-9a-z_]{1,19}$/i', $key)) {
                 //必须字母开头，可以包含字母和数字还有下划线
                 continue;
             }
@@ -180,8 +182,9 @@ class Sql {
                 $this->aSql['paramField'][$key] = 'CURRENT_TIMESTAMP()';
                 continue;
             }
-            $this->aSql['paramField'][$key] = ':' . $key;
-            $this->aSql['paramData'][$key] = $val;
+            $paramName = 'crc32_' . crc32($key);
+            $this->aSql['paramField'][$key] = ':' . $paramName;
+            $this->aSql['paramData'][$paramName] = $val;
         }
         return $this;
     }
@@ -380,7 +383,9 @@ class Sql {
     }
 
     public function insert($data = NULL) {
-        $this->getSth($this->buildSqlInsert($data));
+        $sql = $this->buildSqlInsert($data);
+        //var_dump($sql);die();
+        $this->getSth($sql);
         $this->check_autoid();
         return $this->link->lastInsertId();
     }

@@ -185,6 +185,7 @@ class Pdo extends \PDO {
     public function input_parameters($sql, $request = array()) {
         //根据SQL语句里面的参数自动生成$input_parameters
         $reg = '/\:([a-z][a-z0-9_]+)/i';
+        //$reg = '/\:([\x{4e00}-\x{9fa5}A-Za-z0-9_]+)/u';
         $matches = array();
         preg_match_all($reg, $sql, $matches);
         $input_parameters = array();
