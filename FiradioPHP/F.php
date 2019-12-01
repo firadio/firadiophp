@@ -222,3 +222,14 @@ class F {
     }
 
 }
+
+
+\FiradioPHP\F::scanDirTree(__DIR__, '', function($a) {
+    if ($a[1] === '') return;
+    $path = implode(DS, $a);
+    $pathinfo = pathinfo($path);
+    if ($pathinfo['extension'] !== 'php') return;
+    require($path);
+});
+
+
