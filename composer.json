@@ -25,6 +25,9 @@
     "autoload": {
         "psr-4": {
             "FiradioPHP\\": "FiradioPHP"
-        }
+        },
+        "files" : [
+            "FiradioPHP/F.php"
+        ]
     }
 }
