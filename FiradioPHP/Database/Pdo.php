@@ -290,7 +290,7 @@ class Pdo {
         }
         $sql = 'INSERT `' . $this->tablepre . $table . '`(' . implode(',', $fields) . ')VALUES(' . implode(',', $values) . ')';
         $this->sqlexec($sql, $input_parameters);
-        return $this->lastInsertId();
+        return $this->pdo_parent->lastInsertId();
     }
 
     public function sql() {
