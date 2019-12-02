@@ -26,7 +26,7 @@ class F {
         mb_http_input('UTF-8');
         mb_regex_encoding('UTF-8');
         try {
-            spl_autoload_register('\FiradioPHP\F::loadByNamespace');
+            //spl_autoload_register('\FiradioPHP\F::loadByNamespace');
             self::$oError = new System\Error();
             self::$oConfig = new System\Config($configDir);
         } catch (Exception $ex) {
