@@ -204,7 +204,7 @@ class Router {
                 $depend[] = $oRes->ipaddr;
                 continue;
             }
-            if ($value->name === 'SESSIONID') {
+            if ($value->name === 'sessionId') {
                 $depend[] = trim($oRes->sessionId);
                 continue;
             }
