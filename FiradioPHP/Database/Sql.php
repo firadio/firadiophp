@@ -36,7 +36,7 @@ class Sql {
             $this->aSql['table'] = str_replace('{tablepre}', $this->link->tablepre, $table);
             return $this;
         }
-        if (preg_match('/^[A-Za-z0-9_]+$/u', $table)) {
+        if (preg_match('/^[A-Za-z0-9_]+(\s[a-z]+)?$/u', $table)) {
             //如果没有带上前缀标记就自动加上
             $this->aSql['table'] = $this->link->tablepre . $table;
             return $this;
