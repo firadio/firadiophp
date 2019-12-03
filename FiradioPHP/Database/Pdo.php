@@ -293,6 +293,10 @@ class Pdo {
         return $this->pdo_parent->lastInsertId();
     }
 
+    public function lastInsertId() {
+        return $this->pdo_parent->lastInsertId();
+    }
+
     public function sql() {
         return new Sql($this);
         if (empty($this->sql)) {
