@@ -111,15 +111,24 @@ class Sql {
         $where = $this->aSql['where'];
         $where_keys = array();
         foreach ($where as $key => $val) {
-            $str = $this->getWhereKey($key);
-            if ($str === FALSE) continue;
+            $whereKey = $this->getWhereKey($key);
+            if ($whereKey === FALSE) continue;
             if ($val === NULL) {
-                $str = 'ISNULL(' . $str . ')';
-                $where_keys[] = $str;
+                $whereKey = 'ISNULL(' . $whereKey . ')';
+                $where_keys[] = $whereKey;
                 continue;
             }
-            $str .= '=:' . $key;
-            $where_keys[] = $str;
+            if (is_array($val)) {
+                $fields = array();
+                foreach ($val as $vk => $vv) {
+                    $fields[] = ':' . $key . '_' . $vk;
+                    $this->aSql['paramData'][$key . '_' . $vk] = $vv;
+                }
+                $where_keys[] = $whereKey . ' IN(' . implode(',', $fields) . ')';
+                continue;
+            }
+            $whereKey .= '=:' . $key;
+            $where_keys[] = $whereKey;
             $this->aSql['paramData'][$key] = $val;
         }
         $this->aSql['sql_where'] = implode(' AND ', $where_keys);
@@ -150,6 +159,12 @@ class Sql {
             return $this;
         }
         $this->aSql['sql_where'] = $where;
+        return $this;
+    }
+
+    public function where_sql($sql, $data) {
+        $this->aSql['sql_where'] = $sql;
+        $this->data($data);
         return $this;
     }
 
