@@ -12,7 +12,6 @@ class Response {
     private $path = ''; //输入用户请求路径
     private $pathinfo = ''; //输入用户请求路径
     private $sessionId = ''; //会话ID
-    private $APICOOKID = ''; //会话ID
     private $aParam = array(); // 用于提供给action函数进行处理的参数
     //aRequest的存储优先级，1：HTTP_RAW_POST_DATA为JSON字符串时，2：存在POST时，3：GET请求
     private $aRequest = array(); //输入用户请求数据
@@ -44,9 +43,6 @@ class Response {
         }
         if ($name === 'sessionId') {
             return $this->sessionId;
-        }
-        if ($name === 'APICOOKID') {
-            return $this->APICOOKID;
         }
         if ($name === 'aParam') {
             // 提供给Router.php的load_php_file获取参数用的

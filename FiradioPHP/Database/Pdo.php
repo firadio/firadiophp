@@ -6,7 +6,7 @@ use \PDOException;
 use \Exception;
 use FiradioPHP\F;
 
-class Pdo extends \PDO {
+class Pdo {
     /*
      * http://php.net/manual/zh/class.pdo.php
      */
@@ -16,6 +16,7 @@ class Pdo extends \PDO {
     private $errorCountMax = 2; //最大失败次数
     private $sql;
     public $tablepre = '';
+    private $pdo_parent;
 
     public function __get($name) {
         if ($name === 'setting') {
@@ -62,11 +63,15 @@ class Pdo extends \PDO {
                 $options[constant("PDO::{$key}")] = $option;
             }
         }
-        parent::__construct($dsn, $setting['username'], $setting['password'], $options);
+        $this->pdo_parent = new \PDO($dsn, $setting['username'], $setting['password'], $options);
         foreach ($setting["attributes"] as $k => $v) {
             $val = is_string($v) ? constant("PDO::{$v}") : $v;
-            $this->setAttribute(constant("PDO::{$k}"), $val);
+            $this->pdo_parent->setAttribute(constant("PDO::{$k}"), $val);
         }
+    }
+
+    public function inTransaction() {
+        return $this->pdo_parent->inTransaction();
     }
 
     public function begin() {
@@ -84,7 +89,7 @@ class Pdo extends \PDO {
             if ($this->inTransaction()) {
                 return $ret;
             }
-            $ret = @parent::beginTransaction();
+            $ret = @$this->pdo_parent->beginTransaction();
             $this->errorCount = 0; //重置错误计数
             return $ret;
         } catch (PDOException $ex) {
@@ -125,14 +130,18 @@ class Pdo extends \PDO {
 
     public function rollback() {
         if ($this->inTransaction()) {
-            parent::rollback();
+            $this->pdo_parent->rollback();
         }
+    }
+
+    public function commit() {
+        return $this->pdo_parent->commit();
     }
 
     public function prepare($sql, $driver_options = array()) {
         //Fatal error: Access level to FiradioPHP\Database\Pdo::prepare() must be public (as in class PDO)
         $statement = str_replace('{tablepre}', $this->tablepre, $sql);
-        return parent::prepare($statement, $driver_options);
+        return $this->pdo_parent->prepare($statement, $driver_options);
     }
 
     public function sqlexec($sql, $parameters) {
@@ -185,6 +194,7 @@ class Pdo extends \PDO {
     public function input_parameters($sql, $request = array()) {
         //根据SQL语句里面的参数自动生成$input_parameters
         $reg = '/\:([a-z][a-z0-9_]+)/i';
+        //$reg = '/\:([\x{4e00}-\x{9fa5}A-Za-z0-9_]+)/u';
         $matches = array();
         preg_match_all($reg, $sql, $matches);
         $input_parameters = array();
@@ -280,7 +290,11 @@ class Pdo extends \PDO {
         }
         $sql = 'INSERT `' . $this->tablepre . $table . '`(' . implode(',', $fields) . ')VALUES(' . implode(',', $values) . ')';
         $this->sqlexec($sql, $input_parameters);
-        return $this->lastInsertId();
+        return $this->pdo_parent->lastInsertId();
+    }
+
+    public function lastInsertId() {
+        return $this->pdo_parent->lastInsertId();
     }
 
     public function sql() {
