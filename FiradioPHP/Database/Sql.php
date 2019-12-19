@@ -352,6 +352,11 @@ class Sql {
         return $sth;
     }
 
+    public function sqlexec() {
+        $sth = $this->getSth($this->buildSqlSelect());
+        return $sth;
+    }
+
     public function select($fetch_style = \PDO::FETCH_ASSOC) {
         $sth = $this->getSth($this->buildSqlSelect());
         return $sth->fetchAll($fetch_style);

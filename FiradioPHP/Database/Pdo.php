@@ -291,6 +291,10 @@ class Pdo extends \PDO {
         return $this->sql;
     }
 
+    public function page($oSql) {
+        return new Page($oSql);
+    }
+
     public function database_exist($dbname) {
         $sql = 'SELECT information_schema.SCHEMATA.SCHEMA_NAME FROM information_schema.SCHEMATA where SCHEMA_NAME=:dbname';
         $request = array();
