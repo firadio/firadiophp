@@ -13,6 +13,7 @@ class Sql {
 
     private $aSql = array();
     private $aPage = array();
+    public $aConfig = array();
     public $link;
 
     public function __construct($link) {
@@ -20,6 +21,7 @@ class Sql {
         $this->aSql['ignore'] = FALSE;
         $this->aSql['where'] = array();
         $this->aSql['paramData'] = array();
+        $this->aConfig['check_field_name'] = TRUE;
     }
 
     public function field($field) {
@@ -34,7 +36,7 @@ class Sql {
             $this->aSql['table'] = str_replace('{tablepre}', $this->link->tablepre, $table);
             return $this;
         }
-        if (preg_match('/^[A-Za-z0-9_]+$/u', $table)) {
+        if (preg_match('/^[A-Za-z0-9_]+(\s[a-z]+)?$/u', $table)) {
             //如果没有带上前缀标记就自动加上
             $this->aSql['table'] = $this->link->tablepre . $table;
             return $this;
@@ -111,15 +113,24 @@ class Sql {
         $where = $this->aSql['where'];
         $where_keys = array();
         foreach ($where as $key => $val) {
-            $str = $this->getWhereKey($key);
-            if ($str === FALSE) continue;
+            $whereKey = $this->getWhereKey($key);
+            if ($whereKey === FALSE) continue;
             if ($val === NULL) {
-                $str = 'ISNULL(' . $str . ')';
-                $where_keys[] = $str;
+                $whereKey = 'ISNULL(' . $whereKey . ')';
+                $where_keys[] = $whereKey;
                 continue;
             }
-            $str .= '=:' . $key;
-            $where_keys[] = $str;
+            if (is_array($val)) {
+                $fields = array();
+                foreach ($val as $vk => $vv) {
+                    $fields[] = ':' . $key . '_' . $vk;
+                    $this->aSql['paramData'][$key . '_' . $vk] = $vv;
+                }
+                $where_keys[] = $whereKey . ' IN(' . implode(',', $fields) . ')';
+                continue;
+            }
+            $whereKey .= '=:' . $key;
+            $where_keys[] = $whereKey;
             $this->aSql['paramData'][$key] = $val;
         }
         $this->aSql['sql_where'] = implode(' AND ', $where_keys);
@@ -153,6 +164,12 @@ class Sql {
         return $this;
     }
 
+    public function where_sql($sql, $data) {
+        $this->aSql['sql_where'] = $sql;
+        $this->data($data);
+        return $this;
+    }
+
     public function param($param) {
         $this->aSql['paramData'] = $param;
         return $this;
@@ -168,7 +185,7 @@ class Sql {
             $this->aSql['paramData'] = array();
         }
         foreach ($data as $key => $val) {
-            if (!preg_match('/^[a-z][0-9a-z_]{1,19}$/i', $key)) {
+            if ($this->aConfig['check_field_name'] && !preg_match('/^[a-z][0-9a-z_]{1,19}$/i', $key)) {
                 //必须字母开头，可以包含字母和数字还有下划线
                 continue;
             }
@@ -180,8 +197,9 @@ class Sql {
                 $this->aSql['paramField'][$key] = 'CURRENT_TIMESTAMP()';
                 continue;
             }
-            $this->aSql['paramField'][$key] = ':' . $key;
-            $this->aSql['paramData'][$key] = $val;
+            $paramName = 'crc32_' . crc32($key);
+            $this->aSql['paramField'][$key] = ':' . $paramName;
+            $this->aSql['paramData'][$paramName] = $val;
         }
         return $this;
     }
@@ -385,7 +403,9 @@ class Sql {
     }
 
     public function insert($data = NULL) {
-        $this->getSth($this->buildSqlInsert($data));
+        $sql = $this->buildSqlInsert($data);
+        //var_dump($sql);die();
+        $this->getSth($sql);
         $this->check_autoid();
         return $this->link->lastInsertId();
     }

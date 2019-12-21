@@ -26,7 +26,7 @@ class F {
         mb_http_input('UTF-8');
         mb_regex_encoding('UTF-8');
         try {
-            spl_autoload_register('\FiradioPHP\F::loadByNamespace');
+            //spl_autoload_register('\FiradioPHP\F::loadByNamespace');
             self::$oError = new System\Error();
             self::$oConfig = new System\Config($configDir);
         } catch (Exception $ex) {
@@ -222,3 +222,15 @@ class F {
     }
 
 }
+
+if (function_exists('opcache_compile_file')) {
+    \FiradioPHP\F::scanDirTree(__DIR__, '', function($a) {
+        if ($a[1] === '') return;
+        $path = implode(DS, $a);
+        $pathinfo = pathinfo($path);
+        if ($pathinfo['extension'] !== 'php') return;
+        opcache_compile_file($path);
+    });
+}
+
+

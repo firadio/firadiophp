@@ -59,8 +59,9 @@ if (filter_input(INPUT_SERVER, 'HTTP_CONTENT_TYPE') === 'application/x-www-form-
 $oRes->aParam = $aParam; //4：用户请求参数
 $oRes->request = $aParam; //4：输入用户请求数据
 $oRes->sessionId = filter_input(INPUT_POST, 'sessionId');
-$oRes->APICOOKID = filter_input(INPUT_COOKIE, 'APICOOKID');
-
+if (empty($oRes->sessionId)) {
+    $oRes->sessionId = filter_input(INPUT_COOKIE, 'sessionId');
+}
 F::headerAllowOrigin(filter_input(INPUT_SERVER, 'HTTP_ORIGIN'));
 
 header('Access-Control-Allow-Credentials: true');

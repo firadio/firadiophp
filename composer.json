@@ -16,15 +16,21 @@
         }
     ],
     "require": {
+        "alibabacloud/sdk":"dev-master",
         "aliyun/aliyun-tablestore-sdk-php": "dev-master",
         "rjyxz/aliyun-php-sdk-core": "dev-master",
         "rjyxz/aliyun-php-sdk-dm": "dev-master",
         "bluerhinos/phpmqtt": "dev-master",
+        "swiftmailer/swiftmailer":"dev-master",
         "php": ">=5.6.0"
     },
+    "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "FiradioPHP\\": "FiradioPHP"
-        }
+        },
+        "files" : [
+            "FiradioPHP/F.php"
+        ]
     }
 }
