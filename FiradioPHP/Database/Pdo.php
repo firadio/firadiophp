@@ -191,6 +191,16 @@ class Pdo {
         return $sth->fetchAll(\PDO::FETCH_ASSOC);
     }
 
+    public function func($funcName, $params = array()) {
+        $sql = "SELECT {$funcName}";
+        if (count($params) > 0) {
+            $place_holders = implode(',', array_fill(0, count($params), '?'));
+            $sql .= "({$place_holders})";
+        }
+        $sth = $this->sqlexec($sql, $params);
+        return $sth->fetch(\PDO::FETCH_NUM)[0];
+    }
+
     public function input_parameters($sql, $request = array()) {
         //根据SQL语句里面的参数自动生成$input_parameters
         $reg = '/\:([a-z][a-z0-9_]+)/i';
