@@ -25,6 +25,10 @@ class Pdo {
         throw new Exception("cannot get property name=$name");
     }
 
+    public function setting($name, $value) {
+        $this->setting[$name] = $value;
+    }
+
     private function dsn($driver, $conf = array()) {
         $dsn = $driver . ':';
         foreach ($conf as $k => $v) {
