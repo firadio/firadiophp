@@ -338,10 +338,7 @@ class Sql {
         return $sql;
     }
 
-    public function buildSqlInsert($data = NULL) {
-        if (!empty($data)) {
-            $this->data($data);
-        }
+    public function buildSqlInsert() {
         $fields = $values = array();
         foreach ($this->aSql['paramField'] as $field => $val) {
             $fields[] = '`' . $field . '`';
@@ -350,6 +347,18 @@ class Sql {
         $sql = 'INSERT';
         if ($this->aSql['ignore']) $sql .= ' IGNORE';
         $sql .= ' ' . $this->aSql['table'] . '(' . implode(',', $fields) . ')VALUES(' . implode(',', $values) . ')';
+        return $sql;
+    }
+
+    public function buildSqlInsertWhenNotExists() {
+        $fields = $values = array();
+        foreach ($this->aSql['paramField'] as $field => $val) {
+            $fields[] = '`' . $field . '`';
+            $values[] = $val;
+        }
+        $sql = 'INSERT INTO ' . $this->aSql['table'] . '(' . implode(',', $fields) . ')';
+        $sql .= ' SELECT ' . implode(',', $values) . ' FROM dual WHERE NOT EXISTS';
+        $sql .= '(SELECT 1 FROM ' . $this->aSql['table'] . ' WHERE ' . $this->aSql['sql_where'] . ')';
         return $sql;
     }
 
@@ -402,11 +411,22 @@ class Sql {
         return $sth->rowCount();
     }
 
-    public function insert($data = NULL) {
-        $sql = $this->buildSqlInsert($data);
-        //var_dump($sql);die();
+    public function insert($data) {
+        if (is_array($data)) {
+            $this->data($data);
+        }
+        $sql = $this->buildSqlInsert();
         $this->getSth($sql);
         $this->check_autoid();
+        return $this->link->lastInsertId();
+    }
+
+    public function insertWhenNotExists($data) {
+        if (is_array($data)) {
+            $this->data($data);
+        }
+        $sql = $this->buildSqlInsertWhenNotExists();
+        $this->getSth($sql);
         return $this->link->lastInsertId();
     }
 
@@ -417,6 +437,10 @@ class Sql {
 
     public function add($data = NULL) {
         return $this->insert($data);
+    }
+
+    public function addwne($data = NULL) {
+        return $this->insertWhenNotExists($data);
     }
 
     public function save($data = NULL) {
