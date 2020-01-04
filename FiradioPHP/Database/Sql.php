@@ -417,8 +417,9 @@ class Sql {
         }
         $sql = $this->buildSqlInsert();
         $this->getSth($sql);
+        $lastInsertId = $this->link->lastInsertId();
         $this->check_autoid();
-        return $this->link->lastInsertId();
+        return $lastInsertId;
     }
 
     public function insertWhenNotExists($data) {
