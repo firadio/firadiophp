@@ -13,3 +13,4 @@ composer.phar
 ~*
 cookie.*
 *.log
+*.lock
