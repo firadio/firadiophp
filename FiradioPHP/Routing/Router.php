@@ -140,8 +140,7 @@ class Router {
         if (($funcInfo = $this->getFuncInfo($file)) === false) {
             return false;
         }
-        $argv = $oRes->aParam;
-        $fp = $this->getFucntionParameterForAction($funcInfo['refFunPar'], $argv, $oRes);
+        $fp = $this->getFucntionParameterForAction($funcInfo['refFunPar'], $oRes);
         try {
             call_user_func_array($funcInfo['func'], $fp[0]);
             foreach ($fp[1] as $sName => $oInstance) {
@@ -178,10 +177,7 @@ class Router {
         return $depend;
     }
 
-    private function getFucntionParameterForAction($refFunPar, $param, $oRes) {
-        if (!is_array($param)) {
-            $param = [$param];
-        }
+    private function getFucntionParameterForAction($refFunPar, $oRes) {
         $depend = array();
         $getInstance = array();
         foreach ($refFunPar as $value) {
@@ -230,6 +226,7 @@ class Router {
                 continue;
             }
             // 到这里已经完成了特殊参数，可以开始处理用户参数了
+            $param = $oRes->aParam;
             if (isset($param[$value->name])) {
                 // 开始获取用户的参数
                 $depend[] = $param[$value->name];
