@@ -57,4 +57,8 @@ class Redis {
         }
     }
 
+    public function HSET($name, $key, $val) {
+        return $this->redis->HSET($name, $key, $val);
+    }
+
 }

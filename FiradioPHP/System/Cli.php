@@ -39,7 +39,7 @@ class Cli {
 
     public function is_end() {
         if (!$this->exist()) {
-            echo "[Cli] Ended!";
+            echo "[Cli] Ended!\r\n";
             return TRUE;
         }
     }
