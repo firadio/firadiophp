@@ -182,16 +182,23 @@ class Router {
         $getInstance = array();
         foreach ($refFunPar as $value) {
             $matches = array();
-            //这3个都是用户主动传入的，分别是aRequest,aArgv,sRawContent
-            if ($value->name === 'request') {
-                $depend[] = $oRes->aParam;
+            if ($value->name === 'aSession') {
+                // aSession是用户主动传入的
+                $depend[] = $oRes->aSession;
                 continue;
             }
-            if ($value->name === 'aArgv') {
+            if ($value->name === 'aRequest') {
+                // aRequest是用户主动传入的
+                $depend[] = $oRes->aRequest;
+                continue;
+            }
+            if ($value->name === 'aParam') {
+                // aParam是父action通过setParam设的值
                 $depend[] = $oRes->aParam;
                 continue;
             }
             if ($value->name === 'sRawContent') {
+                // sRawContent是用户主动传入的
                 $depend[] = $oRes->sRawContent;
                 continue;
             }
@@ -225,11 +232,15 @@ class Router {
                 $depend[] = $oInstance;
                 continue;
             }
+            if (isset($oRes->aParam[$value->name])) {
+                // 开始获取父action里setParam的参数
+                $depend[] = $oRes->aParam[$value->name];
+                continue;
+            }
             // 到这里已经完成了特殊参数，可以开始处理用户参数了
-            $param = $oRes->aParam;
-            if (isset($param[$value->name])) {
+            if (isset($oRes->aRequest[$value->name])) {
                 // 开始获取用户的参数
-                $depend[] = $param[$value->name];
+                $depend[] = $oRes->aRequest[$value->name];
                 continue;
             }
             // 最后才处理默认值

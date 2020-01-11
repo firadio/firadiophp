@@ -61,4 +61,15 @@ class Redis {
         return $this->redis->HSET($name, $key, $val);
     }
 
+    public function Keys($keyname) {
+        $keys = $this->redis->KEYS($keyname);
+        return $keys;
+    }
+
+    public function zCount($keyname, $start, $end) {
+        $i = $this->redis->zCount($keyname, $start, $end);
+        return $i;
+    }
+
+
 }
