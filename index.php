@@ -36,9 +36,8 @@ $oRes = new \FiradioPHP\Routing\Response();
 $oRes->fBeginTime = microtime(TRUE);
 $oRes->ipaddr = getIpAddr(filter_input_array(INPUT_SERVER)); //2：输入网络IP地址
 $oRes->path = filter_input(INPUT_SERVER, 'PATH_INFO'); //3：输入用户请求路径
-$oRes->aRequest = $_REQUEST; //4：用户请求数据（包括sessionId）
 //通过 F::json_decode 可以自动识别数组格式和字符串的JSON格式，最终输出数组
-$aParam = $oRes->aRequest;
+$aParam = $_REQUEST; //4：用户请求数据（包括sessionId）
 if (isset($aParam['param'])) {
     $aParam2 = F::json_decode($aParam['param']);
     $aParam = array_merge($aParam, $aParam2);
@@ -56,12 +55,13 @@ if (filter_input(INPUT_SERVER, 'HTTP_CONTENT_TYPE') === 'application/x-www-form-
     }
 }
 
-$oRes->aParam = $aParam; //4：用户请求参数
-$oRes->request = $aParam; //4：输入用户请求数据
-$oRes->sessionId = filter_input(INPUT_POST, 'sessionId');
-if (empty($oRes->sessionId)) {
-    $oRes->sessionId = filter_input(INPUT_COOKIE, 'sessionId');
+$oRes->aRequest = $aParam; //4：用户请求参数
+$sessionId = filter_input(INPUT_POST, 'sessionId');
+if (empty($sessionId)) {
+    $sessionId = filter_input(INPUT_COOKIE, 'sessionId');
 }
+$oRes->setParam('sessionId', $sessionId);
+
 F::headerAllowOrigin(filter_input(INPUT_SERVER, 'HTTP_ORIGIN'));
 
 header('Access-Control-Allow-Credentials: true');
