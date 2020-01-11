@@ -182,11 +182,6 @@ class Router {
         $getInstance = array();
         foreach ($refFunPar as $value) {
             $matches = array();
-            if ($value->name === 'aSession') {
-                // aSession是用户主动传入的
-                $depend[] = $oRes->aSession;
-                continue;
-            }
             if ($value->name === 'aRequest') {
                 // aRequest是用户主动传入的
                 $depend[] = $oRes->aRequest;
@@ -205,10 +200,6 @@ class Router {
             //这3个字符串都是用户被动传入的，分别是IPADDR,JSCOOKID
             if ($value->name === 'IPADDR') {
                 $depend[] = $oRes->ipaddr;
-                continue;
-            }
-            if ($value->name === 'sessionId') {
-                $depend[] = trim($oRes->sessionId);
                 continue;
             }
             //由Response实例化的object

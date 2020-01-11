@@ -11,8 +11,6 @@ class Response {
     private $ipaddr = ''; //输入网络IP地址
     private $path = ''; //输入用户请求路径
     private $pathinfo = ''; //输入用户请求路径
-    private $sessionId = ''; //会话ID
-    private $aSession = array(); //会话
     private $aParam = array(); // 用于提供给action函数进行处理的参数
     //aRequest的存储优先级，1：HTTP_RAW_POST_DATA为JSON字符串时，2：存在POST时，3：GET请求
     private $aRequest = array(); //输入用户请求数据
@@ -41,9 +39,6 @@ class Response {
         if ($name === 'pathinfo') {
             return $this->pathinfo;
         }
-        if ($name === 'sessionId') {
-            return $this->sessionId;
-        }
         if ($name === 'aParam') {
             // 提供给Router.php的load_php_file获取参数用的
             return $this->aParam;
@@ -51,15 +46,12 @@ class Response {
         if ($name === 'aRequest') {
             return $this->aRequest;
         }
-        if ($name === 'aResponse' || $name === 'response') {
+        if ($name === 'aResponse') {
             // 提供给Router.php的getResponse获取传回数据用的
             return $this->aResponse;
         }
         if ($name === 'aResponseHeader') {
             return $this->aResponseHeader;
-        }
-        if ($name === 'aSession') {
-            return $this->aSession;
         }
         throw new Exception("cannot get property name=$name");
     }
@@ -75,14 +67,6 @@ class Response {
             $this->path = F::path_format($value);
             return;
         }
-        if ($name === 'sessionId') {
-            $this->sessionId = $value;
-            return;
-        }
-        if ($name === 'APICOOKID') {
-            $this->APICOOKID = $value;
-            return;
-        }
         if ($name === 'aParam') {
             throw new Exception('not allow to set aParam, only use setParam');
             $this->aParam = $value;
@@ -90,10 +74,6 @@ class Response {
         }
         if ($name === 'aRequest') {
             $this->aRequest = $value;
-            return;
-        }
-        if ($name === 'aSession') {
-            $this->aSession = $value;
             return;
         }
         throw new Exception("dont have property name=$name");
