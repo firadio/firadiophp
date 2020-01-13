@@ -8,7 +8,6 @@ use \Exception;
 class Response {
 
     public $fBeginTime = 0; //开始时间
-    private $ipaddr = ''; //输入网络IP地址
     private $path = ''; //输入用户请求路径
     private $pathinfo = ''; //输入用户请求路径
     private $aParam = array(); // 用于提供给action函数进行处理的参数
@@ -21,7 +20,6 @@ class Response {
     public $oServer; //来自于Swoole的onConn
     public $isWebsocket = false;
     public $aHeader = array(); //$_SERVER['HTTP_AUTHORIZATION']
-    public $sRawContent; //保存原始的HTTP_RAW_POST_DATA
     public $channels = array();
     public $refFunPar = array();
 
@@ -30,9 +28,6 @@ class Response {
     }
 
     public function __get($name) {
-        if ($name === 'ipaddr') {
-            return $this->ipaddr;
-        }
         if ($name === 'path') {
             return $this->path;
         }
@@ -57,11 +52,6 @@ class Response {
     }
 
     public function __set($name, $value) {
-        if ($name === 'ipaddr') {
-            $this->ipaddr = $value;
-            $this->aResponse['ipaddr'] = $this->ipaddr;
-            return;
-        }
         if ($name === 'path') {
             $this->pathinfo = pathinfo($value);
             $this->path = F::path_format($value);

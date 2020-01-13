@@ -192,19 +192,14 @@ class Router {
                 $depend[] = $oRes->aParam;
                 continue;
             }
-            if ($value->name === 'sRawContent') {
-                // sRawContent是用户主动传入的
-                $depend[] = $oRes->sRawContent;
-                continue;
-            }
-            //这3个字符串都是用户被动传入的，分别是IPADDR,JSCOOKID
-            if ($value->name === 'IPADDR') {
-                $depend[] = $oRes->ipaddr;
-                continue;
-            }
             //由Response实例化的object
             if ($value->name === 'oRes') {
                 $depend[] = $oRes;
+                continue;
+            }
+            if (isset($oRes->aParam[$value->name])) {
+                // 开始获取父action里setParam的参数
+                $depend[] = $oRes->aParam[$value->name];
                 continue;
             }
             //开始处理由config实例化的object
@@ -221,11 +216,6 @@ class Router {
                 $oInstance = F::$oConfig->getInstance($sName);
                 $getInstance[$sName] = $oInstance;
                 $depend[] = $oInstance;
-                continue;
-            }
-            if (isset($oRes->aParam[$value->name])) {
-                // 开始获取父action里setParam的参数
-                $depend[] = $oRes->aParam[$value->name];
                 continue;
             }
             // 到这里已经完成了特殊参数，可以开始处理用户参数了
