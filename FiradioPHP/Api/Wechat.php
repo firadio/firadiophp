@@ -4,6 +4,8 @@ namespace FiradioPHP\Api;
 
 use \DOMDocument;
 use \FiradioPHP\Api\Wechat\Response;
+use \FiradioPHP\Api\Wechat\Wxpay;
+
 use FiradioPHP\Socket\Curl;
 
 class Wechat {
@@ -161,4 +163,12 @@ class Wechat {
         $jsonArr = json_decode($jsonStr, TRUE);
         return $jsonArr;
     }
+
+    public function Wxpay() {
+        return new Wxpay($this->aConfig);
+    }
+
+
 }
+
+

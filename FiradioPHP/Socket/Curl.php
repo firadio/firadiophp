@@ -164,6 +164,17 @@ class Curl {
                 curl_setopt($s, CURLOPT_SAFE_UPLOAD, FALSE);
             }
         }
+
+        if ($this->sslcert_file) {
+            curl_setopt($s, CURLOPT_SSLCERTTYPE, 'PEM'); //sslCertType
+            curl_setopt($s, CURLOPT_SSLCERT, $this->sslcert_file);
+        }
+
+        if ($this->sslkey_file) {
+            curl_setopt($s, CURLOPT_SSLKEYTYPE, 'PEM'); //sslKeyType
+            curl_setopt($s, CURLOPT_SSLKEY, $this->sslkey_file);
+        }
+
         if ($this->_includeHeader) {
             $this->getHeaderBody(curl_exec($s), $this->response_header, $this->_webpage);
         } else {
