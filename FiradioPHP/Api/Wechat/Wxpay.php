@@ -22,8 +22,14 @@ class Wxpay {
 
     public function sign(&$data) {
         $data['nonce_str'] = mt_rand();
-        $data['sign'] = 'x';
-        $data['mch_id'] = $this->aConfig['mchId'];
+        $data2 = $data;
+        ksort($data2);
+        $data2['key'] = $this->aConfig['mchKey'];
+        $arr = array();
+        foreach ($data2 as $k => $v) {
+            $arr[] = $k . '=' . $v;
+        }
+        $data['sign'] = strtoupper(md5(implode('&', $arr)));
     }
 
     public function sendredpack() {
@@ -31,11 +37,12 @@ class Wxpay {
         $this->oCurl->setUrlPre($url);
         $data = array();
         $data['mch_billno'] = 'FIR' . date('YmdHis');
+        $data['mch_id'] = $this->aConfig['mchId'];
         $data['wxappid'] = $this->aConfig['appId'];
         $data['send_name'] = '飞儿云平台';
         $data['re_openid'] = 'o6fZl0SipjGyauypnix-KPp9ghi8';
-        $data['total_amount'] = 1;
-        $data['total_num'] = 1;
+        $data['total_amount'] = 100;
+        $data['total_num'] = 1; // total_num必须等于1
         $data['wishing'] = '红包祝福语';
         $data['client_ip'] = '127.0.0.1';
         $data['act_name'] = '飞儿云红包';
@@ -50,7 +57,7 @@ class Wxpay {
             $arr['xml'][0][$k] = array(array('#cdata-section' => $v));
         }
         $xml = $this->array2dom($arr, new DOMDocument())->saveXML();
-        print_r($xml);
+        //print_r($xml);
         $this->oCurl->setPost($xml);
         $res_xml = $this->oCurl->createCurl();
         $xml_tree = new DOMDocument();
