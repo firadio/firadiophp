@@ -33,6 +33,7 @@ class Wxpay {
     }
 
     public function sendredpack() {
+        // 发放红包接口 https://pay.weixin.qq.com/wiki/doc/api/tools/cash_coupon.php?chapter=13_4&index=3
         $url = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/sendredpack';
         $this->oCurl->setUrlPre($url);
         $data = array();
@@ -41,7 +42,7 @@ class Wxpay {
         $data['wxappid'] = $this->aConfig['appId'];
         $data['send_name'] = '飞儿云平台';
         $data['re_openid'] = 'o6fZl0SipjGyauypnix-KPp9ghi8';
-        $data['total_amount'] = 100;
+        $data['total_amount'] = 1;
         $data['total_num'] = 1; // total_num必须等于1
         $data['wishing'] = '红包祝福语';
         $data['client_ip'] = '127.0.0.1';
@@ -66,6 +67,38 @@ class Wxpay {
         $arr = $this->dom2array($xml_tree);
         //print_r($arr);
         echo $arr['xml'][0]['return_msg'][0]['#cdata-section'];
+        exit;
+    }
+
+
+    public function transfers() {
+        // 企业付款 https://pay.weixin.qq.com/wiki/doc/api/tools/mch_pay.php?chapter=14_2
+        $url = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
+        $this->oCurl->setUrlPre($url);
+        $data = array();
+        $data['mch_appid'] = $this->aConfig['appId'];
+        $data['mchid'] = $this->aConfig['mchId'];
+        $data['partner_trade_no'] = 'FIR' . date('YmdHis');
+        $data['openid'] = 'o6fZl0SipjGyauypnix-KPp9ghi8';
+        $data['check_name'] = 'NO_CHECK';
+        $data['amount'] = 1;
+        $data['desc'] = '测试';
+        $data['spbill_create_ip'] = '127.0.0.1';
+        $this->sign($data);
+        $arr = array();
+        $arr['xml'] = array();
+        $arr['xml'][0] = array();
+        foreach ($data as $k => $v) {
+            $arr['xml'][0][$k] = array(array('#cdata-section' => $v));
+        }
+        $xml = $this->array2dom($arr, new DOMDocument())->saveXML();
+        $this->oCurl->setPost($xml);
+        $res_xml = $this->oCurl->createCurl();
+        $xml_tree = new DOMDocument();
+        $xml_tree->loadXML($res_xml);
+        $arr = $this->dom2array($xml_tree);
+        print_r($arr);
+        //echo $arr['xml'][0]['err_code_des'][0]['#cdata-section'];
         exit;
     }
 
