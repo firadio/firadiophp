@@ -20,7 +20,7 @@ class Wxpay {
         $this->oCurl->sslkey_file = APP_ROOT . '/config/wechat/apiclient_key.pem';
     }
 
-    public function sign(&$data) {
+    private function sign(&$data) {
         $data['nonce_str'] = mt_rand();
         $data2 = $data;
         ksort($data2);
@@ -30,6 +30,14 @@ class Wxpay {
             $arr[] = $k . '=' . $v;
         }
         $data['sign'] = strtoupper(md5(implode('&', $arr)));
+    }
+
+    private function return_msg($arr) {
+        $msg = $arr['xml'][0]['return_msg'][0]['#cdata-section'];
+        if (isset($arr['xml'][0]['err_code_des'])) {
+            $msg = $arr['xml'][0]['err_code_des'][0]['#cdata-section'];
+        }
+        return $msg;
     }
 
     public function sendredpack() {
@@ -66,7 +74,7 @@ class Wxpay {
         //$return_msg = $xml_tree->getElementsByTagName('return_msg')->item(0)->nodeValue;
         $arr = $this->dom2array($xml_tree);
         //print_r($arr);
-        echo $arr['xml'][0]['return_msg'][0]['#cdata-section'];
+        echo $this->return_msg($arr);
         exit;
     }
 
@@ -97,10 +105,40 @@ class Wxpay {
         $xml_tree = new DOMDocument();
         $xml_tree->loadXML($res_xml);
         $arr = $this->dom2array($xml_tree);
-        print_r($arr);
-        //echo $arr['xml'][0]['err_code_des'][0]['#cdata-section'];
+        echo $this->return_msg($arr);
         exit;
     }
+
+
+    public function refund() {
+        // 申请退款 https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_4
+        $url = 'https://api.mch.weixin.qq.com/secapi/pay/refund';
+        $this->oCurl->setUrlPre($url);
+        $data = array();
+        $data['appid'] = $this->aConfig['appId'];
+        $data['mch_id'] = $this->aConfig['mchId'];
+        $data['transaction_id'] = '4200000521202001123672492951';
+        $data['out_refund_no'] = 'FIR' . date('YmdHis');
+        $data['total_fee'] = 20; // 订单金额
+        $data['refund_fee'] = 1; // 退款金额
+        //$data['refund_account'] = 'REFUND_SOURCE_RECHARGE_FUNDS'; // 可用余额退款
+        $this->sign($data);
+        $arr = array();
+        $arr['xml'] = array();
+        $arr['xml'][0] = array();
+        foreach ($data as $k => $v) {
+            $arr['xml'][0][$k] = array(array('#cdata-section' => $v));
+        }
+        $xml = $this->array2dom($arr, new DOMDocument())->saveXML();
+        $this->oCurl->setPost($xml);
+        $res_xml = $this->oCurl->createCurl();
+        $xml_tree = new DOMDocument();
+        $xml_tree->loadXML($res_xml);
+        $arr = $this->dom2array($xml_tree);
+        echo $this->return_msg($arr);
+        exit;
+    }
+
 
     public function dom2array($node) {
         //print $node->nodeType.'<br/>';
