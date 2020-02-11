@@ -121,6 +121,11 @@ class Sql {
                 continue;
             }
             if (is_array($val)) {
+                if ($val[0] === 'FIND_IN_SET') {
+                    $where_keys[] = ' FIND_IN_SET(:' . $key . ',' . $whereKey . ')';
+                    $this->aSql['paramData'][$key] = $val[1];
+                    continue;
+                }
                 $fields = array();
                 foreach ($val as $vk => $vv) {
                     $fields[] = ':' . $key . '_' . $vk;

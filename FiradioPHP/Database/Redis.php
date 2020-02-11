@@ -71,5 +71,10 @@ class Redis {
         return $i;
     }
 
+    public function hGetAll($keyname) {
+        $row = $this->redis->hGetAll($keyname);
+        if ($row === FALSE) $row = array();
+        return $row;
+    }
 
 }
