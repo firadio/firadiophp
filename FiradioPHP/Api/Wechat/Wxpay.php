@@ -117,10 +117,11 @@ class Wxpay {
         $data = array();
         $data['appid'] = $this->aConfig['appId'];
         $data['mch_id'] = $this->aConfig['mchId'];
-        $data['transaction_id'] = '4200000521202001123672492951';
+        //$data['transaction_id'] = '';
+        $data['out_trade_no'] = '150812118120200216150215';
         $data['out_refund_no'] = 'FIR' . date('YmdHis');
-        $data['total_fee'] = 20; // 订单金额
-        $data['refund_fee'] = 1; // 退款金额
+        $data['total_fee'] = 300; // 订单金额
+        $data['refund_fee'] = 300; // 退款金额
         //$data['refund_account'] = 'REFUND_SOURCE_RECHARGE_FUNDS'; // 可用余额退款
         $this->sign($data);
         $arr = array();
