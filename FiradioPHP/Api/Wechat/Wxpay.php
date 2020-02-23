@@ -117,8 +117,8 @@ class Wxpay {
         $data = array();
         $data['appid'] = $this->aConfig['appId'];
         $data['mch_id'] = $this->aConfig['mchId'];
-        //$data['transaction_id'] = '';
-        $data['out_trade_no'] = '150812118120200216150215';
+        //$data['transaction_id'] = '4200000510202002059720570566';
+        $data['out_trade_no'] = '150812118120200215215532';
         $data['out_refund_no'] = 'FIR' . date('YmdHis');
         $data['total_fee'] = 300; // 订单金额
         $data['refund_fee'] = 300; // 退款金额
