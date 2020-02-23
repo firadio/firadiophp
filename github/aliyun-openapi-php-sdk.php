@@ -12,8 +12,12 @@ $client = new DefaultAcsClient($iClientProfile);
 if (0) {
     $request = new Ecs\DescribeRegionsRequest();
     $request->setMethod("GET");
+    $response = $client->getAcsResponse($request);
 }
-if (0) {
+$aTemp = array();
+//$aTemp['InstanceId'] = 'i-hp32es8xdl5netl63xdn';
+if (1) {
+    //$request = new Ecs\RunInstancesRequest();
     $request = new Ecs\CreateInstanceRequest();
     $request->setAction('CreateInstance');
     $request->setImageId("ubuntu_18_04_64_20G_alibase_20190624.vhd");
@@ -34,18 +38,29 @@ if (0) {
     $request->setInstanceChargeType('PostPaid'); // PrePaid(包年包月) || PostPaid(按量付费)
     $request->setSpotStrategy('SpotAsPriceGo'); // NoSpot(正常按量付费) | SpotWithPriceLimit(设置上限价格) | SpotAsPriceGo(系统自动出价)
     //$request->setSpotPriceLimit(1);
+    $response = $client->getAcsResponse($request);
+    if (isset($response->InstanceId)) {
+        $aTemp['InstanceId'] = ($response->InstanceId);
+        print_r($aTemp);
+    }
+    sleep(2);
+}
+if (isset($aTemp['InstanceId'])) {
+    // 启动实例
+    $request = new Ecs\StartInstanceRequest();
+    $request->setAction('StartInstance');
+    $request->setInstanceId($aTemp['InstanceId']);
+    //$request->InitLocalDisk('false'); // 适用于实例规格族d1、i1或者i2等包含本地盘的实例。
+    $response = $client->getAcsResponse($request);
+    print_r($response);
+    sleep(10);
 }
 if (0) {
+    // 删除实例
     $request = new Ecs\DeleteInstanceRequest();
-    $request->setAction('DeleteInstance');
-    $request->setInstanceId('i-hp3hmf0x1k9cqk2n0kdk');
-    $request->setForce('false');
+    //$request->setAction('DeleteInstance');
+    $request->setInstanceId($aTemp['InstanceId']);
+    $request->setForce(TRUE);
+    $response = $client->getAcsResponse($request);
 }
-if (1) {
-    $request = new Ecs\DeleteInstanceRequest();
-    $request->setAction('StartInstance');
-    $request->setInstanceId('i-hp33f6ma6dn5tzc7h1l0');
-    //$request->InitLocalDisk('false'); // 适用于实例规格族d1、i1或者i2等包含本地盘的实例。
-}
-$response = $client->getAcsResponse($request);
 file_put_contents('aliyun-openapi-php-sdk.json~', json_encode($response));
