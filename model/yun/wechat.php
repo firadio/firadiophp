@@ -42,7 +42,7 @@ return function($oDb2, $im_account, $content) {
     }
     $pattern = "/激活((帐|账)号)?/";
     if (preg_match($pattern, $msgkey)) {
-        $msg = '请[充值]任意金额即可开通您的Windows帐号，建议1元以上，当然1分也可以。';
+        $msg = '请[充值]任意金额即可开通您的Windows帐号，至少3元以上。';
         $msg .= "\r\n请使用[充值]指令获取微信付款二维码";
         return $msg;
     }

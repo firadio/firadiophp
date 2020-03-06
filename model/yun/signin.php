@@ -21,7 +21,7 @@ return function($oDb2, $im_type, $im_account, $username, $msgkey) {
         $msg .= "\r\n要了解详情可咨询客服微信号:" . CONFIG_ADMIN_WX;
         $this->model_error($msg);
     }
-    if (empty($row_ntuser['opened'])) {
+    if (empty($row_ntuser['activated']) && empty($row_ntuser['opened'])) {
         $msg = "您提供的Windows用户名[{$username}]\r\n尚未审核开通";
         $msg .= "\r\n要了解详情可咨询客服微信号:" . CONFIG_ADMIN_WX;
         $this->model_error($msg);
