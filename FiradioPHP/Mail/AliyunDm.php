@@ -38,6 +38,12 @@ class AliyunDm {
         return 1;
     }
 
+    private function FromAlias() {
+        if (!empty($this->config['from'])) {
+            return $this->config['from'][$this->config['username']];
+        }
+    }
+
     public function SingleSendMail($ToAddress, $Subject, $TextBody) {
         try {
             $result = AlibabaCloud::rpc()
@@ -51,6 +57,7 @@ class AliyunDm {
                 'query' => [
                     'RegionId' => "cn-hangzhou",
                     'AccountName' => $this->config['username'],
+                    'FromAlias' => $this->config['FromAlias'],
                     'AddressType' => "0",
                     'ReplyToAddress' => "false",
                     'ToAddress' => $ToAddress,
