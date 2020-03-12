@@ -114,15 +114,15 @@ class Wechat {
         }
         $url = 'https://api.weixin.qq.com/cgi-bin/token';
         $this->oCurl->setUrlPre($url);
-        //$this->oCurl->setHeader('Content-Type', 'application/x-www-form-urlencoded');
-        $post = array();
-        $post['grant_type'] = 'client_credential';
-        $post['appid'] = $this->aConfig['appId'];
-        $post['secret'] = $this->aConfig['appSecret'];
-        $jsonStr = $this->oCurl->post('', $post);
+        $get = array();
+        $get['grant_type'] = 'client_credential';
+        $get['appid'] = $this->aConfig['appId'];
+        $get['secret'] = $this->aConfig['appSecret'];
+        $this->oCurl->setParam($get);
+        $jsonStr = $this->oCurl->execCurl();
         $jsonArr = json_decode($jsonStr, TRUE);
         if (empty($jsonArr['access_token'])) {
-            print_r($jsonArr);
+            throw new \Exception('access_token()' . $jsonStr);
             return;
         }
         $this->aConfig['access_token'] = $jsonArr['access_token'];
@@ -151,6 +151,18 @@ class Wechat {
         return $jsonArr;
     }
 
+    public function menu_get() {
+        $url = 'https://api.weixin.qq.com/cgi-bin/menu/get';
+        $this->oCurl->setUrlPre($url);
+        $get = array();
+        $get['access_token'] = $this->access_token();
+        $this->oCurl->setParam($get);
+        $jsonStr = $this->oCurl->execCurl();
+        $jsonArr = json_decode($jsonStr, TRUE);
+        $jsonArr = $jsonArr['menu']['button'];
+        return $jsonArr;
+    }
+
     public function menu_create($button) {
         $data = array();
         $data['button'] = $button;
@@ -159,7 +171,10 @@ class Wechat {
         $get['access_token'] = $this->access_token();
         $url = 'https://api.weixin.qq.com/cgi-bin/menu/create';
         $this->oCurl->setUrlPre($url);
-        $jsonStr = $this->oCurl->post($get, $post);
+        $this->oCurl->setHeader('Content-Type', 'application/json');
+        $this->oCurl->setParam($get);
+        $this->oCurl->setPost($post);
+        $jsonStr = $this->oCurl->execCurl();
         $jsonArr = json_decode($jsonStr, TRUE);
         return $jsonArr;
     }

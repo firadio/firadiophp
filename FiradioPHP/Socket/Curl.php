@@ -72,6 +72,10 @@ class Curl {
         $this->_cookieFileLocation = $path;
     }
 
+    public function setParam($params) {
+        $this->_fullUrl = $this->urlAddParams($this->_urlpre, $params);
+    }
+
     public function setPost($postFields) {
         $this->_post = true;
         $this->_postFields = $postFields;
@@ -112,9 +116,13 @@ class Curl {
                 $this->setHeader('Content-Type', 'application/x-www-form-urlencoded');
             }
         }
+        $this->_fullUrl = $this->urlAddParams($this->_urlpre, $path);
+        $this->execCurl();
+    }
+
+    public function execCurl() {
         $s = curl_init();
-        $seturl = $this->urlAddParams($this->_urlpre, $path);
-        curl_setopt($s, CURLOPT_URL, $seturl);
+        curl_setopt($s, CURLOPT_URL, $this->_fullUrl);
         curl_setopt($s, CURLOPT_HTTPHEADER, $this->CURLOPT_HTTPHEADER());
         curl_setopt($s, CURLOPT_TIMEOUT, $this->_timeout);
         curl_setopt($s, CURLOPT_MAXREDIRS, $this->_maxRedirects);
