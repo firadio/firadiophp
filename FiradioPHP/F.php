@@ -221,16 +221,19 @@ class F {
         }
     }
 
+    public static function opcache_start() {
+        if (PHP_SAPI === 'cli') return;
+        if (!function_exists('opcache_compile_file')) return;
+        self::scanDirTree(__DIR__, '', function($a) {
+            if ($a[1] === '') return;
+            $path = implode(DS, $a);
+            $pathinfo = pathinfo($path);
+            if ($pathinfo['extension'] !== 'php') return;
+            opcache_compile_file($path);
+        });
+
+    }
 }
 
-if (function_exists('opcache_compile_file')) {
-    \FiradioPHP\F::scanDirTree(__DIR__, '', function($a) {
-        if ($a[1] === '') return;
-        $path = implode(DS, $a);
-        $pathinfo = pathinfo($path);
-        if ($pathinfo['extension'] !== 'php') return;
-        opcache_compile_file($path);
-    });
-}
-
+F::opcache_start();
 

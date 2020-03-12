@@ -165,12 +165,12 @@ class Curl {
             }
         }
 
-        if ($this->sslcert_file) {
+        if (!empty($this->sslcert_file)) {
             curl_setopt($s, CURLOPT_SSLCERTTYPE, 'PEM'); //sslCertType
             curl_setopt($s, CURLOPT_SSLCERT, $this->sslcert_file);
         }
 
-        if ($this->sslkey_file) {
+        if (!empty($this->sslkey_file)) {
             curl_setopt($s, CURLOPT_SSLKEYTYPE, 'PEM'); //sslKeyType
             curl_setopt($s, CURLOPT_SSLKEY, $this->sslkey_file);
         }
