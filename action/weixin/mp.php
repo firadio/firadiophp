@@ -1,6 +1,6 @@
 <?php
 
-return function($oWechat, $oDb2, $oDb6, $oRes, $echostr, $signature, $timestamp, $nonce) {
+return function($oWechat, $oDb2, $oDb6, $oRes, $echostr, $signature, $timestamp, $nonce, $sRawContent) {
     if ($signature !== $oWechat->getSignature($timestamp, $nonce)) {
         $this->error('invalid signature');
     }
@@ -9,7 +9,7 @@ return function($oWechat, $oDb2, $oDb6, $oRes, $echostr, $signature, $timestamp,
         $oRes->end($echostr);
         return;
     }
-    $oWechat->loadXML($oRes->sRawContent);
+    $oWechat->loadXML($sRawContent);
     //echo $oWechat->getRawContent();
     $Event = $oWechat->request['Event'];
     if ($Event === 'subscribe') {
