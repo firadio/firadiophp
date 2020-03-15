@@ -12,8 +12,8 @@ return function($oDb2, $im_type, $im_account, $username, $msgkey) {
         $this->model_error('请勿关闭定位功能，在【设置】里的【提供位置信息】要一直开着，距离上次采集定位已过去' . $timeout . '秒');
     }
     $where = array();
-    $where['deleted'] = NULL;
     $where['username'] = $username;
+    $where['deleted'] = NULL;
     $row_ntuser = $oDb2->sql()->table('ntuser_user')->where($where)->find();
     if (empty($row_ntuser)) {
         $msg = "您提供的Win帐号{$username}尚未添加到云平台";
@@ -22,7 +22,7 @@ return function($oDb2, $im_type, $im_account, $username, $msgkey) {
         $this->model_error($msg);
     }
     if (empty($row_ntuser['activated']) && empty($row_ntuser['opened'])) {
-        $msg = "您提供的Windows用户名[{$username}]\r\n尚未审核开通";
+        $msg = "您提供的Windows用户名[{$username}]尚未审核开通";
         $msg .= "\r\n要了解详情可咨询客服微信号:" . CONFIG_ADMIN_WX;
         $this->model_error($msg);
     }
