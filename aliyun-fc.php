@@ -44,7 +44,7 @@ function handler($request, $context): \RingCentral\Psr7\Response{
     */
     $oRes = new \FiradioPHP\Routing\Response();
     $oRes->fBeginTime = $fBeginTime; //1：执行的开始时间
-    $oRes->ipaddr = $request->getAttribute('clientIP'); //2：用户IP地址
+    $oRes->setParam('IPADDR', $request->getAttribute('clientIP')); //2：用户IP地址
     $oRes->path = $request->getAttribute('path'); //3：用户请求路径
     $aRequest = $request->getQueryParams(); //4：用户请求参数
     $sRawContent = $request->getBody()->getContents();
@@ -54,14 +54,13 @@ function handler($request, $context): \RingCentral\Psr7\Response{
         $post = array();
         parse_str($sRawContent, $post);
         if (is_array($post)) {
-            $oRes->aParam = $post;
             foreach ($post as $k => $v) {
                 $aRequest[$k] = $v;
             }
         }
     }
     $oRes->aRequest = $aRequest;
-    $result = $oRes->aResponse;
+    $result = array();
     try {
         $result = \FiradioPHP\F::$aInstances['router']->getResponse($oRes);
     } catch (Exception $ex) {
