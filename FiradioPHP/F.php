@@ -19,6 +19,10 @@ class F {
     public static $aInstances = array();
     public static $aClient = array();
 
+    public static function autoload() {
+        spl_autoload_register('\FiradioPHP\F::loadByNamespace');
+    }
+
     public static function init($configDir = '') {
         date_default_timezone_set('PRC');
         mb_internal_encoding('UTF-8');
@@ -27,6 +31,8 @@ class F {
         mb_regex_encoding('UTF-8');
         try {
             //spl_autoload_register('\FiradioPHP\F::loadByNamespace');
+            //self::loadByNamespace('FiradioPHP\\System\\Error');
+            //self::loadByNamespace('FiradioPHP\\System\\Config');
             self::$oError = new System\Error();
             self::$oConfig = new System\Config($configDir);
         } catch (Exception $ex) {
@@ -40,11 +46,13 @@ class F {
     }
 
     public static function loadByNamespace($name) {
+        if (class_exists($name)) return;
         $dir = str_replace('\\', DS, $name);
         $file = dirname(__DIR__) . DS . $dir . '.php';
-        if (is_file($file)) {
-            require $file;
+        if (!is_file($file)) {
+            throw new Exception('loadByNamespace not find: ' . $file);
         }
+        include_once $file;
     }
 
     public static function formatPath($sPath) {
