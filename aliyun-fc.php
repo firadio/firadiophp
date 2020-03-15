@@ -51,7 +51,7 @@ function handler($request, $context): \RingCentral\Psr7\Response{
     $sRawContent = $request->getBody()->getContents();
     if (!empty($sRawContent)) {
          // 5：POST提交内容
-        $oRes->sRawContent = $sRawContent;
+        $oRes->setParam('sRawContent', $sRawContent);
         $post = array();
         parse_str($sRawContent, $post);
         if (is_array($post)) {
