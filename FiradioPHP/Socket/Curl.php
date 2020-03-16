@@ -28,6 +28,7 @@ class Curl {
     public $authentication = 0;
     public $auth_name = '';
     public $auth_pass = '';
+    private $_params = array();
 
     public function useAuth($use) {
         $this->authentication = 0;
@@ -66,6 +67,7 @@ class Curl {
 
     public function setUrlPre($urlpre) {
         $this->_urlpre = $urlpre;
+        $this->_fullUrl = $this->urlAddParams($this->_urlpre, $this->_params);
     }
 
     public function setCookiFileLocation($path) {
@@ -73,7 +75,8 @@ class Curl {
     }
 
     public function setParam($params) {
-        $this->_fullUrl = $this->urlAddParams($this->_urlpre, $params);
+        $this->_params = $params;
+        $this->_fullUrl = $this->urlAddParams($this->_urlpre, $this->_params);
     }
 
     public function setPost($postFields) {
