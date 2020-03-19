@@ -45,6 +45,15 @@ class AliyunDm {
     }
 
     public function SingleSendMail($ToAddress, $Subject, $TextBody) {
+        $query = array();
+        $query['RegionId'] = "cn-hangzhou";
+        $query['AccountName'] = $this->config['username'];
+        $query['FromAlias'] = $this->config['FromAlias'];
+        $query['AddressType'] = "0";
+        $query['ReplyToAddress'] = "false";
+        $query['ToAddress'] = $ToAddress;
+        $query['Subject'] = $Subject;
+        $query['HtmlBody'] = $TextBody;
         try {
             $result = AlibabaCloud::rpc()
             ->product('Dm')
@@ -54,16 +63,7 @@ class AliyunDm {
             ->method('POST')
             ->host('dm.aliyuncs.com')
             ->options([
-                'query' => [
-                    'RegionId' => "cn-hangzhou",
-                    'AccountName' => $this->config['username'],
-                    'FromAlias' => $this->config['FromAlias'],
-                    'AddressType' => "0",
-                    'ReplyToAddress' => "false",
-                    'ToAddress' => $ToAddress,
-                    'Subject' => $Subject,
-                    'TextBody' => $TextBody,
-                ],
+                'query' => $query,
             ])
             ->request();
             //print_r($result->toArray());
