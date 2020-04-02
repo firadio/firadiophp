@@ -189,6 +189,10 @@ class Sql {
         if (!isset($this->aSql['paramData'])) {
             $this->aSql['paramData'] = array();
         }
+        $mysqlFun = array();
+        $mysqlFun['CURRENT_TIMESTAMP()'] = 'CURRENT_TIMESTAMP()';
+        $mysqlFun['CURRENT_DATE()'] = 'CURRENT_DATE()';
+        $mysqlFun['FLOOR(UNIX_TIMESTAMP(NOW())/3600)'] = 'FLOOR(UNIX_TIMESTAMP(NOW())/3600)';
         foreach ($data as $key => $val) {
             if ($this->aConfig['check_field_name'] && !preg_match('/^[a-z][0-9a-z_]{1,19}$/i', $key)) {
                 //必须字母开头，可以包含字母和数字还有下划线
@@ -198,8 +202,8 @@ class Sql {
                 $this->aSql['paramField'][$key] = 'NULL';
                 continue;
             }
-            if ($val === 'CURRENT_TIMESTAMP()') {
-                $this->aSql['paramField'][$key] = 'CURRENT_TIMESTAMP()';
+            if (isset($mysqlFun[$val])) {
+                $this->aSql['paramField'][$key] = $mysqlFun[$val];
                 continue;
             }
             $paramName = 'crc32_' . crc32($key);
