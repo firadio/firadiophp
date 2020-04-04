@@ -22,16 +22,122 @@ class AlibabaCloud {
         }
     }
 
+    /*
+     * 常用功能
+    */
+
     public function setDefaultClient($accessKeyId, $accessSecret, $regionId) {
         \AlibabaCloud\Client\AlibabaCloud::accessKeyClient($accessKeyId, $accessSecret)->regionId($regionId)->asDefaultClient();
     }
 
-    public function EcsDescribeInstances($regionId, $PageNumber = 1) {
-        // 调用DescribeInstances查询一台或多台ECS实例的详细信息。
-        $request = Ecs::v20140526()->DescribeInstances();
-        //$request->withRegionId($regionId);
-        $request->withPageNumber($PageNumber);
+
+    /*
+     * 开始ECS相关功能
+    */
+
+    public function EcsCreateInstance($rowNthostOperate) {
+        print_r($rowNthostOperate);
+        $request = Ecs::v20140526()->CreateInstance();
+        $request->withImageId($rowNthostOperate['vps_imageid']);
+        $request->withInstanceType($rowNthostOperate['ecs_instancetype']); // 2H4G
+        $request->withVSwitchId($rowNthostOperate['VSwitchId']);
+        if (!empty($rowNthostOperate['SecurityGroupId'])) {
+            $request->withSecurityGroupId($rowNthostOperate['SecurityGroupId']);
+        }
+        //$request->withSecurityGroupId(getSecurityGroupId());
+        $InstanceName = 'hvu-' . $rowNthostOperate['hvu_id'] . '-' . $rowNthostOperate['username'];
+        $request->withInstanceName($InstanceName);
+        $request->withInternetChargeType('PayByTraffic'); // PayByTraffic || PayByBandwidth
+        //$request->withAutoRenew('true');
+        //$request->withAutoRenewPeriod('1');
+        $request->withInternetMaxBandwidthOut($rowNthostOperate['bandwidth_upload_mbps']); // 上传速度
+        //$request->withInternetMaxBandwidthIn(100); // 下载速度
+        //$request->withHostName('');
+        $request->withPassword($rowNthostOperate['password']); // 长度为8至30个字符，必须同时包含大小写英文字母、数字和特殊符号中的三类字符。特殊符号可以是：()`~!@#$%^&*-_+=|{}[]:;'<>,.?/
+        //$request->withPasswordInherit('true'); // 是否使用镜像预设的密码。使用该参数时，Password参数必须为空，同时您需要确保使用的镜像已经设置了密码。
+        $request->withZoneId($rowNthostOperate['zoneId']);
+        $request->withSystemDiskSize($rowNthostOperate['limit_storagegb']); // 系统盘大小，单位为GiB。取值范围：20~500
+        $request->withSystemDiskCategory('cloud_efficiency'); // cloud_efficiency(高效云盘)
+        $request->withInstanceChargeType('PostPaid'); // PrePaid(包年包月) || PostPaid(按量付费)
+        $request->withSpotStrategy('SpotAsPriceGo'); // NoSpot(正常按量付费) | SpotWithPriceLimit(设置上限价格) | SpotAsPriceGo(系统自动出价)
+        //$request->withSpotPriceLimit(1);
+        return $request->request();
+    }
+
+    public function EcsAllocatePublicIpAddress($InstanceId) {
+        $request = Ecs::v20140526()->AllocatePublicIpAddress();
+        $request->withInstanceId($InstanceId);
+        //$request->withIpAddress('1.1.1.1');
+        //$request->withVlanId('100');
+        return $request->request();
+    }
+
+    public function EcsStartInstance($InstanceId) {
+        // 启动实例
+        $request = Ecs::v20140526()->StartInstance();
+        $request->withInstanceId($InstanceId);
+        //$request->withInitLocalDisk('false'); // 适用于实例规格族d1、i1或者i2等包含本地盘的实例。
+        return $request->request();
+    }
+
+    public function EcsDeleteInstance($InstanceId) {
+        // 删除实例
+        $request = Ecs::v20140526()->DeleteInstance();
+        $request->withInstanceId($InstanceId);
+        $request->withForce(TRUE);
+        return $request->request();
+    }
+
+    public function EcsRebootInstance($InstanceId, $ForceStop = TRUE) {
+        // 重置实例密码
+        $request = Ecs::v20140526()->RebootInstance();
+        $request->withInstanceId($InstanceId);
+        $request->withForceStop($ForceStop);
+        return $request->request();
+    }
+
+    public function EcsStopInstance($InstanceId, $ForceStop = FALSE) {
+        // 关机
+        $request = Ecs::v20140526()->StopInstance();
+        $request->withInstanceId($InstanceId);
+        // StopCharging：停止计费 | KeepCharging：继续计费。
+        $request->withStoppedMode('StopCharging');
+        $request->withForceStop($ForceStop);
+        return $request->request();
+    }
+
+    public function EcsCreateImageByInstanceId($InstanceId, $ImageName) {
+        // 创建镜像
+        $request = Ecs::v20140526()->CreateImage();
+        $request->withInstanceId($InstanceId);
+        $request->withImageName($ImageName);
+        return $request->request();
+    }
+
+    public function EcsDeleteImage($ImageId, $Force = TRUE) {
+        // 删除镜像
+        $request = Ecs::v20140526()->DeleteImage();
+        $request->withImageId($ImageId);
+        $request->withForce($Force);
+        return $request->request();
+    }
+
+    public function EcsDescribeImagesByImageId($ImageId) {
+        // 查询镜像
+        $request = Ecs::v20140526()->DescribeImages();
+        $request->withImageId($ImageId);
         $ret = $request->request();
+        $rows = $ret['Images']['Image'];
+        return isset($rows[0]) ? $rows[0] : array();
+    }
+
+    public function EcsModifyInstancePassword($InstanceId, $Password) {
+        // 重置实例密码
+        $request = Ecs::v20140526()->ModifyInstanceAttribute();
+        $request->withInstanceId($InstanceId);
+        $request->withPassword($Password);
+        $ret = $request->request();
+        EcsRebootInstance($InstanceId, FALSE);
         return $ret;
     }
 
@@ -43,6 +149,21 @@ class AlibabaCloud {
         return $ret;
     }
 
+    public function EcsDeleteSnapshot($SnapshotId) {
+        // 删除快照
+        $request = Ecs::v20140526()->DeleteSnapshot();
+        $request->withSnapshotId($SnapshotId);
+        $ret = $request->request();
+        return $ret;
+    }
+
+    public function getSecurityGroupId() {
+        $request = Ecs::v20140526()->DescribeSecurityGroups();
+        $ret = $request->request();
+        $sgs = $ret['SecurityGroups']['SecurityGroup'];
+        return $sgs[0]['SecurityGroupId'];
+    }
+
     public function getEipInstanceId($InstanceId) {
         // 获取当前EcsInstanceId的EipInstanceId
         $request = Ecs::v20140526()->DescribeInstances();
@@ -52,13 +173,34 @@ class AlibabaCloud {
         return $ret['Instances']['Instance'][0]['EipAddress']['AllocationId'];
     }
 
-    public function EcsDeleteInstance($InstanceId) {
-        // 删除实例
-        $request = Ecs::v20140526()->DeleteInstance();
+    public function EcsDescribeInstances($regionId, $PageNumber = 1) {
+        // 调用DescribeInstances查询一台或多台ECS实例的详细信息。
+        $request = Ecs::v20140526()->DescribeInstances();
+        //$request->withRegionId($regionId);
+        $request->withPageNumber($PageNumber);
+        $ret = $request->request();
+        return $ret;
+    }
+
+    public function EcsModifyInstanceVncPasswd($InstanceId, $VncPassword) {
+        $request = Ecs::v20140526()->ModifyInstanceVncPasswd();
         $request->withInstanceId($InstanceId);
-        $request->withForce(TRUE);
+        $request->withVncPassword($VncPassword);
         return $request->request();
     }
+
+    public function EcsDescribeInstanceVncUrl($InstanceId) {
+        $request = Ecs::v20140526()->DescribeInstanceVncUrl();
+        $request->withInstanceId($InstanceId);
+        return $request->request();
+    }
+
+
+
+
+    /*
+     * 开始VPC相关功能
+    */
 
     public function VpcAddCommonBandwidthPackageIp($IpInstanceId, $BandwidthPackageId) {
         // 调用AddCommonBandwidthPackageIp接口添加EIP到共享带宽中。
@@ -66,6 +208,47 @@ class AlibabaCloud {
         $request->withBandwidthPackageId($BandwidthPackageId);
         $request->withIpInstanceId($IpInstanceId);
         $ret = $request->request();
+        return $ret;
+    }
+
+    public function VpcReleaseEipAddress($IpInstanceId) {
+        // 调用ReleaseEipAddress接口释放指定的弹性公网IP（EIP）。
+        $request = Vpc::v20160428()->ReleaseEipAddress();
+        $request->withAllocationId($IpInstanceId);
+        $ret = $request->request();
+        return $ret;
+    }
+
+    public function VpcRemoveCommonBandwidthPackageIp($IpInstanceId, $BandwidthPackageId) {
+        // 调用RemoveCommonBandwidthPackageIp接口移除共享带宽实例中的EIP。
+        $request = Vpc::v20160428()->RemoveCommonBandwidthPackageIp();
+        $request->withBandwidthPackageId($BandwidthPackageId);
+        $request->withIpInstanceId($IpInstanceId);
+        $ret = $request->request();
+        return $ret;
+    }
+
+    public function VpcUnassociateEipAddress($IpInstanceId) {
+        $request = Vpc::v20160428()->UnassociateEipAddress();
+        $request->withAllocationId($IpInstanceId);
+        $ret = $request->request();
+    }
+
+    public function VpcAllocateEipAddress() {
+        $request = Vpc::v20160428()->AllocateEipAddress();
+        $request->withBandwidth(1);
+        $request->withInstanceChargeType('PostPaid'); // PostPaid（默认值）：按量计费。
+        $request->withInternetChargeType('PayByTraffic'); // PayByTraffic：按流量计费。
+        $ret = $request->request();
+        return $ret;
+    }
+
+    public function VpcAssociateEipAddress($AllocationId, $InstanceId) {
+        $request = Vpc::v20160428()->AssociateEipAddress();
+        $request->withAllocationId($AllocationId);
+        $request->withInstanceId($InstanceId);
+        $ret = $request->request();
+        return $ret;
     }
 
     public function VpcModifyCommonBandwidthPackageIpBandwidth($EipId, $Bandwidth, $BandwidthPackageId) {
