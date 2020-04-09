@@ -1,6 +1,6 @@
 <?php
 
-return function($oWechat, $oDb2, $oDb6, $oRes, $echostr, $signature, $timestamp, $nonce, $sRawContent) {
+return function($oWechat, $oDb2, $oRes, $echostr, $signature, $timestamp, $nonce, $sRawContent) {
     if ($signature !== $oWechat->getSignature($timestamp, $nonce)) {
         $this->error('invalid signature');
     }

@@ -5,26 +5,28 @@ return function($oDb2, $im_type, $im_account, $username, $msgkey) {
     $where['WxUserName'] = $im_account;
     $row_location = $oDb2->sql()->table('location_trace')->where($where)->desc('id')->find();
     if (empty($row_location)) {
-        $this->model_error('请开启定位功能，方法是点击右上角的图标进去，选择【设置】，打开【提供位置信息】');
+        $msg = '请开启定位功能，方法是点击右上角的图标进去，选择【设置】，打开【提供位置信息】';
+        return($msg);
     }
     $timeout = time() - strtotime($row_location['created']);
     if ($timeout > 1000) {
-        $this->model_error('请勿关闭定位功能，在【设置】里的【提供位置信息】要一直开着，距离上次采集定位已过去' . $timeout . '秒');
+        $msg = '请勿关闭定位功能，在【设置】里的【提供位置信息】要一直开着，距离上次采集定位已过去' . $timeout . '秒';
+        return($msg);
     }
     $where = array();
     $where['username'] = $username;
     $where['deleted'] = NULL;
     $row_ntuser = $oDb2->sql()->table('ntuser_user')->where($where)->find();
     if (empty($row_ntuser)) {
-        $msg = "您提供的Win帐号{$username}尚未添加到云平台";
-        $msg .= "\r\n请到飞儿云平台(yun.firadio.net)添加Win帐号";
+        $msg = "您提供的远程帐号{$username}尚未添加到云平台";
+        $msg .= "\r\n请到飞儿云平台(yun.firadio.net)添加远程帐号";
         $msg .= "\r\n要了解详情可咨询客服微信号:" . CONFIG_ADMIN_WX;
-        $this->model_error($msg);
+        return($msg);
     }
     if (empty($row_ntuser['activated']) && empty($row_ntuser['opened'])) {
-        $msg = "您提供的Windows用户名[{$username}]尚未审核开通";
+        $msg = "您提供的远程帐号[{$username}]尚未充值激活";
         $msg .= "\r\n要了解详情可咨询客服微信号:" . CONFIG_ADMIN_WX;
-        $this->model_error($msg);
+        return($msg);
     }
     $user_id = $row_ntuser['id'];
     $username = $row_ntuser['username'];
