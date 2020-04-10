@@ -238,7 +238,7 @@ class Router {
      * 执行action行为器
      * @return boolean
      */
-    private function execAction($oRes) {
+    public function execAction($oRes) {
         if ($oRes->path === '' || $oRes->path === '/') {
             return $this->load_php_file($this->config['action_dir'] . '/index.php', $oRes);
         }
