@@ -137,7 +137,7 @@ class AlibabaCloud {
         $request->withInstanceId($InstanceId);
         $request->withPassword($Password);
         $ret = $request->request();
-        EcsRebootInstance($InstanceId, FALSE);
+        $this->EcsRebootInstance($InstanceId, FALSE);
         return $ret;
     }
 
@@ -193,6 +193,24 @@ class AlibabaCloud {
         $request = Ecs::v20140526()->DescribeInstanceVncUrl();
         $request->withInstanceId($InstanceId);
         return $request->request();
+    }
+
+    public function EcsDescribeDisks($PageNumber = 1) {
+        // 查询一块或多块您已经创建的块存储（包括云盘以及本地盘）。
+        $request = Ecs::v20140526()->DescribeDisks();
+        $request->withPageNumber($PageNumber);
+        $ret = $request->request();
+        return $ret;
+    }
+
+    public function EcsModifyDiskAttribute($DiskId, $DeleteWithInstance = FALSE, $DeleteAutoSnapshot = FALSE) {
+        // 修改一个块存储的名称、描述、是否随实例释放等属性。
+        $request = Ecs::v20140526()->ModifyDiskAttribute();
+        $request->withDiskId($DiskId);
+        $request->withDeleteWithInstance($DeleteWithInstance);
+        $request->withDeleteAutoSnapshot($DeleteAutoSnapshot);
+        $ret = $request->request();
+        return $ret;
     }
 
 
@@ -289,6 +307,13 @@ class AlibabaCloud {
         $request = Vpc::v20160428()->DescribeCommonBandwidthPackages();
         $ret = $request->request();
         return $ret['CommonBandwidthPackages']['CommonBandwidthPackage'];
+    }
+
+    public function VpcDescribeEipAddresses($PageNumber = 1) {
+        $request = Vpc::v20160428()->DescribeEipAddresses();
+        $request->withPageNumber($PageNumber);
+        $ret = $request->request();
+        return $ret;
     }
 
 
