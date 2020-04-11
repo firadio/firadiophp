@@ -53,8 +53,13 @@ class AlibabaCloud {
         $request->withInternetMaxBandwidthOut($rowNthostOperate['bandwidth_upload_mbps']); // 上传速度
         //$request->withInternetMaxBandwidthIn(100); // 下载速度
         //$request->withHostName('');
-        $request->withPassword($rowNthostOperate['password']); // 长度为8至30个字符，必须同时包含大小写英文字母、数字和特殊符号中的三类字符。特殊符号可以是：()`~!@#$%^&*-_+=|{}[]:;'<>,.?/
-        //$request->withPasswordInherit('true'); // 是否使用镜像预设的密码。使用该参数时，Password参数必须为空，同时您需要确保使用的镜像已经设置了密码。
+        if (empty($rowNthostOperate['password'])) {
+            // 是否使用镜像预设的密码。使用该参数时，Password参数必须为空，同时您需要确保使用的镜像已经设置了密码。
+            $request->withPasswordInherit('true');
+        } else {
+             // 长度为8至30个字符，必须同时包含大小写英文字母、数字和特殊符号中的三类字符。特殊符号可以是：()`~!@#$%^&*-_+=|{}[]:;'<>,.?/
+            $request->withPassword($rowNthostOperate['password']);
+        }
         $request->withZoneId($rowNthostOperate['zoneId']);
         $request->withSystemDiskSize($rowNthostOperate['limit_storagegb']); // 系统盘大小，单位为GiB。取值范围：20~500
         $request->withSystemDiskCategory('cloud_efficiency'); // cloud_efficiency(高效云盘)
