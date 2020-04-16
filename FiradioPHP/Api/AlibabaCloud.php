@@ -69,6 +69,19 @@ class AlibabaCloud {
         return $request->request();
     }
 
+
+    public function EcsReplaceSystemDisk($rowNthostOperate) {
+        // 更换系统盘
+        print_r($rowNthostOperate);
+        $request = Ecs::v20140526()->ReplaceSystemDisk();
+        $request->withInstanceId($rowNthostOperate['vps_instanceid']);
+        $request->withImageId($rowNthostOperate['vps_imageid']);
+        $request->withSystemDiskSize($rowNthostOperate['limit_storagegb']); // 系统盘大小，单位为GiB。取值范围：20~500
+        $request->withPassword($rowNthostOperate['password']);
+        $request->withSecurityEnhancementStrategy('Deactive'); // 更换系统盘后，是否免费使用云安全中心服务。
+        return $request->request();
+    }
+
     public function EcsAllocatePublicIpAddress($InstanceId) {
         $request = Ecs::v20140526()->AllocatePublicIpAddress();
         $request->withInstanceId($InstanceId);
