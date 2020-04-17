@@ -32,6 +32,14 @@ class Wxpay {
         $data['sign'] = strtoupper(md5(implode('&', $arr)));
     }
 
+    private function return_code($arr) {
+        $code = $arr['xml'][0]['return_code'][0]['#cdata-section'];
+        if (isset($arr['xml'][0]['err_code'])) {
+            $code = $arr['xml'][0]['err_code'][0]['#cdata-section'];
+        }
+        return $code;
+    }
+
     private function return_msg($arr) {
         $msg = $arr['xml'][0]['return_msg'][0]['#cdata-section'];
         if (isset($arr['xml'][0]['err_code_des'])) {
@@ -110,7 +118,7 @@ class Wxpay {
     }
 
 
-    public function refund() {
+    public function refund($out_refund_no, $out_trade_no, $total_fee, $refund_fee) {
         // 申请退款 https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_4
         $url = 'https://api.mch.weixin.qq.com/secapi/pay/refund';
         $this->oCurl->setUrlPre($url);
@@ -118,10 +126,10 @@ class Wxpay {
         $data['appid'] = $this->aConfig['appId'];
         $data['mch_id'] = $this->aConfig['mchId'];
         //$data['transaction_id'] = '4200000510202002059720570566';
-        $data['out_trade_no'] = '150812118120200215215532';
-        $data['out_refund_no'] = 'FIR' . date('YmdHis');
-        $data['total_fee'] = 300; // 订单金额
-        $data['refund_fee'] = 300; // 退款金额
+        $data['out_trade_no'] = $out_trade_no;
+        $data['out_refund_no'] = $out_refund_no;
+        $data['total_fee'] = $total_fee * 100; // 订单金额
+        $data['refund_fee'] = $refund_fee * 100; // 退款金额
         //$data['refund_account'] = 'REFUND_SOURCE_RECHARGE_FUNDS'; // 可用余额退款
         $this->sign($data);
         $arr = array();
@@ -132,12 +140,14 @@ class Wxpay {
         }
         $xml = $this->array2dom($arr, new DOMDocument())->saveXML();
         $this->oCurl->setPost($xml);
-        $res_xml = $this->oCurl->createCurl();
+        $res_xml = $this->oCurl->execCurl();
         $xml_tree = new DOMDocument();
         $xml_tree->loadXML($res_xml);
         $arr = $this->dom2array($xml_tree);
-        echo $this->return_msg($arr);
-        exit;
+        $ret = array();
+        $ret['code'] = $this->return_code($arr);
+        $ret['msg'] = $this->return_msg($arr);
+        return $ret;
     }
 
 
