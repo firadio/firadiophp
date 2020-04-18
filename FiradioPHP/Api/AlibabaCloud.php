@@ -221,12 +221,25 @@ class AlibabaCloud {
         return $ret;
     }
 
-    public function EcsModifyDiskAttribute($DiskId, $DeleteWithInstance = FALSE, $DeleteAutoSnapshot = FALSE) {
+    public function getDiskByEcsInstanceId($InstanceId, $DiskType = 'system') {
+        // 查询一块或多块您已经创建的块存储（包括云盘以及本地盘）。
+        $request = Ecs::v20140526()->DescribeDisks();
+        $request->withInstanceId($InstanceId);
+        $request->withDiskType($DiskType);
+        $ret = $request->request();
+        if (empty($ret['Disks'])) return FALSE;
+        if (empty($ret['Disks']['Disk'])) return FALSE;
+        if (empty($ret['Disks']['Disk'][0])) return FALSE;
+        return $ret['Disks']['Disk'][0];
+    }
+
+    public function EcsModifyDiskAttribute($DiskId, $DeleteWithInstance = FALSE, $DeleteAutoSnapshot = FALSE, $DiskName = NULL) {
         // 修改一个块存储的名称、描述、是否随实例释放等属性。
         $request = Ecs::v20140526()->ModifyDiskAttribute();
         $request->withDiskId($DiskId);
         $request->withDeleteWithInstance($DeleteWithInstance);
         $request->withDeleteAutoSnapshot($DeleteAutoSnapshot);
+        if ($DiskName !== NULL) $request->withDiskName($DiskName);
         $ret = $request->request();
         return $ret;
     }
