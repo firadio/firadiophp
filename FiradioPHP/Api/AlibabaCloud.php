@@ -39,6 +39,7 @@ class AlibabaCloud {
         print_r($rowNthostOperate);
         $request = Ecs::v20140526()->CreateInstance();
         $request->withImageId($rowNthostOperate['vps_imageid']);
+        $request->withSecurityEnhancementStrategy('Deactive'); // 是否免费使用云安全中心服务。
         $request->withInstanceType($rowNthostOperate['ecs_instancetype']); // 2H4G
         $request->withVSwitchId($rowNthostOperate['VSwitchId']);
         if (!empty($rowNthostOperate['SecurityGroupId'])) {
