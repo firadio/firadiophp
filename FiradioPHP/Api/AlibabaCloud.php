@@ -335,10 +335,17 @@ class AlibabaCloud {
         return 0;
     }
 
-    public function VpcDescribeCommonBandwidthPackages() {
+    public function VpcDescribeCommonBandwidthPackage() {
         $request = Vpc::v20160428()->DescribeCommonBandwidthPackages();
         $ret = $request->request();
         return $ret['CommonBandwidthPackages']['CommonBandwidthPackage'];
+    }
+
+    public function VpcDescribeCommonBandwidthPackages($PageNumber = 1) {
+        $request = Vpc::v20160428()->DescribeCommonBandwidthPackages();
+        $request->withPageNumber($PageNumber);
+        $ret = $request->request();
+        return $ret;
     }
 
     public function VpcDescribeEipAddresses($PageNumber = 1) {
