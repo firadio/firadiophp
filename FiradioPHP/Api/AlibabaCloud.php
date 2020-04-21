@@ -329,6 +329,7 @@ class AlibabaCloud {
         krsort($d2);
         foreach ($d2 as $k) {
             $row = $d1[$k];
+            if ($row['EipTX'] == 0) continue;
             $row['EipTXPS'] = $row['EipTX'] / $period;
             return($row);
         }
