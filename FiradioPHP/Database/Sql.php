@@ -436,7 +436,8 @@ class Sql {
             $this->data($data);
         }
         $sql = $this->buildSqlInsertWhenNotExists();
-        $this->getSth($sql);
+        $sth = $this->getSth($sql);
+        if ($sth->rowCount() === 0) return FALSE;
         return $this->link->lastInsertId();
     }
 
@@ -451,6 +452,15 @@ class Sql {
 
     public function addwne($data = NULL) {
         return $this->insertWhenNotExists($data);
+    }
+
+    public function addwnesave($data = NULL) {
+        $lastInsertId = $this->insertWhenNotExists($data);
+        if ($lastInsertId === FALSE) {
+            $ret = $this->save($data);
+            return ($ret > 0);
+        }
+        return $lastInsertId;
     }
 
     public function save($data = NULL) {
