@@ -147,6 +147,7 @@ class Verify {
         $code = mb_str_split($code, 1, 'UTF-8');
         $this->createImage($code);
         imagepng($this->_image, $filename);
+        imagedestroy($this->_image);
     }
 
     public function createImage($code) {
@@ -173,10 +174,9 @@ class Verify {
                 }
             }
             $dir->close();
-            $this->fontttf = $ttfs[array_rand($ttfs)];
+            $this->fontttf = $ttfPath . $ttfs[array_rand($ttfs)];
         } 
-        $this->fontttf = $ttfPath . $this->fontttf;
-        
+
         if($this->useImgBg) {
             $this->_background();
         }
