@@ -120,7 +120,7 @@ class Curl {
             }
         }
         $this->_fullUrl = $this->urlAddParams($this->_urlpre, $path);
-        $this->execCurl();
+        return $this->execCurl();
     }
 
     public function execCurl() {
