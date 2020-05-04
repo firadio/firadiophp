@@ -143,7 +143,7 @@ class Verify {
         return $code;
     }
 
-    public savePng($code, $filename) {
+    public function savePng($code, $filename) {
         $code = mb_str_split($code, 1, 'UTF-8');
         $this->createImage($code);
         imagepng($this->_image, $filename);
