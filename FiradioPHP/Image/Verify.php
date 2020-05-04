@@ -138,10 +138,15 @@ class Verify {
         } else {
             for ($i = 0; $i<$this->length; $i++) {
                 $code[$i] = $this->codeSet[mt_rand(0, strlen($this->codeSet)-1)];
-                $codeNX  += mt_rand($this->fontSize*1.2, $this->fontSize*1.6);
             }
         }
         return $code;
+    }
+
+    public savePng($code, $filename) {
+        $code = mb_str_split($code, 1, 'UTF-8');
+        $this->createImage($code);
+        imagepng($this->_image, $filename);
     }
 
     public function createImage($code) {
