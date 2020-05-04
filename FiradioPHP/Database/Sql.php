@@ -463,6 +463,19 @@ class Sql {
         return $lastInsertId;
     }
 
+    public function addwnefindidsave($data = NULL) {
+        $lastInsertId = $this->insertWhenNotExists($data);
+        if ($lastInsertId === FALSE) {
+            $row = $this->find();
+            if (isset($row['id'])) {
+                $this->where(array('id' => $row['id']))->save($data);
+                return $row['id'];
+            }
+            return FALSE;
+        }
+        return $lastInsertId;
+    }
+
     public function save($data = NULL) {
         $sth = $this->getSth($this->buildSqlUpdate($data));
         return $sth->rowCount();

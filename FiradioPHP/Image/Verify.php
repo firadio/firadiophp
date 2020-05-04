@@ -111,6 +111,40 @@ class Verify {
      * @return void
      */
     public function entry($id = '') {
+        $code = $this->getCode();
+        $this->createImage($code);
+        // 保存验证码
+        $key        =   $this->authcode($this->seKey);
+        $code       =   $this->authcode(strtoupper(implode('', $code)));
+        $secode     =   array();
+        $secode['verify_code'] = $code; // 把校验码保存到session
+        $secode['verify_time'] = NOW_TIME;  // 验证码创建时间
+        session($key.$id, $secode);
+        header('Cache-Control: private, max-age=0, no-store, no-cache, must-revalidate');
+        header('Cache-Control: post-check=0, pre-check=0', false);		
+        header('Pragma: no-cache');
+        header("content-type: image/png");
+        // 输出图像
+        imagepng($this->_image);
+        imagedestroy($this->_image);
+    }
+
+    public function getCode() {
+        $code = array(); // 验证码
+        if($this->useZh){ // 中文验证码
+            for ($i = 0; $i<$this->length; $i++) {
+                $code[$i] = iconv_substr($this->zhSet,floor(mt_rand(0,mb_strlen($this->zhSet,'utf-8')-1)),1,'utf-8');
+            }
+        } else {
+            for ($i = 0; $i<$this->length; $i++) {
+                $code[$i] = $this->codeSet[mt_rand(0, strlen($this->codeSet)-1)];
+                $codeNX  += mt_rand($this->fontSize*1.2, $this->fontSize*1.6);
+            }
+        }
+        return $code;
+    }
+
+    public function createImage($code) {
         // 图片宽(px)
         $this->imageW || $this->imageW = $this->length*$this->fontSize*1.5 + $this->length*$this->fontSize/2; 
         // 图片高(px)
@@ -152,37 +186,18 @@ class Verify {
         }
         
         // 绘验证码
-        $code = array(); // 验证码
         $codeNX = 0; // 验证码第N个字符的左边距
         if($this->useZh){ // 中文验证码
             for ($i = 0; $i<$this->length; $i++) {
-                $code[$i] = iconv_substr($this->zhSet,floor(mt_rand(0,mb_strlen($this->zhSet,'utf-8')-1)),1,'utf-8');
                 imagettftext($this->_image, $this->fontSize, mt_rand(-40, 40), $this->fontSize*($i+1)*1.5, $this->fontSize + mt_rand(10, 20), $this->_color, $this->fontttf, $code[$i]);
             }
         }else{
             for ($i = 0; $i<$this->length; $i++) {
-                $code[$i] = $this->codeSet[mt_rand(0, strlen($this->codeSet)-1)];
                 $codeNX  += mt_rand($this->fontSize*1.2, $this->fontSize*1.6);
                 imagettftext($this->_image, $this->fontSize, mt_rand(-40, 40), $codeNX, $this->fontSize*1.6, $this->_color, $this->fontttf, $code[$i]);
             }
         }
-       
-        // 保存验证码
-        $key        =   $this->authcode($this->seKey);
-        $code       =   $this->authcode(strtoupper(implode('', $code)));
-        $secode     =   array();
-        $secode['verify_code'] = $code; // 把校验码保存到session
-        $secode['verify_time'] = NOW_TIME;  // 验证码创建时间
-        session($key.$id, $secode);
-                        
-        header('Cache-Control: private, max-age=0, no-store, no-cache, must-revalidate');
-        header('Cache-Control: post-check=0, pre-check=0', false);		
-        header('Pragma: no-cache');
-        header("content-type: image/png");
 
-        // 输出图像
-        imagepng($this->_image);
-        imagedestroy($this->_image);
     }
 
     /** 
