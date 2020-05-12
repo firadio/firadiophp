@@ -257,7 +257,7 @@ class Router {
         return true;
     }
 
-    private function error($message, $param2 = '提示') {
+    public function error($message, $param2 = '提示') {
         $exCode = -2;
         if (is_numeric($param2)) {
             $exCode = $param2;
