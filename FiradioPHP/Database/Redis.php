@@ -64,6 +64,14 @@ class Redis {
         return $this->redis->HSET($name, $key, $val);
     }
 
+    public function HGET($name, $key) {
+        return $this->redis->HGET($name, $key);
+    }
+
+    public function HDEL($name, $key) {
+        return $this->redis->HDEL($name, $key);
+    }
+
     public function Keys($keyname) {
         $keys = $this->redis->KEYS($keyname);
         return $keys;
