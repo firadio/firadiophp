@@ -146,7 +146,14 @@ class Config {
         $oInstance = array_pop($aClassInfo['free']);
         if ($oInstance === NULL) {
             //F::debug('new ' . $sName);
-            $oInstance = new $aClassInfo['class']($aClassInfo['config']);
+            if (0) {
+                
+            } else if (!empty($aClassInfo['args'])) {
+                $oRef = new \ReflectionClass($aClassInfo['class']);
+                $oInstance = $oRef->newInstanceArgs($aClassInfo['args']);
+            } else {
+                $oInstance = new $aClassInfo['class']($aClassInfo);
+            }
         }
         if (preg_match('/^db[0-9]+$/', $sName) || preg_match('/^db_[a-z]+$/', $sName)
         ) {
@@ -186,11 +193,8 @@ class Config {
             $class = $aConfig['class'];
             F::$aInstances[$sName] = new $class($aConfig);
         }
-        $aClassInfo = array();
-        $aClassInfo['class'] = $aConfig['class'];
-        $aClassInfo['config'] = $aConfig;
-        $aClassInfo['free'] = array();
-        $this->aClass[$sName] = $aClassInfo;
+        $aConfig['free'] = array();
+        $this->aClass[$sName] = $aConfig;
     }
 
 }

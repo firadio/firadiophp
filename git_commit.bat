@@ -5,7 +5,7 @@ SET path=%path%;E:\data\program\PortableGit\bin\
 SET path=%path%;C:\data\program\PortableGit\bin\
 git config --global user.email "xiangxisheng@gmail.com"
 git config --global user.name "Xiang/Xisheng"
-git config --global core.safecrlf true
+git config --global core.safecrlf warn
 git config --global core.autocrlf true
 git remote rm origin
 git remote add origin https://gitee.com/firadio/firadiophp.git
