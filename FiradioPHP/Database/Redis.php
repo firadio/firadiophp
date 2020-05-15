@@ -45,7 +45,11 @@ class Redis {
         return $this->redis->sRandMember($name, $count);
     }
 
-    public function set($name, $value) {
+    public function set($name, $value, $param3 = NULL) {
+        // 参考 https://github.com/phpredis/phpredis/#set
+        if ($param3 !== NULL) {
+            return $this->redis->set($name, $value, $param3);
+        }
         return $this->redis->set($name, $value);
     }
 
