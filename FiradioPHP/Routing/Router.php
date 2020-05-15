@@ -242,6 +242,12 @@ class Router {
         if ($oRes->path === '' || $oRes->path === '/') {
             return $this->load_php_file($this->config['action_dir'] . '/index.php', $oRes);
         }
+        if (is_file($this->config['action_dir'] . '.php')) {
+            $ret = $this->load_php_file($this->config['action_dir'] . '.php', $oRes);
+            if ($ret === false) {
+                return false;
+            }
+        }
         $aPath = explode('/', $oRes->path);
         $sPath = '';
         foreach ($aPath as $dir) {
