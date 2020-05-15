@@ -17,7 +17,10 @@ class Redis {
 
     private function connect() {
         $this->redis = new \Redis();
-        return $this->redis->connect($this->config['host'], $this->config['port']);
+        $this->redis->connect($this->config['host'], $this->config['port']);
+        if (!empty($this->config['auth'])) {
+            $this->redis->auth($this->config['auth']);
+        }
     }
 
     public function sAdd($name, $value) {

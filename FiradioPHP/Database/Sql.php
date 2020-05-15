@@ -403,6 +403,12 @@ class Sql {
         return $sth->fetch($fetch_style);
     }
 
+    public function val() {
+        $sth = $this->getSth($this->buildSqlSelect(TRUE));
+        $row = $sth->fetch(\PDO::FETCH_NUM);
+        return ($row === FALSE) ? NULL : $row[0];
+    }
+
     public function count() {
         $this->field('COUNT(*)');
         $sth = $this->getSth($this->buildSqlSelect(TRUE));
