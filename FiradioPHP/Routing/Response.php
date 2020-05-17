@@ -78,6 +78,30 @@ class Response {
         $this->aResponse[$name] = $value;
     }
 
+    public function data($name, $value) {
+        if (!isset($this->aResponse['data'])) {
+            $this->aResponse['data'] = array();
+        }
+        $this->aResponse['data'][$name] = $value;
+    }
+
+    public function info($name, $value) {
+        if (!isset($this->aResponse['data'])) {
+            $this->aResponse['data'] = array();
+        }
+        if (!isset($this->aResponse['data']['info'])) {
+            $this->aResponse['data']['info'] = array();
+        }
+        $this->aResponse['data']['info'][$name] = $value;
+    }
+
+    public function setting($name, $value) {
+        if (!isset($this->aResponse['setting'])) {
+            $this->aResponse['setting'] = array();
+        }
+        $this->aResponse['setting'][$name] = $value;
+    }
+
     public function header($name, $value) {
         $this->aResponseHeader[$name] = $value;
     }
