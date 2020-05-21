@@ -85,14 +85,11 @@ class Response {
         $this->aResponse['data'][$name] = $value;
     }
 
-    public function info($name, $value) {
-        if (!isset($this->aResponse['data'])) {
-            $this->aResponse['data'] = array();
+    public function debug($name, $value) {
+        if (!isset($this->aResponse['debug'])) {
+            $this->aResponse['debug'] = array();
         }
-        if (!isset($this->aResponse['data']['info'])) {
-            $this->aResponse['data']['info'] = array();
-        }
-        $this->aResponse['data']['info'][$name] = $value;
+        $this->aResponse['debug'][$name] = $value;
     }
 
     public function setting($name, $value) {

@@ -461,6 +461,11 @@ class Sql {
     }
 
     public function addwnesave($data = NULL) {
+        foreach ($this->aSql['where'] as $k => $v) {
+            if (!isset($data[$k])) {
+                $data[$k] = $v;
+            }
+        }
         $lastInsertId = $this->insertWhenNotExists($data);
         if ($lastInsertId === FALSE) {
             $ret = $this->save($data);
