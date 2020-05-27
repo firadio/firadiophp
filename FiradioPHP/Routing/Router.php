@@ -15,6 +15,8 @@ class Router {
     private $config = array();
     private $cache_funarr = array();
     private $user_cache = array();
+    private $sCode = '';
+    public $message_field = 'message';
 
     public function __construct($config) {
         $this->config = $config;
@@ -25,7 +27,7 @@ class Router {
     }
 
     public function __set($name, $value) {
-        $this->error("cant set property-name=$name", 'Error In Router');
+        $this->error("cant set property-name={$name} to {$value}", 'Error In Router');
     }
 
     public function __call($name, $arguments) {
@@ -69,16 +71,17 @@ class Router {
             // code = -1 用于输出特殊格式资料
             // code = -2 自定义错误
             // code = -3 其他未知错误
-            if ($exCode === 0) $exCode = -3;
-            $oRes->assign('code', $exCode);
-            if ($exCode === -1) {
+            $oRes->assign('code', $ex->sCode);
+            if ($ex->sCode === 'end') {
                 //该异常由$oRes->end();发起
                 throw new Exception($ex->getMessage(), $exCode);
             }
             $traces = $ex->getTrace();
             $message = $ex->getMessage();
-            $message = str_replace(APP_ROOT, '', $message);
-            $oRes->assign('message', $message);
+            if (TRUE) {
+                $message = str_replace(APP_ROOT, '', $message);
+            }
+            $oRes->assign($this->message_field, $message);
             if (!empty($ex->title)) {
                 $oRes->assign('title', $ex->title);
             }
@@ -94,7 +97,9 @@ class Router {
     }
 
     private function end($html) {
-        throw new Exception($html, -1);
+        $ex = new Exception($html, -1);
+        $ex->sCode = 'end';
+        throw $ex;
     }
 
     private function html($path, $aData) {
@@ -102,7 +107,7 @@ class Router {
         foreach ($aData as $key => $value) {
             $html = str_replace('{$' . $key . '}', $value, $html);
         }
-        throw new Exception($html, -1);
+        $this->end($html);
     }
 
     private function getFuncInfo($file_path) {
@@ -127,6 +132,7 @@ class Router {
     private function file_require($file_path) {
         if (!is_file($file_path)) {
             $file_path = substr($file_path, strlen($this->config['action_dir']));
+            $this->sCode = 'ActionNotFound';
             $this->error($file_path . ' Not Found Action', 'Error In Router');
         }
         $func = require($file_path);
@@ -269,6 +275,7 @@ class Router {
             $exCode = $param2;
         }
         $ex = new Exception($message, $exCode);
+        $ex->sCode = $this->sCode;
         if (is_string($param2)) {
             $ex->title = $param2;
         }
