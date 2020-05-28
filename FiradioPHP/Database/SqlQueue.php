@@ -24,11 +24,12 @@ class SqlQueue {
         $aField = array($this->sFieldId);
         $aField[] = $this->sFieldSeq;
         // 首先获取下一条需要处理的ID号
+        $this->oDb->begin();
         $aRow1 = $oSql->where($aWhere)->order($this->sFieldSeq)->field(implode(',', $aField))->find();
         if (empty($aRow1)) {
+            $this->oDb->rollback();
             return;
         }
-        $this->oDb->begin();
         // 通过这个ID号来锁行
         $aRow2 = $oSql->where($this->sFieldId, $aRow1[$this->sFieldId])->field('*')->lock()->find();
         if ($aRow2[$this->sFieldSeq] !== $aRow1[$this->sFieldSeq]) {
