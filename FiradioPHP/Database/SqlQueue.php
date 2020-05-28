@@ -2,7 +2,7 @@
 
 namespace FiradioPHP\Database;
 
-class MysqlQueue {
+class SqlQueue {
 
     public $oDb = null;
     public $sTable = null; // 表名
