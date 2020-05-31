@@ -7,21 +7,19 @@ use \Exception;
 class Curl {
 
     protected $_useragent = 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1';
-    protected $_url;
-    protected $_urlpre;
-    protected $_followlocation;
-    protected $_timeout;
-    protected $_maxRedirects;
-    protected $_cookieFileLocation = './curl_cookie.txt';
-    protected $_post;
-    protected $_postFields;
-    protected $_referer = "http://www.google.com";
+    protected $_urlpre = '';
+    protected $_followlocation = NULL;
+    protected $_timeout = 10;
+    protected $_maxRedirects = NULL;
+    protected $_cookieFileLocation = NULL;
+    protected $_post = FALSE;
+    protected $_postFields = array();
+    protected $_referer = NULL;
     protected $_session;
     protected $_webpage;
     protected $_includeHeader;
     protected $_noBody;
     protected $_status;
-    protected $_binaryTransfer;
     private $_upload = FALSE;
     private $_header = array();
     public $response_header = array();
@@ -32,8 +30,9 @@ class Curl {
 
     public function useAuth($use) {
         $this->authentication = 0;
-        if ($use == true)
+        if ($use == true) {
             $this->authentication = 1;
+        }
     }
 
     public function setName($name) {
@@ -44,21 +43,10 @@ class Curl {
         $this->auth_pass = $pass;
     }
 
-    public function __construct($urlpre = '', $followlocation = true, $timeOut = NULL, $maxRedirecs = 4, $binaryTransfer = false, $includeHeader = false, $noBody = false) {
-        if ($urlpre) {
+    public function __construct($urlpre = NULL) {
+        if ($urlpre !== NULL) {
             $this->_urlpre = $urlpre;
         }
-        $this->_followlocation = $followlocation;
-        //$this->_timeout = $timeOut;
-        if ($timeOut) {
-            $this->setTimeout($timeOut);
-        } else {
-            $this->setTimeout();
-        }
-        $this->_maxRedirects = $maxRedirecs;
-        $this->_noBody = $noBody;
-        $this->_includeHeader = TRUE;
-        $this->_binaryTransfer = $binaryTransfer;
     }
 
     public function setReferer($referer) {
@@ -127,11 +115,17 @@ class Curl {
         $s = curl_init();
         curl_setopt($s, CURLOPT_URL, $this->_fullUrl);
         curl_setopt($s, CURLOPT_HTTPHEADER, $this->CURLOPT_HTTPHEADER());
-        curl_setopt($s, CURLOPT_TIMEOUT, $this->_timeout);
-        curl_setopt($s, CURLOPT_MAXREDIRS, $this->_maxRedirects);
+        if ($this->_timeout !== NULL) {
+            curl_setopt($s, CURLOPT_TIMEOUT, $this->_timeout);
+        }
+        if ($this->_maxRedirects !== NULL) {
+            curl_setopt($s, CURLOPT_MAXREDIRS, $this->_maxRedirects);
+        }
         curl_setopt($s, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($s, CURLOPT_FOLLOWLOCATION, $this->_followlocation);
-        if (!isset($this->_header['Cookie'])) {
+        if ($this->_followlocation !== NULL) {
+            curl_setopt($s, CURLOPT_FOLLOWLOCATION, $this->_followlocation);
+        }
+        if (!isset($this->_header['Cookie']) && $this->_cookieFileLocation !== NULL) {
             curl_setopt($s, CURLOPT_COOKIEJAR, $this->_cookieFileLocation);
             curl_setopt($s, CURLOPT_COOKIEFILE, $this->_cookieFileLocation);
         }
@@ -149,8 +143,19 @@ class Curl {
             curl_setopt($s, CURLOPT_USERPWD, $this->auth_name . ':' . $this->auth_pass);
         }
         if ($this->_post) {
+            $aPost = $this->_postFields;
+            $sPost = '';
+            $sContentType = isset($this->_header['Content-Type']) ? $this->_header['Content-Type'] : '';
+            $postFormat = isset($this->postFormat) ? $this->postFormat : '';
+            if ($postFormat === 'json') {
+                $sPost = json_encode($aPost);
+            } else if (strpos($sContentType, 'application/json') !== FALSE) {
+                $sPost = json_encode($aPost);
+            } else {
+                $sPost = http_build_query($aPost);
+            }
             curl_setopt($s, CURLOPT_POST, true);
-            curl_setopt($s, CURLOPT_POSTFIELDS, $this->_postFields);
+            curl_setopt($s, CURLOPT_POSTFIELDS, $sPost);
         }
 
         if ($this->_includeHeader) {
@@ -167,7 +172,9 @@ class Curl {
           }
          */
         curl_setopt($s, CURLOPT_USERAGENT, $this->_useragent);
-        curl_setopt($s, CURLOPT_REFERER, $this->_referer);
+        if ($this->_referer !== NULL) {
+            curl_setopt($s, CURLOPT_REFERER, $this->_referer);
+        }
         if ($this->_upload) {
             if (class_exists('\CURLFile')) {
                 curl_setopt($s, CURLOPT_SAFE_UPLOAD, TRUE);
@@ -234,17 +241,7 @@ class Curl {
         if (!is_array($aPost)) {
             throw new Exception('你输入的内容既不是string也不是array');
         }
-        $sPost = '';
-        $sContentType = isset($this->_header['Content-Type']) ? $this->_header['Content-Type'] : '';
-        $postFormat = isset($this->postFormat) ? $this->postFormat : '';
-        if ($postFormat === 'json') {
-            $sPost = json_encode($aPost);
-        } else if (strpos($sContentType, 'application/json') !== FALSE) {
-            $sPost = json_encode($aPost);
-        } else {
-            $sPost = http_build_query($aPost);
-        }
-        $this->setPost($sPost);
+        $this->setPost($aPost);
         return $this->createCurl($sPath);
     }
 

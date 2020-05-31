@@ -7,6 +7,7 @@
  */
 
 namespace FiradioPHP\Database;
+
 use \Exception;
 
 class Sql {
@@ -114,7 +115,9 @@ class Sql {
         $where_keys = array();
         foreach ($where as $key => $val) {
             $whereKey = $this->getWhereKey($key);
-            if ($whereKey === FALSE) continue;
+            if ($whereKey === FALSE) {
+                continue;
+            }
             if ($val === NULL) {
                 $whereKey = 'ISNULL(' . $whereKey . ')';
                 $where_keys[] = $whereKey;
@@ -142,7 +145,9 @@ class Sql {
     }
 
     private function checkConditionName($fieldName) {
-        if (!is_string($fieldName)) return FALSE;
+        if (!is_string($fieldName)) {
+            return FALSE;
+        }
         if (!preg_match('/^[a-z][0-9a-z_.]{0,50}$/i', $fieldName)) {
             return FALSE;
         }
@@ -190,9 +195,32 @@ class Sql {
             $this->aSql['paramData'] = array();
         }
         $mysqlFun = array();
+
+        //当前日期时间（根据数据库服务器设置的时区）
         $mysqlFun['CURRENT_TIMESTAMP()'] = 'CURRENT_TIMESTAMP()';
+
+        //当前日期（根据数据库服务器设置的时区）
         $mysqlFun['CURRENT_DATE()'] = 'CURRENT_DATE()';
+
+        //从1970年1月1日0点（UTC时间）到现在的小时数
         $mysqlFun['FLOOR(UNIX_TIMESTAMP(NOW())/3600)'] = 'FLOOR(UNIX_TIMESTAMP(NOW())/3600)';
+        $mysqlFun['HOURS()'] = 'FLOOR(UNIX_TIMESTAMP(NOW())/3600)';
+
+        //当前年份（根据数据库服务器设置的时区）
+        $mysqlFun['YEAR(NOW())'] = 'YEAR(NOW())';
+
+        //当前月份（根据数据库服务器设置的时区）
+        $mysqlFun['MONTH(NOW())'] = 'MONTH(NOW())';
+
+        //从1970年1月1日到现在的月数（根据数据库服务器设置的时区）
+        $mysqlFun['MONTHS()'] = "TIMESTAMPDIFF(MONTH,'1970-01-01',NOW())";
+
+        //从1970年1月1日到现在的天数（根据数据库服务器设置的时区）
+        $mysqlFun['DAYS()'] = "TIMESTAMPDIFF(DAY,'1970-01-01',NOW())";
+
+        //从1969年12月29日（星期一）到现在的星期数（根据数据库服务器设置的时区）
+        $mysqlFun['WEEKS()'] = "TIMESTAMPDIFF(WEEK,ADDDATE('1970-01-01',-3),NOW())";
+
         foreach ($data as $key => $val) {
             if ($this->aConfig['check_field_name'] && !preg_match('/^[a-z][0-9a-z_]{1,19}$/i', $key)) {
                 //必须字母开头，可以包含字母和数字还有下划线
@@ -354,7 +382,9 @@ class Sql {
             $values[] = $val;
         }
         $sql = 'INSERT';
-        if ($this->aSql['ignore']) $sql .= ' IGNORE';
+        if ($this->aSql['ignore']) {
+            $sql .= ' IGNORE';
+        }
         $sql .= ' ' . $this->aSql['table'] . '(' . implode(',', $fields) . ')VALUES(' . implode(',', $values) . ')';
         return $sql;
     }
@@ -439,11 +469,18 @@ class Sql {
 
     public function insertWhenNotExists($data) {
         if (is_array($data)) {
+            foreach ($this->aSql['where'] as $k => $v) {
+                if (!isset($data[$k])) {
+                    $data[$k] = $v;
+                }
+            }
             $this->data($data);
         }
         $sql = $this->buildSqlInsertWhenNotExists();
         $sth = $this->getSth($sql);
-        if ($sth->rowCount() === 0) return FALSE;
+        if ($sth->rowCount() === 0) {
+            return FALSE;
+        }
         return $this->link->lastInsertId();
     }
 
@@ -461,11 +498,6 @@ class Sql {
     }
 
     public function addwnesave($data = NULL) {
-        foreach ($this->aSql['where'] as $k => $v) {
-            if (!isset($data[$k])) {
-                $data[$k] = $v;
-            }
-        }
         $lastInsertId = $this->insertWhenNotExists($data);
         if ($lastInsertId === FALSE) {
             $ret = $this->save($data);
@@ -524,7 +556,9 @@ class Sql {
 
     private function check_autoid() {
         $tableName = $this->aSql['table'];
-        if (!$this->check_autoid_enable($this->aSql['table_raw'])) return;
+        if (!$this->check_autoid_enable($this->aSql['table_raw'])) {
+            return;
+        }
         $fieldName = 'id';
         $sql = "SELECT {$fieldName} FROM {$tableName} ORDER BY {$fieldName} DESC LIMIT 2";
         $sth = $this->getSth($sql);
@@ -548,4 +582,5 @@ class Sql {
         }
         throw $ex;
     }
+
 }

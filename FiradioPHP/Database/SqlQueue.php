@@ -32,6 +32,10 @@ class SqlQueue {
         }
         // 通过这个ID号来锁行
         $aRow2 = $oSql->where($this->sFieldId, $aRow1[$this->sFieldId])->field('*')->lock()->find();
+        if (empty($aRow2)) {
+            $this->oDb->rollback();
+            return;
+        }
         if ($aRow2[$this->sFieldSeq] !== $aRow1[$this->sFieldSeq]) {
             // Seq不同说明这条记录已经被其他线程处理过了
             $this->oDb->rollback();
