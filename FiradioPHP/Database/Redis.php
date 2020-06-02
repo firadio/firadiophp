@@ -2,9 +2,6 @@
 
 namespace FiradioPHP\Database;
 
-use \Exception;
-use FiradioPHP\F;
-
 class Redis {
 
     private $config = array();
@@ -25,7 +22,9 @@ class Redis {
 
     public function sAdd($name, $value) {
         if (is_array($value)) {
-            if (count($value) === 0) return;
+            if (count($value) === 0) {
+                return;
+            }
             array_unshift($value, $name);
             return call_user_func_array([$this->redis, 'sAdd'], $value);
         }
@@ -88,7 +87,9 @@ class Redis {
 
     public function hGetAll($keyname) {
         $row = $this->redis->hGetAll($keyname);
-        if ($row === FALSE) $row = array();
+        if ($row === FALSE) {
+            $row = array();
+        }
         return $row;
     }
 
