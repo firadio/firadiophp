@@ -14,7 +14,6 @@ class Pdo {
     private $setting = array();
     private $errorCount = 0;
     private $errorCountMax = 2; //最大失败次数
-    private $sql;
     public $tablepre = '';
     private $pdo_parent;
 
@@ -119,9 +118,7 @@ class Pdo {
                 throw $ex;
             }
             $this->errorCount++;
-            if (1
-                && $ex->getCode() === 0
-                && $ex->getMessage() === 'PDO::beginTransaction(): MySQL server has gone away'
+            if (1 && $ex->getCode() === 0 && $ex->getMessage() === 'PDO::beginTransaction(): MySQL server has gone away'
             ) {
                 //服务端断开时重连一次
                 $this->connect();
@@ -150,6 +147,10 @@ class Pdo {
 
     public function sqlexec($sql, $parameters) {
         //执行SQL语句
+        if (FALSE) {
+            $var_export = var_export($parameters, TRUE);
+            file_put_contents('c:/1.txt', "{$sql}\r\n{$var_export}\r\n\r\n", FILE_APPEND);
+        }
         $sth = $this->prepare($sql);
         try {
             //Warning: Error while sending QUERY packet. PID=7888 in
@@ -313,10 +314,6 @@ class Pdo {
 
     public function sql() {
         return new Sql($this);
-        if (empty($this->sql)) {
-            $this->sql = new Sql($this);
-        }
-        return $this->sql;
     }
 
     public function page($oSql) {
