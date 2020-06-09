@@ -31,6 +31,12 @@ class NgApi {
         $ret = json_decode($sJson, TRUE);
         if (is_array($ret)) {
             $this->lastRet = $ret;
+            if (isset($ret['statusCode'])) {
+                $this->lastRet['code'] = $ret['statusCode'];
+            }
+            if (isset($ret['message'])) {
+                $this->lastRet['msg'] = $ret['message'];
+            }
         } else {
             throw new \Exception('Api1返回错误1', -1);
         }
@@ -38,7 +44,7 @@ class NgApi {
             throw new \Exception('Api1返回错误2', -1);
         }
         if (!empty($ret['statusCode']) && $ret['statusCode'] !== '01') {
-            throw new \Exception($ret['message'], $ret['statusCode']);
+            throw new \Exception($ret['message'], -1);
         }
         if (!isset($ret['data'])) {
             throw new \Exception('Api1返回错误3', -1);
@@ -141,6 +147,18 @@ class NgApi {
         return $this->retDataByPathAndPost('/v1/user/trans', $aPost);
     }
 
+    private function CheckTransUserScoreStatus($username, $plat_type, $client_transfer_id) {
+        $aPost = array();
+        $aPost['sign_key'] = $this->aConfig['sign_key'];
+        $code_text = $this->aConfig['sign_key'] . $this->aConfig['api_account'] . $username;
+        $code_text .= $plat_type . $client_transfer_id;
+        $aPost['code'] = md5($code_text);
+        $aPost['username'] = $username;
+        $aPost['plat_type'] = $plat_type;
+        $aPost['client_transfer_id'] = $client_transfer_id;
+        return $this->retDataByPathAndPost('/v1/user/status', $aPost);
+    }
+
     public function transAll($username) {
         $aPost = array();
         $aPost['sign_key'] = $this->aConfig['sign_key'];
@@ -149,14 +167,14 @@ class NgApi {
         return $this->retDataByPathAndPost('/v1/user/trans-all', $aPost);
     }
 
-    public function do_user_gscorelog_one($oDb, $client_transfer_id, $apiType = 'api1') {
+    public function do_user_gscore_order_one($oDb, $client_transfer_id, $apiType = 'api1') {
         $oDb->begin();
-        $aWhereUserGScorelog = array();
-        $aWhereUserGScorelog['client_transfer_id'] = $client_transfer_id;
+        $aWhereUserGScoreOrder = array();
+        $aWhereUserGScoreOrder['client_transfer_id'] = $client_transfer_id;
         //检查订单是否有效
-        $oSql = $oDb->sql()->table('user_gscorelog');
-        $oSql->field('status,username,plat_type,money,site_id,site_uid');
-        $oSql->where($aWhereUserGScorelog);
+        $oSql = $oDb->sql()->table('user_gscore_order');
+        //$oSql->field('status,username,plat_type,money,site_id,site_uid');
+        $oSql->where($aWhereUserGScoreOrder);
         $oSql->lock();
         $aRowUserGScorelog = $oSql->find();
         if (empty($aRowUserGScorelog)) {
@@ -170,26 +188,45 @@ class NgApi {
         }
         $username = $aRowUserGScorelog['username'];
         $plat_type = $aRowUserGScorelog['plat_type'];
-        $money = floatval($aRowUserGScorelog['money']);
+        $fUserScore = floatval($aRowUserGScorelog['money']);
         //转账金额(负数表示从平台转出，正数转入)，不支持小数
-        if (ceil($money) !== $money) {
+        if ($fUserScore === 0) {
+            //交易金额不能为0
+            $this->error("交易金额不能为0");
+            return FALSE;
+        }
+        if (ceil($fUserScore) !== $fUserScore) {
             //不支持小数
-            $this->error("不支持小数,您输入的是[{$money}]");
+            $this->error("不支持小数,您输入的是[{$fUserScore}]");
             return FALSE;
         }
         //执行远程API操作，返回当前余额
         $user_gscore_balance = NULL;
-        $aSaveSiteCreditlog = array();
+        $aSaveUserGScoreOrder = array();
         $ex = NULL;
         if (TRUE) {
             try {
                 if ($apiType === 'api1') {
-                    $user_gscore_balance = $this->transScoreAndGetBalance($username, $plat_type, $money, $client_transfer_id);
+                    $user_gscore_balance = $this->transScoreAndGetBalance($username, $plat_type, $fUserScore, $client_transfer_id);
+                } else if ($apiType === 're-api1') {
+                    //因为上次和NG通信失败，导致status仍然是0，因此重试
+                    try {
+                        //首先确定订单是否存在
+                        $aScoreStatus = $this->CheckTransUserScoreStatus($username, $plat_type, $client_transfer_id);
+                        $aSaveUserGScoreOrder['money'] = $aScoreStatus['score'];
+                        $user_gscore_balance = $aScoreStatus['after_score'];
+                    } catch (\Exception $ex) {
+                        
+                    }
+                    if ($this->lastRet['statusCode'] === '00' && $this->lastRet['message'] === '失败') {
+                        //如果订单不存在就去执行
+                        $user_gscore_balance = $this->transScoreAndGetBalance($username, $plat_type, $fUserScore, $client_transfer_id);
+                    }
                 } else if ($apiType === 'api2') {
                     $aPost = array();
                     $aPost['site_uid'] = $aRowUserGScorelog['site_uid'];
                     $aPost['plat_type'] = $plat_type;
-                    $aPost['money'] = $money;
+                    $aPost['money'] = $fUserScore;
                     $aPost['client_transfer_id'] = $client_transfer_id;
                     $aData = $this->api2('score_trans_in', $aPost);
                     if (isset($aData['balance'])) {
@@ -209,18 +246,47 @@ class NgApi {
                     $aSaveUserScore['balance'] = $user_gscore_balance;
                     $oDb->sql()->table('user_gscore')->where($aWhereUserScore)->addwnesave($aSaveUserScore);
                 }
-                $aSaveSiteCreditlog['status'] = 1;
-                $aSaveSiteCreditlog['api_trans_balance'] = $user_gscore_balance;
+                $aSaveUserGScoreOrder['status'] = 1;
+                $aSaveUserGScoreOrder['api_trans_balance'] = $user_gscore_balance;
             } catch (\Exception $e) {
                 $ex = $e;
-                $aSaveSiteCreditlog['status'] = 2;
+                $aSaveUserGScoreOrder['status'] = 0;
             }
-            $aSaveSiteCreditlog['api_trans_code'] = isset($this->lastRet['statusCode']) ? $this->lastRet['statusCode'] : '';
-            $aSaveSiteCreditlog['api_trans_msg'] = isset($this->lastRet['message']) ? $this->lastRet['message'] : '';
+            $aSaveUserGScoreOrder['api_trans_code'] = isset($this->lastRet['code']) ? $this->lastRet['code'] : '';
+            $aSaveUserGScoreOrder['api_trans_msg'] = isset($this->lastRet['msg']) ? $this->lastRet['msg'] : '';
         }
-        $oSql->where($aWhereUserGScorelog)->save($aSaveSiteCreditlog);
+        $oSql->where($aWhereUserGScoreOrder)->save($aSaveUserGScoreOrder);
         if ($ex !== NULL) {
+            $oDb->commit();
             throw $ex;
+        }
+        if ($apiType === 'api1' || $apiType === 're-api1') {
+            //首先确定这个订单号在站点积分记录是否存在
+            $oSqlSiteCreditLog = $oDb->sql()->table('site_credit_log')->where($aWhereUserGScoreOrder);
+            $aRow = $oSqlSiteCreditLog->find();
+            if (empty($aRow)) {
+                //只有不存在的情况下才去操作账变
+                $aRowSite = $oDb->sql()->table('site')->where('id', $aRowUserGScorelog['site_id'])->lock()->find();
+                //与用户操作金额刚好相反，用户余额增加的时候站点额度减少，用户余额减少的时候站点额度增加
+                $iCreditAmount = -$fUserScore;
+                $iCreditBalanceBefore = floatval($aRowSite['credit_balance']);
+                $iCreditBalanceAfter = $iCreditBalanceBefore + $iCreditAmount;
+                $aSaveSite = array('credit_balance' => $iCreditBalanceAfter);
+                $oDb->sql()->table('site')->where('id', $aRowUserGScorelog['site_id'])->save($aSaveSite);
+                $aAddSiteCreditlog = array();
+                $aAddSiteCreditlog['site_id'] = $aRowUserGScorelog['site_id'];
+                $aAddSiteCreditlog['site_uid'] = $aRowUserGScorelog['site_uid'];
+                $aAddSiteCreditlog['username'] = $aRowUserGScorelog['username'];
+                $aAddSiteCreditlog['plat_type'] = $aRowUserGScorelog['plat_type'];
+                $aAddSiteCreditlog['trans_type'] = $aRowUserGScorelog['trans_type'];
+                $aAddSiteCreditlog['client_transfer_id'] = $aRowUserGScorelog['client_transfer_id'];
+                $aAddSiteCreditlog['title'] = $aRowUserGScorelog['title'];
+                $aAddSiteCreditlog['credit_amount'] = $iCreditAmount;
+                $aAddSiteCreditlog['credit_balance_before'] = $iCreditBalanceBefore;
+                $aAddSiteCreditlog['credit_balance_after'] = $iCreditBalanceAfter;
+                $oSqlSiteCreditLog->add($aAddSiteCreditlog);
+            }
+            $oDb->commit();
         }
         return $user_gscore_balance;
     }

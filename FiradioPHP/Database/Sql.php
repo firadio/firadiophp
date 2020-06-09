@@ -22,7 +22,7 @@ class Sql {
         $this->aSql['ignore'] = FALSE;
         $this->aSql['where'] = array();
         $this->aSql['paramData'] = array();
-        $this->aConfig['check_field_name'] = TRUE;
+        $this->aConfig['check_field_name'] = FALSE;
     }
 
     public function field($field) {
@@ -222,7 +222,7 @@ class Sql {
         $mysqlFun['WEEKS()'] = "TIMESTAMPDIFF(WEEK,ADDDATE('1970-01-01',-3),NOW())";
 
         foreach ($data as $key => $val) {
-            if ($this->aConfig['check_field_name'] && !preg_match('/^[a-z][0-9a-z_]{1,19}$/i', $key)) {
+            if ($this->aConfig['check_field_name'] && !preg_match('/^[a-z][0-9a-z_]{1,30}$/i', $key)) {
                 //必须字母开头，可以包含字母和数字还有下划线
                 continue;
             }

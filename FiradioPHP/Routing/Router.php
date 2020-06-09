@@ -27,7 +27,7 @@ class Router {
     }
 
     public function __set($name, $value) {
-        $this->error("cant set property-name={$name} to {$value}", 'Error In Router');
+        $this->error("cant set property-name={$name}", 'Error In Router');
     }
 
     public function __call($name, $arguments) {
@@ -187,29 +187,30 @@ class Router {
         $depend = array();
         $getInstance = array();
         foreach ($refFunPar as $value) {
+            $sParamName = $value->name;
             $matches = array();
-            if ($value->name === 'aRequest') {
+            if ($sParamName === 'aRequest') {
                 // aRequest是用户主动传入的
                 $depend[] = $oRes->aRequest;
                 continue;
             }
-            if ($value->name === 'aParam') {
+            if ($sParamName === 'aParam') {
                 // aParam是父action通过setParam设的值
                 $depend[] = $oRes->aParam;
                 continue;
             }
             //由Response实例化的object
-            if ($value->name === 'oRes') {
+            if ($sParamName === 'oRes') {
                 $depend[] = $oRes;
                 continue;
             }
-            if (isset($oRes->aParam[$value->name])) {
+            if (isset($oRes->aParam[$sParamName])) {
                 // 开始获取父action里setParam的参数
-                $depend[] = $oRes->aParam[$value->name];
+                $depend[] = $oRes->aParam[$sParamName];
                 continue;
             }
             //开始处理由config实例化的object
-            if (preg_match('/^o([A-Z][a-z0-9_]+)$/', $value->name, $matches)) {
+            if (preg_match('/^o([A-Z][a-z0-9_]+)$/', $sParamName, $matches)) {
                 $sName = strtolower($matches[1]);
                 $oInstance = F::$oConfig->getInstance($sName);
                 $getInstance[$sName] = $oInstance;
@@ -217,10 +218,9 @@ class Router {
                 //$depend[] = F::$aInstances[$sName];
                 continue;
             }
-            if (isset(F::$oConfig->aClass[$value->name])) {
-                $sName = $value->name;
-                $oInstance = F::$oConfig->getInstance($sName);
-                $getInstance[$sName] = $oInstance;
+            if (isset(F::$oConfig->aClass[$sParamName])) {
+                $oInstance = F::$oConfig->getInstance($sParamName);
+                $getInstance[$sParamName] = $oInstance;
                 $depend[] = $oInstance;
                 continue;
             }

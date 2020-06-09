@@ -155,8 +155,7 @@ class Config {
                 $oInstance = new $aClassInfo['class']($aClassInfo);
             }
         }
-        if (preg_match('/^db[0-9]+$/', $sName) || preg_match('/^db_[a-z]+$/', $sName)
-        ) {
+        if ($aClassInfo['class'] === '\FiradioPHP\Database\Pdo') {
             if (!$oInstance->inTransaction()) {
                 $iFreeCount = count($aClassInfo['free']);
                 //F::info($sName . '->beginTransaction FreeCount=' . $iFreeCount);
