@@ -27,25 +27,30 @@ class SqlQueue {
         $this->oDb->begin();
         $aRow1 = $oSql->where($aWhere)->order($this->sFieldSeq)->field(implode(',', $aField))->find();
         if (empty($aRow1)) {
+            //没找到就结束
             $this->oDb->rollback();
             return;
         }
-        // 通过这个ID号来锁行
-        $aRow2 = $oSql->where($this->sFieldId, $aRow1[$this->sFieldId])->field('*')->lock()->find();
-        if (empty($aRow2)) {
-            $this->oDb->rollback();
-            return;
-        }
-        if ($aRow2[$this->sFieldSeq] !== $aRow1[$this->sFieldSeq]) {
-            // Seq不同说明这条记录已经被其他线程处理过了
-            $this->oDb->rollback();
-            return;
-        }
-        $this->sCurrentId = $aRow2[$this->sFieldId];
+        // 找到了就通过这个ID号来自增Seq
+        $aWhereId = array($this->sFieldId => $aRow1[$this->sFieldId]);
         $aSave = array();
         $aSave[$this->sFieldSeq] = $aRow1[$this->sFieldSeq] + 1;
-        $oSql->where($this->sFieldId, $aRow1[$this->sFieldId])->save($aSave);
+        $oSql->where($aWhereId)->save($aSave);
         $this->oDb->commit();
+        //完成自增Seq以后再次找到这个ID
+        $this->oDb->begin();
+        $aRow2 = $oSql->where($aWhereId)->field('*')->lock()->find();
+        if (!empty($aRow2[$this->sFieldState])) {
+            //非0就是处理过了，必须跳过
+            $this->oDb->rollback();
+            return;
+        }
+        if (intval($aRow2[$this->sFieldSeq]) !== $aSave[$this->sFieldSeq]) {
+            // Seq不同说明这条记录已经被其他线程处理过了
+            $this->oDb->rollback();
+            return 'R';
+        }
+        $this->sCurrentId = $aRow2[$this->sFieldId];
         unset($aRow2[$this->sFieldId]);
         unset($aRow2[$this->sFieldCreated]);
         unset($aRow2[$this->sFieldUpdated]);
@@ -55,12 +60,15 @@ class SqlQueue {
     }
 
     public function setState($iState) {
-        $this->oDb->begin();
         $aSave = array();
         $aSave[$this->sFieldState] = $iState;
         $oSql = $this->oDb->sql()->table($this->sTable);
         $oSql->where($this->sFieldId, $this->sCurrentId)->save($aSave);
         $this->oDb->commit();
+    }
+
+    public function rollback() {
+        $this->oDb->rollback();
     }
 
 }

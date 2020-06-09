@@ -167,6 +167,23 @@ class NgApi {
         return $this->retDataByPathAndPost('/v1/user/trans-all', $aPost);
     }
 
+    public function v1_user_record_all() {
+        $aPost = array();
+        $aPost['sign_key'] = $this->aConfig['sign_key'];
+        $before_second = 0;
+        $time_scope_end = time() - $before_second;
+        $time_scope_begin = $time_scope_end - 86400;
+        $aPost['startTime'] = date('Y-m-d H:i:s', $time_scope_begin);
+        $aPost['endTime'] = date('Y-m-d H:i:s', $time_scope_end);
+        $aPost['timeType'] = 0; //默认为空按照最后更新时间获取记录 为1时按照下注时间获取记录
+        $aPost['page'] = 1;
+        $aPost['limit'] = 2000;
+        $code_text = $this->aConfig['sign_key'] . $this->aConfig['api_account'];
+        $code_text .= $aPost['startTime'] . $aPost['endTime'];
+        $aPost['code'] = md5($code_text);
+        return $this->retDataByPathAndPost('/v1/user/record-all', $aPost);
+    }
+
     public function do_user_gscore_order_one($oDb, $client_transfer_id, $apiType = 'api1') {
         $oDb->begin();
         $aWhereUserGScoreOrder = array();
