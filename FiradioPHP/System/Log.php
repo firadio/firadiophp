@@ -40,13 +40,19 @@ class Log {
                 continue;
             }
             $file = substr($trace['file'], strlen(APP_ROOT));
-            $file = str_replace('\\', '/', $file);
+            if (TRUE) {
+                $file = str_replace('\\', '/', $file);
+            }
             $debug = array();
             $debug['file'] = $file . '(' . $trace['line'] . ')';
             $debug['func'] = call_user_func(function () use ($trace) {
                 $sFunc = '';
-                if (isset($trace['class'])) $sFunc .= $trace['class'];
-                if (isset($trace['type'])) $sFunc .= $trace['type'];
+                if (isset($trace['class'])) {
+                    $sFunc .= $trace['class'];
+                }
+                if (isset($trace['type'])) {
+                    $sFunc .= $trace['type'];
+                }
                 $sFunc .= $trace['function'] . '()';
                 return $sFunc;
             });
@@ -60,10 +66,12 @@ class Log {
 
     public function debug($aMessage) {
         $this->write('debug', $aMessage);
+        $this->print($aMessage, 'DEBUG', 5);
     }
 
     public function info($aMessage) {
         $this->write('info', $aMessage);
+        $this->print($aMessage, 'DEBUG', 4);
     }
 
     public function error($aMessage, $ex = NULL) {
@@ -78,10 +86,23 @@ class Log {
         }
         $aMessage[] = self::getDebugArr($traces);
         $this->write('error', $aMessage);
+        $this->print($aMessage, 'ERROR', 2);
+    }
+
+    private function print($aMessage, $sLevel, $iLevel) {
+        $display_level = isset($this->config['display_level']) ? intval($this->config['display_level']) : 0;
+        if ($display_level === 0) {
+            return;
+        }
+        if ($iLevel > $display_level) {
+            //iLevel数字大，说明错误优先级比配置的较低
+            return;
+        }
+        echo date('Y-m-d H:i:s') . ' [' . $sLevel . '] ' . $aMessage . "\r\n";
     }
 
     public function write($sLevel, $aMessage) {
-         // 默认不写入文件(FALSE)
+        // 默认不写入文件(FALSE)
         $writeable = isset($this->config['writeable']) ? $this->config['writeable'] : FALSE;
         if (!$writeable) {
             return;

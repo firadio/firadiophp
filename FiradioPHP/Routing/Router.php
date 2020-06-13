@@ -15,7 +15,6 @@ class Router {
     private $config = array();
     private $cache_funarr = array();
     private $user_cache = array();
-    private $sCode = '';
     public $message_field = 'message';
 
     public function __construct($config) {
@@ -132,8 +131,8 @@ class Router {
     private function file_require($file_path) {
         if (!is_file($file_path)) {
             $file_path = substr($file_path, strlen($this->config['action_dir']));
-            $this->sCode = 'ActionNotFound';
-            $this->error($file_path . ' Not Found Action', 'Error In Router');
+            $sCode = 'ActionNotFound';
+            $this->error($file_path . ' Not Found Action', 'Error In Router', $sCode);
         }
         $func = require($file_path);
         if (gettype($func) !== 'object') {
@@ -212,14 +211,14 @@ class Router {
             //开始处理由config实例化的object
             if (preg_match('/^o([A-Z][a-z0-9_]+)$/', $sParamName, $matches)) {
                 $sName = strtolower($matches[1]);
-                $oInstance = F::$oConfig->getInstance($sName);
+                $oInstance = F::$oConfig->getInstance($sName, TRUE);
                 $getInstance[$sName] = $oInstance;
                 $depend[] = $oInstance;
                 //$depend[] = F::$aInstances[$sName];
                 continue;
             }
             if (isset(F::$oConfig->aClass[$sParamName])) {
-                $oInstance = F::$oConfig->getInstance($sParamName);
+                $oInstance = F::$oConfig->getInstance($sParamName, TRUE);
                 $getInstance[$sParamName] = $oInstance;
                 $depend[] = $oInstance;
                 continue;
@@ -269,15 +268,17 @@ class Router {
         return true;
     }
 
-    public function error($message, $param2 = '提示') {
-        $exCode = -2;
+    public function error($message, $param2 = '提示', $sCode = NULL) {
+        $exCode = -1000;
         if (is_numeric($param2)) {
             $exCode = $param2;
         }
         $ex = new Exception($message, $exCode);
-        $ex->sCode = $this->sCode;
+        if ($sCode !== NULL) {
+            $ex->sCode = $sCode;
+        }
         if (is_string($param2)) {
-            $ex->title = $param2;
+            $ex->sTitle = $param2;
         }
         throw $ex;
     }

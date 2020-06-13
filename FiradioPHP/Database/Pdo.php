@@ -49,6 +49,13 @@ class Pdo {
         $this->connect($setting);
     }
 
+    public function __free() {
+        //回收再利用
+        if ($this->inTransaction()) {
+            $this->rollback();
+        }
+    }
+
     public function connect($setting = NULL) {
         if (!empty($setting)) {
             //有新配置就更新
@@ -86,13 +93,12 @@ class Pdo {
     }
 
     public function beginTransaction() {
-        $ret = null;
         try {
             //Warning: Error while sending QUERY packet. PID=7888 in
             if ($this->inTransaction()) {
-                return $ret;
+                return;
             }
-            $ret = @$this->pdo_parent->beginTransaction();
+            $ret = $this->pdo_parent->beginTransaction();
             $this->errorCount = 0; //重置错误计数
             return $ret;
         } catch (PDOException $ex) {
@@ -126,7 +132,6 @@ class Pdo {
             }
             throw $ex;
         }
-        return $ret;
     }
 
     public function rollback() {

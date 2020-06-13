@@ -51,7 +51,6 @@ class SqlQueue {
             return 'R';
         }
         $this->sCurrentId = $aRow2[$this->sFieldId];
-        unset($aRow2[$this->sFieldId]);
         unset($aRow2[$this->sFieldCreated]);
         unset($aRow2[$this->sFieldUpdated]);
         unset($aRow2[$this->sFieldState]);
@@ -62,6 +61,10 @@ class SqlQueue {
     public function setState($iState) {
         $aSave = array();
         $aSave[$this->sFieldState] = $iState;
+        $this->save($aSave);
+    }
+
+    public function save($aSave) {
         $oSql = $this->oDb->sql()->table($this->sTable);
         $oSql->where($this->sFieldId, $this->sCurrentId)->save($aSave);
         $this->oDb->commit();

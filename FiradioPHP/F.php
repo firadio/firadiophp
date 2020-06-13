@@ -46,7 +46,9 @@ class F {
     }
 
     public static function loadByNamespace($name) {
-        if (class_exists($name)) return;
+        if (class_exists($name)) {
+            return;
+        }
         $dir = str_replace('\\', DS, $name);
         $file = dirname(__DIR__) . DS . $dir . '.php';
         if (!is_file($file)) {
@@ -107,9 +109,6 @@ class F {
     public static function debug($message) {
         if (is_array($message)) {
             $message = print_r($message, true);
-        }
-        if (0) {
-            echo date('Y-m-d H:i:s') . ' ' . $message . "\r\n";
         }
         if (isset(F::$aInstances['log'])) {
             F::$aInstances['log']->debug($message);
@@ -230,17 +229,25 @@ class F {
     }
 
     public static function opcache_start() {
-        if (PHP_SAPI === 'cli') return;
-        if (!function_exists('opcache_compile_file')) return;
+        if (PHP_SAPI === 'cli') {
+            return;
+        }
+        if (!function_exists('opcache_compile_file')) {
+            return;
+        }
         self::scanDirTree(__DIR__, '', function($a) {
-            if ($a[1] === '') return;
+            if ($a[1] === '') {
+                return;
+            }
             $path = implode(DS, $a);
             $pathinfo = pathinfo($path);
-            if ($pathinfo['extension'] !== 'php') return;
+            if ($pathinfo['extension'] !== 'php') {
+                return;
+            }
             opcache_compile_file($path);
         });
-
     }
+
 }
 
 F::opcache_start();

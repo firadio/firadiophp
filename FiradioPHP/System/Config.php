@@ -136,7 +136,7 @@ class Config {
         }
     }
 
-    public function getInstance($sName) {
+    public function getInstance($sName, $autoBegin = FALSE) {
         //取得一个新实例，或则已经标记为free的空闲实例
         if (!isset($this->aClass[$sName])) {
             F::error('The sName ' . $sName . ' does not exist in the $this->aClass');
@@ -145,21 +145,29 @@ class Config {
         $aClassInfo = &$this->aClass[$sName];
         $oInstance = array_pop($aClassInfo['free']);
         if ($oInstance === NULL) {
-            //F::debug('new ' . $sName);
+            F::debug("New [{$sName}]");
             if (0) {
                 
             } else if (!empty($aClassInfo['args'])) {
+                //如果配置文件里有args的参数
                 $oRef = new \ReflectionClass($aClassInfo['class']);
+                //把args送到class类的构造函数里实例化
                 $oInstance = $oRef->newInstanceArgs($aClassInfo['args']);
             } else {
+                //这是飞儿云默认配置，把整个配置送到类的构造函数里实例化
                 $oInstance = new $aClassInfo['class']($aClassInfo);
             }
+        } else {
+            $iFreeCount = count($aClassInfo['free']);
+            F::debug("Pop [{$sName}], Remain={$iFreeCount}");
         }
-        if ($aClassInfo['class'] === '\FiradioPHP\Database\Pdo') {
-            if (!$oInstance->inTransaction()) {
-                $iFreeCount = count($aClassInfo['free']);
-                //F::info($sName . '->beginTransaction FreeCount=' . $iFreeCount);
-                $oInstance->beginTransaction();
+        if ($autoBegin === TRUE) {
+            if (method_exists($oInstance, 'inTransaction')) {
+                //如果是数据库
+                if (!$oInstance->inTransaction()) {
+                    //且尚未开始事务处理的话
+                    $oInstance->beginTransaction();
+                }
             }
         }
         return $oInstance;
@@ -168,13 +176,12 @@ class Config {
     public function freeInstance($sName, $oInstance) {
         //将实例记为free空闲状态
         $aClassInfo = &$this->aClass[$sName];
-        $iFreeCount = array_push($aClassInfo['free'], $oInstance);
-        if (preg_match('/^db[0-9]+$/', $sName)) {
-            if ($oInstance->inTransaction()) {
-                //F::info($sName . '->rollback FreeCount=' . $iFreeCount);
-                $oInstance->rollback();
-            }
+        if (method_exists($oInstance, '__free')) {
+            //如果是数据库，且正在事务处理中的话，就会执行回滚操作
+            $oInstance->__free(); //回收再利用
         }
+        //最后：把使用过的对象返回free里重复利用
+        $iFreeCount = array_push($aClassInfo['free'], $oInstance);
         return $iFreeCount;
     }
 
