@@ -113,6 +113,19 @@ class Router {
         if (!$this->config['cache_enable']) {
             return $this->getFuncInfoByFile($file_path);
         }
+        if (isset($this->config['cache_second'])) {
+            if (isset($this->cache_funarr[$file_path])) {
+                $aFuncInfo = $this->cache_funarr[$file_path];
+                if (microtime(TRUE) - $aFuncInfo['time'] < $this->config['cache_second']) {
+                    return $aFuncInfo;
+                }
+                $this->cache_funarr[$file_path]['time'] = microtime(TRUE);
+                if ($aFuncInfo['mtime'] === filemtime($file_path)) {
+                    return $aFuncInfo;
+                }
+            }
+            return $this->cache_funarr[$file_path] = $this->getFuncInfoByFile($file_path);
+        }
         if (array_key_exists($file_path, $this->cache_funarr)) {
             F::debug('getFuncInfoInCache');
             return $this->cache_funarr[$file_path];
@@ -122,7 +135,9 @@ class Router {
 
     private function getFuncInfoByFile($file_path) {
         $funcInfo = array();
+        $funcInfo['time'] = microtime(TRUE);
         $funcInfo['func'] = $this->file_require($file_path);
+        $funcInfo['mtime'] = filemtime($file_path);
         $ReflectionFunc = new \ReflectionFunction($funcInfo['func']);
         $funcInfo['refFunPar'] = $ReflectionFunc->getParameters();
         return $funcInfo;
@@ -304,6 +319,17 @@ class Router {
             $this->user_cache[$table] = array();
         }
         $this->user_cache[$table][$key] = $value;
+    }
+
+    protected function get($key) {
+        if (!isset($this->user_cache[$key])) {
+            return false;
+        }
+        return $this->user_cache[$key];
+    }
+
+    protected function set($key, $value) {
+        $this->user_cache[$key] = $value;
     }
 
     private function logWrite($sLevel, $sMessage) {

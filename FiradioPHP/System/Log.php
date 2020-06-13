@@ -65,13 +65,11 @@ class Log {
     }
 
     public function debug($sMessage) {
-        $this->write('debug', $sMessage);
         $this->print($sMessage, 'DEBUG', 5);
     }
 
     public function info($sMessage) {
-        $this->write('info', $sMessage);
-        $this->print($sMessage, 'DEBUG', 4);
+        $this->print($sMessage, 'INFO', 4);
     }
 
     public function error($aMessage, $ex = NULL) {
@@ -97,6 +95,9 @@ class Log {
         if ($iLevel > $display_level) {
             //iLevel数字大，说明错误优先级比配置的较低
             return;
+        }
+        if (is_array($sMessage)) {
+            $sMessage = print_r($sMessage, true);
         }
         echo date('Y-m-d H:i:s') . ' [' . $sLevel . '] ' . $sMessage . "\r\n";
     }

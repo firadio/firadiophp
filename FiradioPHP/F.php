@@ -106,12 +106,9 @@ class F {
         }
     }
 
-    public static function debug($message) {
-        if (is_array($message)) {
-            $message = print_r($message, true);
-        }
+    public static function debug($sMessage) {
         if (isset(F::$aInstances['log'])) {
-            F::$aInstances['log']->debug($message);
+            F::$aInstances['log']->debug($sMessage);
         }
     }
 

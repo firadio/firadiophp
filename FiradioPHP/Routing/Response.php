@@ -70,8 +70,9 @@ class Response {
     }
 
     private function initResponse() {
+        $this->fBeginTime = microtime(TRUE);
         $this->aResponse = array();
-        $this->aResponse['time'] = microtime(TRUE);
+        $this->aResponse['time'] = $this->fBeginTime;
     }
 
     public function assign($name, $value) {
@@ -149,6 +150,10 @@ class Response {
         if (isset($this->aHeader[$key])) {
             return $this->aHeader[$key];
         }
+    }
+
+    public function getExecTime() {
+        return microtime(TRUE) - $this->fBeginTime;
     }
 
 }
