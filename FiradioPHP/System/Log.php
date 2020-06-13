@@ -64,20 +64,21 @@ class Log {
         return $debugArr;
     }
 
-    public function debug($aMessage) {
-        $this->write('debug', $aMessage);
-        $this->print($aMessage, 'DEBUG', 5);
+    public function debug($sMessage) {
+        $this->write('debug', $sMessage);
+        $this->print($sMessage, 'DEBUG', 5);
     }
 
-    public function info($aMessage) {
-        $this->write('info', $aMessage);
-        $this->print($aMessage, 'DEBUG', 4);
+    public function info($sMessage) {
+        $this->write('info', $sMessage);
+        $this->print($sMessage, 'DEBUG', 4);
     }
 
     public function error($aMessage, $ex = NULL) {
         if (is_string($aMessage)) {
             $aMessage = array($aMessage);
         }
+        $this->print(json_encode($aMessage), 'ERROR', 2);
         $traces = array();
         if ($ex !== NULL && method_exists($ex, 'getTrace')) {
             $traces = $ex->getTrace();
@@ -86,10 +87,9 @@ class Log {
         }
         $aMessage[] = self::getDebugArr($traces);
         $this->write('error', $aMessage);
-        $this->print($aMessage, 'ERROR', 2);
     }
 
-    private function print($aMessage, $sLevel, $iLevel) {
+    private function print($sMessage, $sLevel, $iLevel) {
         $display_level = isset($this->config['display_level']) ? intval($this->config['display_level']) : 0;
         if ($display_level === 0) {
             return;
@@ -98,7 +98,7 @@ class Log {
             //iLevel数字大，说明错误优先级比配置的较低
             return;
         }
-        echo date('Y-m-d H:i:s') . ' [' . $sLevel . '] ' . $aMessage . "\r\n";
+        echo date('Y-m-d H:i:s') . ' [' . $sLevel . '] ' . $sMessage . "\r\n";
     }
 
     public function write($sLevel, $aMessage) {
