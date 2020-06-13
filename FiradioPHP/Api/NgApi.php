@@ -167,10 +167,9 @@ class NgApi {
         return $this->retDataByPathAndPost('/v1/user/trans-all', $aPost);
     }
 
-    public function v1_user_record_all() {
+    public function v1_user_record_all($before_second = 0) {
         $aPost = array();
         $aPost['sign_key'] = $this->aConfig['sign_key'];
-        $before_second = 0;
         $time_scope_end = time() - $before_second;
         $time_scope_begin = $time_scope_end - 86400;
         $aPost['startTime'] = date('Y-m-d H:i:s', $time_scope_begin);
