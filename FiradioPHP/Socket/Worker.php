@@ -4,16 +4,19 @@ namespace FiradioPHP\Socket;
 
 class Worker {
 
-    private $url;
+    private $url = 'http://127.0.0.1';
     private $oConfig;
 
     public function __construct($oConfig) {
         $this->oConfig = $oConfig;
-        $this->url = 'http://127.0.0.1:802';
     }
 
     public function run() {
         $this->curl_start();
+    }
+
+    public function setUrl($sUrl) {
+        $this->url = $sUrl;
     }
 
     private function getParam($sRawContent) {
