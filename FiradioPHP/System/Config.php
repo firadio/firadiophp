@@ -13,6 +13,7 @@ class Config {
 
     private $aClass = array();
     private $aConfigs = array();
+    public $aInstances = array();
 
     public function __get($name) {
         if ($name === 'aClass') {
@@ -195,9 +196,11 @@ class Config {
             return;
         }
         $aConfig['name'] = $sName; // 可供类获取唯一的配置名称
+        $aConfig['oConfig'] = $this;
         if (in_array($sName, array('router', 'log'))) {
             $class = $aConfig['class'];
             F::$aInstances[$sName] = new $class($aConfig);
+            $this->aInstances[$sName] = F::$aInstances[$sName];
         }
         $aConfig['free'] = array();
         $this->aClass[$sName] = $aConfig;

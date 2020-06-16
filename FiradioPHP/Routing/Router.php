@@ -12,13 +12,15 @@ use \Exception;
  */
 class Router {
 
-    private $config = array();
+    private $aConfig = array();
+    private $oConfig;
     private $cache_funarr = array();
     private $user_cache = array();
     public $message_field = 'message';
 
-    public function __construct($config) {
-        $this->config = $config;
+    public function __construct($aConfig) {
+        $this->aConfig = $aConfig;
+        $this->oConfig = $aConfig['oConfig'];
     }
 
     public function __get($name) {
@@ -35,7 +37,7 @@ class Router {
             $this->error("cant call fun-name=$name", 'Error In Router');
         }
         $name_ltrim = substr($name, strlen($modelpre));
-        $path = $this->config['model_dir'] . DS . str_replace('_', DS, $name_ltrim) . '.php';
+        $path = $this->aConfig['model_dir'] . DS . str_replace('_', DS, $name_ltrim) . '.php';
         if (!is_file($path)) {
             $this->error("cant find \$path=$path", 'Error In Router');
         }
@@ -110,17 +112,22 @@ class Router {
     }
 
     private function getFuncInfo($file_path) {
-        if (!$this->config['cache_enable']) {
+        if (!$this->aConfig['cache_enable']) {
             return $this->getFuncInfoByFile($file_path);
         }
-        if (isset($this->config['cache_second'])) {
+        if (isset($this->aConfig['cache_second'])) {
             if (isset($this->cache_funarr[$file_path])) {
                 $aFuncInfo = $this->cache_funarr[$file_path];
-                if (microtime(TRUE) - $aFuncInfo['time'] < $this->config['cache_second']) {
+                if (microtime(TRUE) - $aFuncInfo['time'] < $this->aConfig['cache_second']) {
                     return $aFuncInfo;
                 }
                 $this->cache_funarr[$file_path]['time'] = microtime(TRUE);
-                if ($aFuncInfo['mtime'] === filemtime($file_path)) {
+                $iFilemtime = filemtime($file_path);
+                if ($iFilemtime === FALSE) {
+                    //文件被删后仍然返回之前的缓存
+                    return $aFuncInfo;
+                }
+                if ($aFuncInfo['mtime'] === $iFilemtime) {
                     return $aFuncInfo;
                 }
             }
@@ -145,7 +152,7 @@ class Router {
 
     private function file_require($file_path) {
         if (!is_file($file_path)) {
-            $file_path = substr($file_path, strlen($this->config['action_dir']));
+            $file_path = substr($file_path, strlen($this->aConfig['action_dir']));
             $sCode = 'ActionNotFound';
             $this->error($file_path . ' Not Found Action', 'Error In Router', $sCode);
         }
@@ -164,11 +171,11 @@ class Router {
         try {
             call_user_func_array($funcInfo['func'], $fp[0]);
             foreach ($fp[1] as $sName => $oInstance) {
-                F::$oConfig->freeInstance($sName, $oInstance);
+                $this->oConfig->freeInstance($sName, $oInstance);
             }
         } catch (Exception $ex) {
             foreach ($fp[1] as $sName => $oInstance) {
-                F::$oConfig->freeInstance($sName, $oInstance);
+                $this->oConfig->freeInstance($sName, $oInstance);
             }
             throw $ex;
         }
@@ -226,14 +233,14 @@ class Router {
             //开始处理由config实例化的object
             if (preg_match('/^o([A-Z][a-z0-9_]+)$/', $sParamName, $matches)) {
                 $sName = strtolower($matches[1]);
-                $oInstance = F::$oConfig->getInstance($sName, TRUE);
+                $oInstance = $this->oConfig->getInstance($sName, TRUE);
                 $getInstance[$sName] = $oInstance;
                 $depend[] = $oInstance;
                 //$depend[] = F::$aInstances[$sName];
                 continue;
             }
-            if (isset(F::$oConfig->aClass[$sParamName])) {
-                $oInstance = F::$oConfig->getInstance($sParamName, TRUE);
+            if (isset($this->oConfig->aClass[$sParamName])) {
+                $oInstance = $this->oConfig->getInstance($sParamName, TRUE);
                 $getInstance[$sParamName] = $oInstance;
                 $depend[] = $oInstance;
                 continue;
@@ -260,10 +267,10 @@ class Router {
      */
     public function execAction($oRes) {
         if ($oRes->path === '' || $oRes->path === '/') {
-            return $this->load_php_file($this->config['action_dir'] . '/index.php', $oRes);
+            return $this->load_php_file($this->aConfig['action_dir'] . '/index.php', $oRes);
         }
-        if (is_file($this->config['action_dir'] . '.php')) {
-            $ret = $this->load_php_file($this->config['action_dir'] . '.php', $oRes);
+        if (is_file($this->aConfig['action_dir'] . '.php')) {
+            $ret = $this->load_php_file($this->aConfig['action_dir'] . '.php', $oRes);
             if ($ret === false) {
                 return false;
             }
@@ -275,7 +282,7 @@ class Router {
                 continue;
             }
             $sPath .= DS . $dir;
-            $ret = $this->load_php_file($this->config['action_dir'] . $sPath . '.php', $oRes);
+            $ret = $this->load_php_file($this->aConfig['action_dir'] . $sPath . '.php', $oRes);
             if ($ret === false) {
                 return false;
             }
