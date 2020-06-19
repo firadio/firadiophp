@@ -14,6 +14,7 @@ class Config {
     private $aClass = array();
     private $aConfigs = array();
     public $aInstances = array();
+    private $user_cache = array();
 
     public function __get($name) {
         if ($name === 'aClass') {
@@ -204,6 +205,21 @@ class Config {
         }
         $aConfig['free'] = array();
         $this->aClass[$sName] = $aConfig;
+    }
+
+    public function cache_get($key) {
+        if (!isset($this->user_cache[$key])) {
+            return false;
+        }
+        return $this->user_cache[$key];
+    }
+
+    public function cache_set($key, $value) {
+        $this->user_cache[$key] = $value;
+    }
+
+    public function cache_del($key) {
+        unset($this->user_cache[$key]);
     }
 
 }
