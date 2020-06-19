@@ -13,13 +13,13 @@ class Response {
     private $aParam = array(); // 用于提供给action函数进行处理的参数
     //aRequest的存储优先级，1：HTTP_RAW_POST_DATA为JSON字符串时，2：存在POST时，3：GET请求
     private $aRequest = array(); //输入用户请求数据
+    private $mRequestHeader = array(); //$_SERVER['HTTP_AUTHORIZATION']
     private $aResponse = array(); //输出的结果
-    private $aResponseHeader = array(); //输出的Header
+    private $mResponseHeader = array(); //输出的Header
     public $oRequest; //来自于Swoole\Http\Server
     public $oResponse; //来自于Swoole\Http\Server
     public $oServer; //来自于Swoole的onConn
     public $isWebsocket = false;
-    public $aHeader = array(); //$_SERVER['HTTP_AUTHORIZATION']
     public $channels = array();
     public $refFunPar = array();
 
@@ -45,8 +45,8 @@ class Response {
             // 提供给Router.php的getResponse获取传回数据用的
             return $this->aResponse;
         }
-        if ($name === 'aResponseHeader') {
-            return $this->aResponseHeader;
+        if ($name === 'mResponseHeader') {
+            return $this->mResponseHeader;
         }
         throw new Exception("cannot get property name=$name");
     }
@@ -64,6 +64,10 @@ class Response {
         }
         if ($name === 'aRequest') {
             $this->aRequest = $value;
+            return;
+        }
+        if ($name === 'mRequestHeader') {
+            $this->mRequestHeader = $value;
             return;
         }
         throw new Exception("dont have property name=$name");
@@ -101,7 +105,7 @@ class Response {
     }
 
     public function header($name, $value) {
-        $this->aResponseHeader[$name] = $value;
+        $this->mResponseHeader[$name] = $value;
     }
 
     public function response($name) {
@@ -138,22 +142,28 @@ class Response {
         F::setcookie($name, $value, $expire, $path, $domain);
     }
 
-    public function getHeader($key) {
-        if (isset($this->aHeader[$key])) {
-            return $this->aHeader[$key];
-        }
-        $key = strtolower($key);
-        if (isset($this->aHeader[$key])) {
-            return $this->aHeader[$key];
-        }
-        $key = strtoupper($key);
-        if (isset($this->aHeader[$key])) {
-            return $this->aHeader[$key];
+    public function getRequestHeader($key) {
+        if (isset($this->mRequestHeader[$key])) {
+            return $this->mRequestHeader[$key];
         }
     }
 
     public function getExecTime() {
         return microtime(TRUE) - $this->fBeginTime;
+    }
+
+    public function getReqMsgContents() {
+        if (isset($this->mRequestHeader['worker-msg-content'])) {
+            return json_decode(urldecode($this->mRequestHeader['worker-msg-content']), TRUE);
+        }
+        return array();
+    }
+
+    public function appendToResMsg($sMsg) {
+        if (!isset($this->mResponseHeader['worker-msg-content'])) {
+            $this->mResponseHeader['worker-msg-content'] = array();
+        }
+        $this->mResponseHeader['worker-msg-content'][] = $sMsg;
     }
 
 }

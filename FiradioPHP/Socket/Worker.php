@@ -39,14 +39,14 @@ class Worker {
         return str_replace('.', '/', $kvQuery['service']);
     }
 
-    private function getIpAddr($kvReqHeader) {
-        if (isset($kvReqHeader['x-forwarded-for'])) {
+    private function getIpAddr($mReqHeader) {
+        if (isset($mReqHeader['x-forwarded-for'])) {
             //取得GO服务器传过来的IP
-            return $kvReqHeader['x-forwarded-for'];
+            return $mReqHeader['x-forwarded-for'];
         }
-        if (isset($kvReqHeader['x-remote-address'])) {
+        if (isset($mReqHeader['x-remote-address'])) {
             //取得NodeJS服务器传过来的IP
-            $ip = $kvReqHeader['x-remote-address'];
+            $ip = $mReqHeader['x-remote-address'];
             if (strpos($ip, '::ffff:') !== FALSE) {
                 $ip = substr($ip, 7);
             }
@@ -54,15 +54,16 @@ class Worker {
         }
     }
 
-    private function getResBody($kvReqHeader, $sReqBody) {
-        $IPADDR = $this->getIpAddr($kvReqHeader);
-        $sPath = $this->getPath($kvReqHeader['url']);
+    private function getResponse($mReqHeader, $sReqBody) {
+        $IPADDR = $this->getIpAddr($mReqHeader);
+        $sPath = $this->getPath($mReqHeader['url']);
         $this->consoleLog($this->ipaddr_format($IPADDR) . ' ' . $sPath);
         $oRes = new \FiradioPHP\Routing\Response();
         $oRes->setParam('IPADDR', $IPADDR);
-        $oRes->setParam('sUserAgent', $kvReqHeader['user-agent']);
+        $oRes->setParam('sUserAgent', $mReqHeader['user-agent']);
         $oRes->path = $sPath;
         $oRes->aRequest = $this->getParam($sReqBody);
+        $oRes->mRequestHeader = $mReqHeader;
         $oRes->assign('ret', 0);
         try {
             $this->oConfig->aInstances['router']->execAction($oRes);
@@ -83,9 +84,13 @@ class Worker {
             $oRes->assign('code', (string) $sCode);
             $oRes->assign('msg', $sMsg);
         }
-        $ret = json_encode($oRes->aResponse);
+        $sResBody = json_encode($oRes->aResponse);
+        $mResHeader = $oRes->mResponseHeader;
+        if (isset($mResHeader['worker-msg-content'])) {
+            $mResHeader['worker-msg-content'] = json_encode($mResHeader['worker-msg-content']);
+        }
         echo ' [' . number_format($oRes->getExecTime() * 1000, 2) . 'ms]';
-        return $ret;
+        return array($mResHeader, $sResBody);
     }
 
     private function ipaddr_format($IPADDR) {
@@ -166,11 +171,21 @@ class Worker {
                 continue;
             }
             //第3步：处理客户的请求，并返回新的Body请求
-            $sResBody = $this->getResBody($aReqHeader, $sReqBody);
+            list($mResHeader, $sResBody) = $this->getResponse($aReqHeader, $sReqBody);
+            $mResHeader['client-queueid'] = $aReqHeader['client-queueid'];
+            $mResHeader['worker-msg-lastseq'] = $aReqHeader['worker-msg-lastseq'];
+            //$mResHeader['Content-Type'] = 'text/plain';
+            $mResHeader['Content-Type'] = 'application/json; charset=UTF-8';
             $aResHeader = array();
-            $aResHeader[] = "client-queueid: {$aReqHeader['client-queueid']}";
-            //$aResHeader[] = "Content-Type: text/plain";
-            $aResHeader[] = 'Content-Type: application/json; charset=UTF-8';
+            foreach ($mResHeader as $sResHeaderName => $oResHeader) {
+                if (is_array($oResHeader)) {
+                    foreach ($oResHeader as $sResHeader) {
+                        $aResHeader[] = $sResHeaderName . ': ' . $sResHeader;
+                    }
+                    continue;
+                }
+                $aResHeader[] = $sResHeaderName . ': ' . $oResHeader;
+            }
             //第4步：将本次处理好的queueid提交上去
             curl_setopt($ch, CURLOPT_HTTPHEADER, $aResHeader);
         }
