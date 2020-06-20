@@ -23,7 +23,10 @@ class Worker {
         if (substr($sRawContent, 0, 1) === '{') {
             return json_decode($sRawContent, true);
         }
-        return array();
+        // 非JSON格式就按URL编码的Post进行解析        
+        $mQuery = array();
+        parse_str($sRawContent, $mQuery);
+        return $mQuery;
     }
 
     private function getPath($sUrl) {
@@ -34,7 +37,7 @@ class Worker {
         $kvQuery = array();
         parse_str($kvUrl['query'], $kvQuery);
         if (!isset($kvQuery['service'])) {
-            return;
+            return $kvUrl['path'];
         }
         return str_replace('.', '/', $kvQuery['service']);
     }
@@ -61,6 +64,8 @@ class Worker {
         $oRes = new \FiradioPHP\Routing\Response();
         $oRes->setParam('IPADDR', $IPADDR);
         $oRes->setParam('sUserAgent', $mReqHeader['user-agent']);
+        $oRes->setParam('sRawUrl', $mReqHeader['url']);
+        $oRes->setParam('sRawContent', $sReqBody);
         $oRes->path = $sPath;
         $oRes->aRequest = $this->getParam($sReqBody);
         $oRes->mRequestHeader = $mReqHeader;
