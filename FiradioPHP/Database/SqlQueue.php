@@ -6,11 +6,14 @@ class SqlQueue {
 
     public $oDb = null;
     public $sTable = null; // 表名
+    public $sTableAlias = 't1'; //sTable的别名
+    public $sJoinTable = NULL;
+    public $sJoinField = NULL;
     public $sFieldId = 'id'; // ID列（主键）
     public $sFieldCreated = 'created'; // 创建时间
     public $sFieldUpdated = 'updated'; // 最后更新时间
-    public $sFieldState = null; // 状态列, 0为未处理队列（需要做索引）
-    public $sFieldSeq = null; // 序号列，每次处理+1（需要做索引）
+    public $sFieldState = 'do_state'; // 状态列, 0为未处理队列（需要做索引）
+    public $sFieldSeq = 'do_seq'; // 序号列，每次处理+1（需要做索引）
     private $sCurrentId = null;
 
     public function __construct() {
@@ -20,7 +23,8 @@ class SqlQueue {
     public function getOne() {
         $aWhere = array();
         $aWhere[$this->sFieldState] = 0;
-        $oSql = $this->oDb->sql()->table($this->sTable);
+        $oSql = $this->oDb->sql();
+        $oSql->table($this->sTable);
         $aField = array($this->sFieldId);
         $aField[] = $this->sFieldSeq;
         // 首先获取下一条需要处理的ID号
@@ -39,7 +43,20 @@ class SqlQueue {
         $this->oDb->commit();
         //完成自增Seq以后再次找到这个ID
         $this->oDb->begin();
-        $aRow2 = $oSql->where($aWhereId)->field('*')->lock()->find();
+        if ($this->sTableAlias && $this->sJoinTable && $this->sJoinField) {
+            $oSql->table($this->sTable . ' ' . $this->sTableAlias . ' LEFT JOIN ' . $this->sJoinTable);
+            $oSql->where(array($this->sTableAlias . '.' . $this->sFieldId => $aRow1[$this->sFieldId]));
+            $aField = array($this->sJoinField);
+            $aField[] = $this->sTableAlias . '.' . $this->sFieldId;
+            $aField[] = $this->sTableAlias . '.' . $this->sFieldState;
+            $aField[] = $this->sTableAlias . '.' . $this->sFieldSeq;
+            $oSql->field(implode(',', $aField));
+        } else {
+            $oSql->where($aWhereId);
+            $oSql->field('*');
+        }
+        $oSql->lock();
+        $aRow2 = $oSql->find();
         if (!empty($aRow2[$this->sFieldState])) {
             //非0就是处理过了，必须跳过
             $this->oDb->rollback();
@@ -51,8 +68,6 @@ class SqlQueue {
             return 'R';
         }
         $this->sCurrentId = $aRow2[$this->sFieldId];
-        unset($aRow2[$this->sFieldCreated]);
-        unset($aRow2[$this->sFieldUpdated]);
         unset($aRow2[$this->sFieldState]);
         unset($aRow2[$this->sFieldSeq]);
         return $aRow2;
