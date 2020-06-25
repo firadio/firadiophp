@@ -350,6 +350,9 @@ class AlibabaCloud {
                 break;
             }
         }
+        if ($count_i == 0) {
+            return 0;
+        }
         return $count_val / $count_i / $period;
     }
 
