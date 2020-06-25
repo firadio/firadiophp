@@ -311,29 +311,46 @@ class AlibabaCloud {
         //print_r($ret->toArray());
     }
 
-    public function VpcEipMonitorData($AllocationId) {
+    private function array_orderby() {
+        $args = func_get_args();
+        $data = array_shift($args);
+        foreach ($args as $n => $field) {
+            if (is_string($field)) {
+                $tmp = array();
+                foreach ($data as $key => $row)
+                    $tmp[$key] = $row[$field];
+                $args[$n] = $tmp;
+                }
+        }
+        $args[] = &$data;
+        call_user_func_array('array_multisort', $args);
+        return array_pop($args);
+    }
+
+    public function VpcEipMonitorData($AllocationId, $countLimit = 1, $countKey = 'EipTX') {
         $request = Vpc::v20160428()->DescribeEipMonitorData();
         $request->withAllocationId($AllocationId);
         $arr = array(60, 300, 900, 3600);
         $period = $arr[0];
         $request->withPeriod($period);
         date_default_timezone_set('UTC');
-        $request->withStartTime(date('Y-m-d\TH:i:00\Z', time() - 60 * (15)));
-        $request->withEndTime(date('Y-m-d\TH:i:00\Z', time() + 60));
+        $request->withStartTime(date('Y-m-d\TH:i:00\Z', time() - 60 * ($countLimit + 3)));
+        $request->withEndTime(date('Y-m-d\TH:i:00\Z', time() + 60 * (10)));
         $ret = $request->request();
         $d1 = $ret['EipMonitorDatas']['EipMonitorData'];
-        $d2 = array();
-        foreach ($d1 as $k => $v) {
-            $d2[$v['TimeStamp']] = $k;
+        $sorted = $this->array_orderby($d1, 'TimeStamp', SORT_DESC);
+        $count_i = 0;
+        $count_val = 0;
+        foreach ($sorted as $k => $row) {
+            $val = floatval($row[$countKey]);
+            if ($k == 0 && $val == 0) continue;
+            $count_i++;
+            $count_val += $val;
+            if ($count_i >= $countLimit) {
+                break;
+            }
         }
-        krsort($d2);
-        foreach ($d2 as $k) {
-            $row = $d1[$k];
-            if ($row['EipTX'] == 0) continue;
-            $row['EipTXPS'] = $row['EipTX'] / $period;
-            return($row);
-        }
-        return 0;
+        return $count_val / $count_i / $period;
     }
 
     public function VpcDescribeCommonBandwidthPackage() {
