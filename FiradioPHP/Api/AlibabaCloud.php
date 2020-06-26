@@ -370,9 +370,13 @@ class AlibabaCloud {
         return $ret;
     }
 
-    public function VpcDescribeEipAddresses($PageNumber = 1) {
+    public function VpcDescribeEipAddresses($PageNumber = 1, $PageSize = NULL) {
+        // 参考 https://help.aliyun.com/document_detail/36018.html
         $request = Vpc::v20160428()->DescribeEipAddresses();
         $request->withPageNumber($PageNumber);
+        if ($PageSize !== NULL) {
+            $request->withPageSize($PageSize);
+        }
         $ret = $request->request();
         return $ret;
     }
@@ -383,7 +387,8 @@ class AlibabaCloud {
      * 开始Cms相关功能
     */
 
-    public function CmsDescribeMetricList($Namespace, $MetricName) {
+    public function CmsDescribeMetricList($Namespace, $MetricName, $countLimit = 1, $groupby = NULL) {
+        // 参考 https://help.aliyun.com/document_detail/51936.html
         $request = Cms::v20190101()->DescribeMetricList();
         $request->withNamespace($Namespace);
         $request->withMetricName($MetricName);
@@ -391,23 +396,55 @@ class AlibabaCloud {
         $period = $arr[0];
         $request->withPeriod($period);
         date_default_timezone_set('UTC');
-        $countLimit = 1;
         $request->withStartTime(date('Y-m-d\TH:i:00\Z', time() - 60 * ($countLimit + 3)));
         $request->withEndTime(date('Y-m-d\TH:i:00\Z', time() + 60 * (10)));
+        if ($groupby !== NULL) {
+            $Express = json_encode(array('groupby' => explode(',', $groupby)));
+            $request->withExpress($Express);
+        }
         $ret = $request->request();
         $Datapoints = json_decode($ret->Datapoints, TRUE);
         return $Datapoints;
     }
 
-    public function CmsCbwpLatestMbps() {
+    public function CmsCbwpTxRatesMap($countLimit = 1) {
+        // 参考 https://help.aliyun.com/document_detail/165008.html
         $Namespace = 'acs_bandwidth_package';
-        $MetricName = 'net_tx.rate';
+        $MetricName = 'net_tx.rate'; // 流出带宽
         $Datapoints = $this->CmsDescribeMetricList($Namespace, $MetricName);
-        if (empty($Datapoints)) {
-            return 0;
-        }
         $sorted = $this->array_orderby($Datapoints, 'timestamp', SORT_DESC);
-        return ($sorted[0]['Value'] / 1048576);
+        $mRet = array();
+        foreach ($sorted as $mRow) {
+            if (!isset($mRet[$mRow['instanceId']])) {
+                $mRet[$mRow['instanceId']] = array();
+            }
+            if (count($mRet[$mRow['instanceId']]) >= $countLimit) {
+                continue;
+            }
+            $mRet[$mRow['instanceId']][] = floatval($mRow['Value']);
+        }
+        return $mRet;
     }
+
+    public function CmsEipTxRatesMap($countLimit = 1) {
+        // 参考 https://help.aliyun.com/document_detail/162874.html
+        $Namespace = 'acs_vpc_eip';
+        $MetricName = 'net_tx.rate'; // 流出带宽
+        $Datapoints = $this->CmsDescribeMetricList($Namespace, $MetricName, $countLimit);
+        $sorted = $this->array_orderby($Datapoints, 'timestamp', SORT_DESC);
+        $mRet = array();
+        foreach ($sorted as $mRow) {
+            if (!isset($mRet[$mRow['instanceId']])) {
+                $mRet[$mRow['instanceId']] = array();
+            }
+            if (count($mRet[$mRow['instanceId']]) >= $countLimit) {
+                continue;
+            }
+            $mRet[$mRow['instanceId']][] = floatval($mRow['Value']);
+        }
+        return $mRet;
+    }
+
+
 
 }
