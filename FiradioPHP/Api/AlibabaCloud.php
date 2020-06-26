@@ -7,6 +7,7 @@ use AlibabaCloud\Client\Exception\ClientException;
 use AlibabaCloud\Client\Exception\ServerException;
 use AlibabaCloud\Ecs\Ecs;
 use AlibabaCloud\Vpc\Vpc;
+use AlibabaCloud\Cms\Cms;
 
 /**
  * https://github.com/rjyxz/aliyun-php-sdk-dm
@@ -377,5 +378,36 @@ class AlibabaCloud {
     }
 
 
+
+    /*
+     * 开始Cms相关功能
+    */
+
+    public function CmsDescribeMetricList($Namespace, $MetricName) {
+        $request = Cms::v20190101()->DescribeMetricList();
+        $request->withNamespace($Namespace);
+        $request->withMetricName($MetricName);
+        $arr = array(60, 300, 900, 3600);
+        $period = $arr[0];
+        $request->withPeriod($period);
+        date_default_timezone_set('UTC');
+        $countLimit = 1;
+        $request->withStartTime(date('Y-m-d\TH:i:00\Z', time() - 60 * ($countLimit + 3)));
+        $request->withEndTime(date('Y-m-d\TH:i:00\Z', time() + 60 * (10)));
+        $ret = $request->request();
+        $Datapoints = json_decode($ret->Datapoints, TRUE);
+        return $Datapoints;
+    }
+
+    public function CmsCbwpLatestMbps() {
+        $Namespace = 'acs_bandwidth_package';
+        $MetricName = 'net_tx.rate';
+        $Datapoints = $this->CmsDescribeMetricList($Namespace, $MetricName);
+        if (empty($Datapoints)) {
+            return 0;
+        }
+        $sorted = $this->array_orderby($Datapoints, 'timestamp', SORT_DESC);
+        return ($sorted[0]['Value'] / 1048576);
+    }
 
 }
