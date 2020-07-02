@@ -14,6 +14,7 @@ class Response {
     //aRequest的存储优先级，1：HTTP_RAW_POST_DATA为JSON字符串时，2：存在POST时，3：GET请求
     private $aRequest = array(); //输入用户请求数据
     private $mRequestHeader = array(); //$_SERVER['HTTP_AUTHORIZATION']
+    private $lResponse = array(); //echo的输出结果
     private $aResponse = array(); //输出的结果
     private $mResponseHeader = array(); //输出的Header
     public $oRequest; //来自于Swoole\Http\Server
@@ -101,7 +102,7 @@ class Response {
         if (!isset($this->aResponse['setting'])) {
             $this->aResponse['setting'] = array();
         }
-        $this->aResponse['setting'][$name] = $value;
+        $this->aResponse['setting'][$name] = (string) $value;
     }
 
     public function header($name, $value) {
@@ -164,6 +165,31 @@ class Response {
             $this->mResponseHeader['worker-msg-content'] = array();
         }
         $this->mResponseHeader['worker-msg-content'][] = $sMsg;
+    }
+
+    public function putRequest($mParam) {
+        foreach ($mParam as $sKey => $sVal) {
+            $this->aRequest[$sKey] = $sVal;
+        }
+    }
+
+    public function getResponseHeaders() {
+        $mResHeader = $this->mResponseHeader;
+        if (isset($mResHeader['worker-msg-content'])) {
+            $mResHeader['worker-msg-content'] = json_encode($mResHeader['worker-msg-content']);
+        }
+        return $mResHeader;
+    }
+
+    public function echo($text) {
+        $this->lResponse[] = $text;
+    }
+
+    public function getResponseBody() {
+        if (empty($this->lResponse)) {
+            return json_encode($this->aResponse);
+        }
+        return implode('', $this->lResponse);
     }
 
 }

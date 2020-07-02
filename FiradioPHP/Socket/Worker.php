@@ -6,6 +6,7 @@ class Worker {
 
     private $url = 'http://127.0.0.1';
     private $oConfig;
+    private $mUrlQuery = array();
 
     public function __construct($oConfig) {
         $this->oConfig = $oConfig;
@@ -32,14 +33,13 @@ class Worker {
     private function getPath($sUrl) {
         $kvUrl = parse_url($sUrl);
         if (!isset($kvUrl['query'])) {
-            return;
-        }
-        $kvQuery = array();
-        parse_str($kvUrl['query'], $kvQuery);
-        if (!isset($kvQuery['service'])) {
             return $kvUrl['path'];
         }
-        return str_replace('.', '/', $kvQuery['service']);
+        parse_str($kvUrl['query'], $this->mUrlQuery);
+        if (!isset($this->mUrlQuery['service'])) {
+            return $kvUrl['path'];
+        }
+        return str_replace('.', '/', $this->mUrlQuery['service']);
     }
 
     private function getIpAddr($mReqHeader) {
@@ -67,7 +67,8 @@ class Worker {
         $oRes->setParam('sRawUrl', $mReqHeader['url']);
         $oRes->setParam('sRawContent', $sReqBody);
         $oRes->path = $sPath;
-        $oRes->aRequest = $this->getParam($sReqBody);
+        $oRes->putRequest($this->mUrlQuery);
+        $oRes->putRequest($this->getParam($sReqBody));
         $oRes->mRequestHeader = $mReqHeader;
         $oRes->assign('ret', 0);
         try {
@@ -80,7 +81,8 @@ class Worker {
             $sMsg = $ex->getMessage();
             $oRes->debug('msg', $sMsg);
             if ($sCode === 'end') {
-                return($sMsg);
+                $mResHeader = $oRes->getResponseHeaders();
+                return array($mResHeader, $sMsg);
             }
             if ($sCode === 'ActionNotFound') {
                 $sMsg = '错误：【service参数值】已改变，请到API调试页获取新的service参数值';
@@ -89,11 +91,8 @@ class Worker {
             $oRes->assign('code', (string) $sCode);
             $oRes->assign('msg', $sMsg);
         }
-        $sResBody = json_encode($oRes->aResponse);
-        $mResHeader = $oRes->mResponseHeader;
-        if (isset($mResHeader['worker-msg-content'])) {
-            $mResHeader['worker-msg-content'] = json_encode($mResHeader['worker-msg-content']);
-        }
+        $mResHeader = $oRes->getResponseHeaders();
+        $sResBody = $oRes->getResponseBody();
         echo ' [' . number_format($oRes->getExecTime() * 1000, 2) . 'ms]';
         return array($mResHeader, $sResBody);
     }
@@ -180,7 +179,9 @@ class Worker {
             $mResHeader['client-queueid'] = $aReqHeader['client-queueid'];
             $mResHeader['worker-msg-lastseq'] = $aReqHeader['worker-msg-lastseq'];
             //$mResHeader['Content-Type'] = 'text/plain';
-            $mResHeader['Content-Type'] = 'application/json; charset=UTF-8';
+            if (!isset($mResHeader['Content-Type'])) {
+                $mResHeader['Content-Type'] = 'application/json; charset=UTF-8';
+            }
             $aResHeader = array();
             foreach ($mResHeader as $sResHeaderName => $oResHeader) {
                 if (is_array($oResHeader)) {
