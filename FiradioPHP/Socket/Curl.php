@@ -26,6 +26,7 @@ class Curl {
     public $authentication = 0;
     public $auth_name = '';
     public $auth_pass = '';
+    public $postFormat = '';
     private $_params = array();
 
     public function useAuth($use) {
@@ -143,19 +144,20 @@ class Curl {
             curl_setopt($s, CURLOPT_USERPWD, $this->auth_name . ':' . $this->auth_pass);
         }
         if ($this->_post) {
-            $aPost = $this->_postFields;
-            $sPost = '';
-            $sContentType = isset($this->_header['Content-Type']) ? $this->_header['Content-Type'] : '';
-            $postFormat = isset($this->postFormat) ? $this->postFormat : '';
-            if ($postFormat === 'json') {
-                $sPost = json_encode($aPost);
-            } else if (strpos($sContentType, 'application/json') !== FALSE) {
-                $sPost = json_encode($aPost);
-            } else {
-                $sPost = http_build_query($aPost);
+            $post = $this->_postFields;
+            if (is_array($post)) {
+                $sContentType = isset($this->_header['Content-Type']) ? $this->_header['Content-Type'] : '';
+                $postFormat = isset($this->postFormat) ? strtolower($this->postFormat) : '';
+                if ($postFormat === 'json') {
+                    $post = json_encode($post);
+                } else if (strpos($sContentType, 'application/json') !== FALSE) {
+                    $post = json_encode($post);
+                } else {
+                    $post = http_build_query($post);
+                }
             }
             curl_setopt($s, CURLOPT_POST, true);
-            curl_setopt($s, CURLOPT_POSTFIELDS, $sPost);
+            curl_setopt($s, CURLOPT_POSTFIELDS, $post);
         }
 
         if ($this->_includeHeader) {

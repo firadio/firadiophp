@@ -72,8 +72,9 @@ class Router {
             // code = -1 用于输出特殊格式资料
             // code = -2 自定义错误
             // code = -3 其他未知错误
-            $oRes->assign('code', $ex->sCode);
-            if ($ex->sCode === 'end') {
+            $sCode = isset($ex->sCode) ? $ex->sCode : '';
+            $oRes->assign('code', $sCode);
+            if ($sCode === 'end') {
                 //该异常由$oRes->end();发起
                 throw new Exception($ex->getMessage(), $exCode);
             }

@@ -15,7 +15,14 @@ class Wechat {
 
     public function __construct($conf) {
         $this->aConfig = $conf;
+        unset($this->aConfig['access_token_created']);
         $this->oCurl = new Curl();
+    }
+
+    private function error($errmsg, $errcode) {
+        $ex = new \Exception($errmsg);
+        $ex->sCode = $errcode;
+        throw $ex;
     }
 
     public function getSignature($timestamp, $nonce) {
@@ -108,19 +115,33 @@ class Wechat {
         return $ret;
     }
 
+    private function retDataFromCurl($sUrl, $aGet, $aPost = NULL) {
+        $oCurl = new Curl();
+        $oCurl->setUrlPre($sUrl);
+        $oCurl->setParam($aGet);
+        if (is_array($aPost)) {
+            $sPost = json_encode($aPost, JSON_UNESCAPED_UNICODE);
+            $oCurl->setPost($sPost);
+        }
+        $jsonStr = $oCurl->execCurl();
+        $jsonArr = json_decode($jsonStr, TRUE);
+        if (!empty($jsonArr['errcode']) && isset($jsonArr['errmsg'])) {
+            print_r($jsonArr);
+            $this->error($jsonArr['errmsg'], $jsonArr['errcode']);
+        }
+        return $jsonArr;
+    }
+
     private function access_token() {
         if (isset($this->aConfig['access_token_created']) && time() - $this->aConfig['access_token_created'] < 7200) {
             return $this->aConfig['access_token'];
         }
         $url = 'https://api.weixin.qq.com/cgi-bin/token';
-        $this->oCurl->setUrlPre($url);
         $get = array();
         $get['grant_type'] = 'client_credential';
         $get['appid'] = $this->aConfig['appId'];
         $get['secret'] = $this->aConfig['appSecret'];
-        $this->oCurl->setParam($get);
-        $jsonStr = $this->oCurl->execCurl();
-        $jsonArr = json_decode($jsonStr, TRUE);
+        $jsonArr = $this->retDataFromCurl($url, $get);
         if (empty($jsonArr['access_token'])) {
             throw new \Exception('access_token()' . $jsonStr);
             return;
@@ -152,37 +173,73 @@ class Wechat {
     }
 
     public function menu_get() {
-        $url = 'https://api.weixin.qq.com/cgi-bin/menu/get';
-        $this->oCurl->setUrlPre($url);
         $get = array();
         $get['access_token'] = $this->access_token();
-        $this->oCurl->setParam($get);
-        $jsonStr = $this->oCurl->execCurl();
-        $jsonArr = json_decode($jsonStr, TRUE);
-        $jsonArr = $jsonArr['menu']['button'];
-        return $jsonArr;
+        $url = 'https://api.weixin.qq.com/cgi-bin/menu/get';
+        return $this->retDataFromCurl($url, $get);
     }
 
-    public function menu_create($button) {
+    public function menu_create($aTop) {
         $data = array();
-        $data['button'] = $button;
-        $post = json_encode($data, JSON_UNESCAPED_UNICODE);
+        $data['button'] = $aTop['menu']['button'];
         $get = array();
+        // access_token() 要先执行，否则执行过的 setUrlPre() 会被覆盖
         $get['access_token'] = $this->access_token();
         $url = 'https://api.weixin.qq.com/cgi-bin/menu/create';
-        $this->oCurl->setUrlPre($url);
-        $this->oCurl->setHeader('Content-Type', 'application/json');
-        $this->oCurl->setParam($get);
-        $this->oCurl->setPost($post);
-        $jsonStr = $this->oCurl->execCurl();
-        $jsonArr = json_decode($jsonStr, TRUE);
-        return $jsonArr;
+        return $this->retDataFromCurl($url, $get, $data);
+    }
+
+    public function get_current_selfmenu_info() {
+        $get = array();
+        $get['access_token'] = $this->access_token();
+        $url = 'https://api.weixin.qq.com/cgi-bin/get_current_selfmenu_info';
+        return $this->retDataFromCurl($url, $get);
+    }
+
+    public function menu_addconditional($data) {
+        $get = array();
+        $get['access_token'] = $this->access_token();
+        $url = 'https://api.weixin.qq.com/cgi-bin/menu/addconditional';
+        return $this->retDataFromCurl($url, $get, $data);
+    }
+
+    public function menu_delconditional($menuid) {
+        $aData = array();
+        $aData['menuid'] = $menuid;
+        $get = array();
+        $get['access_token'] = $this->access_token();
+        $url = 'https://api.weixin.qq.com/cgi-bin/menu/delconditional';
+        return $this->retDataFromCurl($url, $get, $aData);
     }
 
     public function Wxpay() {
         return new Wxpay($this->aConfig);
     }
 
+    public function getTokenByCode($code) {
+        $url = 'https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code';
+        $url = str_replace('APPID', $this->aConfig['appId'], $url);
+        $url = str_replace('SECRET', $this->aConfig['appSecret'], $url);
+        $url = str_replace('CODE', $code, $url);
+        $this->oCurl->setUrlPre($url);
+        $get = array();
+        $this->oCurl->setParam($get);
+        $jsonStr = $this->oCurl->execCurl();
+        if (empty($jsonStr)) exit('<font size=7>请等待...</font><script>location.href="http://' . $GLOBALS['safedomain'] . '";</script>');
+        $jsonArr = json_decode($jsonStr, true);
+        if (isset($jsonArr['errcode'])) {
+            $this->error($jsonArr['errmsg']);
+            return;
+        }
+        /*
+         * varchar(110) access_token
+         * int(10)      expires_in = 7200
+         * varchar(110) refresh_token
+         * varchar(30)  openid
+         * varchar(16)  scope
+         */
+        return $jsonArr;
+    }
 
 }
 
