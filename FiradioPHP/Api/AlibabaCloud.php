@@ -328,7 +328,7 @@ class AlibabaCloud {
         return array_pop($args);
     }
 
-    public function VpcEipMonitorData($AllocationId, $countLimit = 1, $countKey = 'EipTX') {
+    public function VpcEipMonitorData($AllocationId, $countLimit = 1) {
         $request = Vpc::v20160428()->DescribeEipMonitorData();
         $request->withAllocationId($AllocationId);
         $arr = array(60, 300, 900, 3600);
@@ -341,20 +341,20 @@ class AlibabaCloud {
         $d1 = $ret['EipMonitorDatas']['EipMonitorData'];
         $sorted = $this->array_orderby($d1, 'TimeStamp', SORT_DESC);
         $count_i = 0;
-        $count_val = 0;
-        foreach ($sorted as $k => $row) {
-            $val = floatval($row[$countKey]);
-            if ($k == 0 && $val == 0) continue;
+        $mRet = array();
+        foreach ($sorted as $k => $mRow) {
             $count_i++;
-            $count_val += $val;
+            foreach ($mRow as $key => $val) {
+                if (!isset($mRet[$key])) {
+                    $mRet[$key] = array();
+                }
+                $mRet[$key][] = $val;
+            }
             if ($count_i >= $countLimit) {
                 break;
             }
         }
-        if ($count_i == 0) {
-            return 0;
-        }
-        return $count_val / $count_i / $period;
+        return $mRet;
     }
 
     public function VpcDescribeCommonBandwidthPackage() {
@@ -404,6 +404,9 @@ class AlibabaCloud {
         }
         $ret = $request->request();
         $Datapoints = json_decode($ret->Datapoints, TRUE);
+        if (empty($Datapoints)) {
+            throw new \Exception("error in ret->Datapoints at json_decode");
+        }
         return $Datapoints;
     }
 
