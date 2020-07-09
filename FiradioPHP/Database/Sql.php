@@ -22,6 +22,7 @@ class Sql {
         $this->aSql['ignore'] = FALSE;
         $this->aSql['where'] = array();
         $this->aSql['paramData'] = array();
+        $this->aSql['join'] = array();
         $this->aConfig['check_field_name'] = FALSE;
     }
 
@@ -44,6 +45,10 @@ class Sql {
         }
         $this->aSql['table'] = $table;
         return $this;
+    }
+
+    public function join($aJoin) {
+        $this->aSql['join'] = $aJoin;
     }
 
     public function tableField($tableField) {
@@ -331,6 +336,13 @@ class Sql {
             $sql .= ' *';
         }
         $sql .= ' FROM ' . $this->aSql['table'];
+        if (!empty($this->aSql['join'])) {
+            $aJoin = array();
+            foreach ($this->aSql['join'] as $mJoin) {
+                $aJoin[] = " LEFT JOIN `{$mJoin[0]}` {$mJoin[1]} ON {$mJoin[2]}";
+            }
+            $sql .= ' ' . implode('', $aJoin);
+        }
         if (isset($this->aSql['sql_where']) && !empty($this->aSql['sql_where'])) {
             $sql .= ' WHERE ' . $this->aSql['sql_where'];
         }

@@ -4,6 +4,7 @@ namespace FiradioPHP\Routing;
 
 use FiradioPHP\F;
 use \Exception;
+use FiradioPHP\System\ConvertCase;
 
 /**
  * 控制器action
@@ -342,6 +343,10 @@ class Router {
 
     private function logWrite($sLevel, $sMessage) {
         F::logWrite($sLevel, $sMessage);
+    }
+
+    public function toCamel($result) {
+        return ConvertCase::toCamel($result);
     }
 
 }
