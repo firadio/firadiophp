@@ -20,8 +20,12 @@ class Wxpay {
         $this->oCurl->sslkey_file = APP_ROOT . '/config/wechat/apiclient_key.pem';
     }
 
+    private function nonce_str() {
+        return md5(mt_rand() . uniqid() . microtime());
+    }
+
     private function sign(&$data) {
-        $data['nonce_str'] = mt_rand();
+        $data['nonce_str'] = $this->nonce_str();
         $data2 = $data;
         ksort($data2);
         $data2['key'] = $this->aConfig['mchKey'];
@@ -150,6 +154,83 @@ class Wxpay {
         return $ret;
     }
 
+
+    public function unifiedOrderJSAPI($out_trade_no, $body, $total_fee, $openid) {
+        // 统一下单 https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_1
+        $url = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
+        $this->oCurl->setUrlPre($url);
+        $data = array();
+        $data['appid'] = $this->aConfig['appId']; // 公众账号ID
+        $data['mch_id'] = $this->aConfig['mchId']; // 商户号
+        $data['device_info'] = 'WEB'; // 设备号
+        $data['sign_type'] = 'MD5'; // 签名类型
+        $data['body'] = $body; // 商品描述
+        // $data['detail'] = $detail; // 商品详情
+        // $data['attach'] = ''; // 附加数据
+        $data['out_trade_no'] = $out_trade_no;
+        $data['fee_type'] = 'CNY'; // 标价币种
+        $data['total_fee'] = $total_fee * 100; // 订单金额
+        $data['spbill_create_ip'] = '127.0.0.1';
+        // $data['time_start'] = date('YmdHis'); // 交易起始时间
+        // $data['time_expire'] = date('YmdHis', time() + 7200); // 交易结束时间
+        // $data['goods_tag'] = ''; // 订单优惠标记
+        $data['notify_url'] = $this->aConfig['notify_url']; // 通知地址
+        $data['trade_type'] = 'JSAPI'; // 交易类型
+        $data['openid'] = $openid; // 用户标识
+        $this->sign($data);
+        $arr = array();
+        $arr['xml'] = array();
+        $arr['xml'][0] = array();
+        foreach ($data as $k => $v) {
+            $arr['xml'][0][$k] = array(array('#cdata-section' => $v));
+        }
+        $xml = $this->array2dom($arr, new DOMDocument())->saveXML();
+        $this->oCurl->setPost($xml);
+        $res_xml = $this->oCurl->execCurl();
+        $xml_tree = new DOMDocument();
+        $xml_tree->loadXML($res_xml);
+        $arr = $this->dom2array2($xml_tree);
+        return $arr;
+    }
+
+    public function jsapi_chooseWXPay($unifiedOrderRet) {
+        $values = array();
+        $values['appId'] = $unifiedOrderRet['appid'];
+        $values['timeStamp'] = time(); // 支付签名时间戳，注意微信jssdk中的所有使用timestamp字段均为小写。但最新版的支付后台生成签名使用的timeStamp字段名需大写其中的S字符
+        $values['nonceStr'] = $this->nonce_str(); // 支付签名随机串，不长于 32 位
+        $values['package'] = 'prepay_id=' . $unifiedOrderRet['prepay_id']; // 统一支付接口返回的prepay_id参数值，提交格式如：prepay_id=\*\*\*）
+        $values['signType'] = 'MD5'; // 签名方式，默认为'SHA1'，使用新版支付需传入'MD5'
+        ksort($values);
+        $urlParams = $this->ToUrlParams($values);
+        $values['paySign'] = strtoupper(md5($urlParams . '&key=' . $this->aConfig['mchKey'])); // 支付签名
+        $values['timestamp'] = $values['timeStamp'];
+        unset($values['timeStamp']);
+        return $values;
+    }
+
+    /**
+     * 格式化参数格式化成url参数
+     */
+    private function ToUrlParams($values) {
+        $buff = "";
+        foreach ($values as $k => $v) {
+            if($k != "sign" && $v != "" && !is_array($v)) {
+                $buff .= $k . "=" . $v . "&";
+            }
+        }
+        $buff = trim($buff, "&");
+        return $buff;
+    }
+
+    public function dom2array2($node) {
+        $ret = array();
+        $mXml = $this->dom2array($node);
+        $mData = $mXml['xml'][0];
+        foreach ($mData as $key => $value) {
+            $ret[$key] = $value[0]['#cdata-section'];
+        }
+        return $ret;
+    }
 
     public function dom2array($node) {
         //print $node->nodeType.'<br/>';

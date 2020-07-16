@@ -227,8 +227,8 @@ class Wechat {
         $jsonStr = $this->oCurl->execCurl();
         if (empty($jsonStr)) exit('<font size=7>请等待...</font><script>location.href="http://' . $GLOBALS['safedomain'] . '";</script>');
         $jsonArr = json_decode($jsonStr, true);
-        if (isset($jsonArr['errcode'])) {
-            $this->error($jsonArr['errmsg']);
+        if (!empty($jsonArr['errcode'])) {
+            $this->error($jsonArr['errmsg'], $jsonArr['errcode']);
             return;
         }
         /*
@@ -239,6 +239,51 @@ class Wechat {
          * varchar(16)  scope
          */
         return $jsonArr;
+    }
+
+    private function nonce_str() {
+        return md5(mt_rand() . uniqid() . microtime());
+    }
+
+    private function jsapi_getticket() {
+        $url = 'https://api.weixin.qq.com/cgi-bin/ticket/getticket?access_token=ACCESS_TOKEN&type=jsapi';
+        $url = str_replace('ACCESS_TOKEN', $this->access_token(), $url);
+        $this->oCurl->setUrlPre($url);
+        $get = array();
+        $this->oCurl->setParam($get);
+        $jsonStr = $this->oCurl->execCurl();
+        $jsonArr = json_decode($jsonStr, true);
+        if (!empty($jsonArr['errcode'])) {
+            $this->error($jsonArr['errmsg'], $jsonArr['errcode']);
+            return;
+        }
+        return $jsonArr['ticket'];
+    }
+
+    public function jsapi_config() {
+        $config = array();
+        $config['debug'] = TRUE; // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
+        $config['appId'] = $this->aConfig['appId']; // 必填，公众号的唯一标识
+        $config['timestamp'] = '' . time(); // 必填，生成签名的时间戳
+        $config['nonceStr'] = $this->nonce_str(); // 必填，生成签名的随机串
+        $config['signature'] = $this->jsapi_config_signature($config); // 必填，签名
+        $config['jsApiList'] = array(); // 必填，需要使用的JS接口列表
+        $config['jsApiList'][] = 'chooseWXPay';
+        return $config;
+    }
+
+    private function jsapi_config_signature($config) {
+        $data = array();
+        $data['jsapi_ticket'] = $this->jsapi_getticket();
+        $data['noncestr'] = $config['nonceStr'];
+        $data['timestamp'] = $config['timestamp'];
+        $data['url'] = 'http://uniapp.feieryun.cn/?a=1';
+        $arr = array();
+        ksort($data);
+        foreach ($data as $k => $v) {
+            $arr[] = $k . '=' . $v;
+        }
+        return sha1(implode('&', $arr));
     }
 
 }
