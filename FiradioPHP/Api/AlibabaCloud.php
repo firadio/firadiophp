@@ -328,7 +328,7 @@ class AlibabaCloud {
         return array_pop($args);
     }
 
-    public function VpcEipMonitorData($AllocationId, $countLimit = 1, $countKey = 'EipTX') {
+    public function VpcEipMonitorData($AllocationId, $countLimit = 1) {
         $request = Vpc::v20160428()->DescribeEipMonitorData();
         $request->withAllocationId($AllocationId);
         $arr = array(60, 300, 900, 3600);
@@ -341,20 +341,20 @@ class AlibabaCloud {
         $d1 = $ret['EipMonitorDatas']['EipMonitorData'];
         $sorted = $this->array_orderby($d1, 'TimeStamp', SORT_DESC);
         $count_i = 0;
-        $count_val = 0;
-        foreach ($sorted as $k => $row) {
-            $val = floatval($row[$countKey]);
-            if ($k == 0 && $val == 0) continue;
+        $mRet = array();
+        foreach ($sorted as $k => $mRow) {
             $count_i++;
-            $count_val += $val;
+            foreach ($mRow as $key => $val) {
+                if (!isset($mRet[$key])) {
+                    $mRet[$key] = array();
+                }
+                $mRet[$key][] = $val;
+            }
             if ($count_i >= $countLimit) {
                 break;
             }
         }
-        if ($count_i == 0) {
-            return 0;
-        }
-        return $count_val / $count_i / $period;
+        return $mRet;
     }
 
     public function VpcDescribeCommonBandwidthPackage() {
@@ -387,32 +387,32 @@ class AlibabaCloud {
      * 开始Cms相关功能
     */
 
-    public function CmsDescribeMetricList($Namespace, $MetricName, $countLimit = 1, $groupby = NULL) {
+    public function CmsDescribeMetricList($Namespace, $MetricName, $countLimit = 1, $period = 60, $groupby = NULL) {
         // 参考 https://help.aliyun.com/document_detail/51936.html
         $request = Cms::v20190101()->DescribeMetricList();
         $request->withNamespace($Namespace);
         $request->withMetricName($MetricName);
-        $arr = array(60, 300, 900, 3600);
-        $period = $arr[0];
         $request->withPeriod($period);
-        date_default_timezone_set('UTC');
-        $request->withStartTime(date('Y-m-d\TH:i:00\Z', time() - 60 * ($countLimit + 3)));
-        $request->withEndTime(date('Y-m-d\TH:i:00\Z', time() + 60 * (10)));
+        $request->withStartTime((time() - $period * ($countLimit + 3)) * 1000);
+        $request->withEndTime((time() + $period * (10)) * 1000);
         if ($groupby !== NULL) {
             $Express = json_encode(array('groupby' => explode(',', $groupby)));
             $request->withExpress($Express);
         }
         $ret = $request->request();
         $Datapoints = json_decode($ret->Datapoints, TRUE);
-        return $Datapoints;
+        if (empty($Datapoints)) {
+            throw new \Exception("error in ret->Datapoints at json_decode");
+        }
+        $sorted = $this->array_orderby($Datapoints, 'timestamp', SORT_DESC);
+        return $sorted;
     }
 
-    public function CmsCbwpTxRatesMap($countLimit = 1) {
+    public function CmsCbwpTxRatesMap($countLimit = 1, $period = 60) {
         // 参考 https://help.aliyun.com/document_detail/165008.html
         $Namespace = 'acs_bandwidth_package';
         $MetricName = 'net_tx.rate'; // 流出带宽
-        $Datapoints = $this->CmsDescribeMetricList($Namespace, $MetricName);
-        $sorted = $this->array_orderby($Datapoints, 'timestamp', SORT_DESC);
+        $sorted = $this->CmsDescribeMetricList($Namespace, $MetricName, $countLimit);
         $mRet = array();
         foreach ($sorted as $mRow) {
             if (!isset($mRet[$mRow['instanceId']])) {
@@ -426,12 +426,11 @@ class AlibabaCloud {
         return $mRet;
     }
 
-    public function CmsEipTxRatesMap($countLimit = 1) {
+    public function CmsEipTxRatesMap($countLimit = 1, $period = 60) {
         // 参考 https://help.aliyun.com/document_detail/162874.html
         $Namespace = 'acs_vpc_eip';
         $MetricName = 'net_tx.rate'; // 流出带宽
-        $Datapoints = $this->CmsDescribeMetricList($Namespace, $MetricName, $countLimit);
-        $sorted = $this->array_orderby($Datapoints, 'timestamp', SORT_DESC);
+        $sorted = $this->CmsDescribeMetricList($Namespace, $MetricName, $countLimit, $period);
         $mRet = array();
         foreach ($sorted as $mRow) {
             if (!isset($mRet[$mRow['instanceId']])) {
