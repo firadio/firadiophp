@@ -193,11 +193,12 @@ class AlibabaCloud {
         return $ret['Instances']['Instance'][0]['EipAddress']['AllocationId'];
     }
 
-    public function EcsDescribeInstances($regionId, $PageNumber = 1) {
+    public function EcsDescribeInstances($regionId, $PageNumber = 1, $PageSize = 10) {
         // 调用DescribeInstances查询一台或多台ECS实例的详细信息。
         $request = Ecs::v20140526()->DescribeInstances();
         //$request->withRegionId($regionId);
         $request->withPageNumber($PageNumber);
+        $request->withPageSize($PageSize);
         $ret = $request->request();
         return $ret;
     }

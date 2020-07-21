@@ -247,5 +247,3 @@ class F {
 
 }
 
-F::opcache_start();
-
