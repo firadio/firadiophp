@@ -318,6 +318,7 @@ class Wxpay {
         if ($this->getSign($aReq) !== $aReq['sign']) {
             return FALSE;
         }
+        $this->data['notify'] = $aReq;
         return TRUE;
     }
 }
