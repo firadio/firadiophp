@@ -25,16 +25,47 @@ class Wxpay {
         return md5(mt_rand() . uniqid() . microtime());
     }
 
-    private function sign(&$data) {
-        $data['nonce_str'] = $this->nonce_str();
-        $data2 = $data;
-        ksort($data2);
-        $data2['key'] = $this->aConfig['mchKey'];
+    private function getSign($data) {
+        unset($data['sign']);
+        ksort($data);
+        $data['key'] = $this->aConfig['mchKey'];
         $arr = array();
-        foreach ($data2 as $k => $v) {
+        foreach ($data as $k => $v) {
             $arr[] = $k . '=' . $v;
         }
-        $data['sign'] = strtoupper(md5(implode('&', $arr)));
+        return strtoupper(md5(implode('&', $arr)));
+    }
+
+    private function sign(&$data) {
+        $data['nonce_str'] = $this->nonce_str();
+        $data['sign'] = $this->getSign($data);
+    }
+
+    public function array2xml($aReqData) {
+        $aInput = array();
+        $aInput['xml'] = array();
+        $aInput['xml'][0] = array();
+        foreach ($aReqData as $k => $v) {
+            $aInput['xml'][0][$k] = array(array('#cdata-section' => $v));
+        }
+        $xml = $this->array2dom($aInput, new DOMDocument())->saveXML();
+        return $xml;
+    }
+
+    private function xml2array($sXml) {
+        $obj = simplexml_load_string($sXml, NULL, LIBXML_NOCDATA);
+        if ($obj === FALSE) {
+            return array();
+        }
+        return json_decode(json_encode($obj), TRUE);
+    }
+
+    private function retCurlPostData($url, $aReqData) {
+        $this->oCurl->setUrlPre($url);
+        $xml = $this->array2xml($aReqData);
+        $this->oCurl->setPost($xml);
+        $res_xml = $this->oCurl->execCurl();
+        return $this->xml2array($res_xml);
     }
 
     private function return_code($arr) {
@@ -159,7 +190,6 @@ class Wxpay {
     public function unifiedOrderJSAPI($out_trade_no, $body, $total_fee, $openid) {
         // 统一下单 https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_1
         $url = 'https://api.mch.weixin.qq.com/pay/unifiedorder';
-        $this->oCurl->setUrlPre($url);
         $data = array();
         $data['appid'] = $this->aConfig['appId']; // 公众账号ID
         $data['mch_id'] = $this->aConfig['mchId']; // 商户号
@@ -178,21 +208,12 @@ class Wxpay {
         $data['notify_url'] = $this->aConfig['notify_url']; // 通知地址
         $data['trade_type'] = 'JSAPI'; // 交易类型
         $data['openid'] = $openid; // 用户标识
+        if (isset($this->data['unifiedorder']) && is_array($this->data['unifiedorder'])) {
+            $data = array_merge($data, $this->data['unifiedorder']);
+        }
         $this->data['unifiedorder'] = $data;
         $this->sign($data);
-        $arr = array();
-        $arr['xml'] = array();
-        $arr['xml'][0] = array();
-        foreach ($data as $k => $v) {
-            $arr['xml'][0][$k] = array(array('#cdata-section' => $v));
-        }
-        $xml = $this->array2dom($arr, new DOMDocument())->saveXML();
-        $this->oCurl->setPost($xml);
-        $res_xml = $this->oCurl->execCurl();
-        $xml_tree = new DOMDocument();
-        $xml_tree->loadXML($res_xml);
-        $arr = $this->dom2array2($xml_tree);
-        return $arr;
+        return $this->retCurlPostData($url, $data);
     }
 
     public function jsapi_chooseWXPay($unifiedOrderRet) {
@@ -287,6 +308,17 @@ class Wxpay {
             }
         }
         return $dom_root;
+    }
+
+    public function notify_check($sXml) {
+        $aReq = $this->xml2array($sXml);
+        if (empty($aReq['sign'])) {
+            return FALSE;
+        }
+        if ($this->getSign($aReq) !== $aReq['sign']) {
+            return FALSE;
+        }
+        return TRUE;
     }
 }
 
