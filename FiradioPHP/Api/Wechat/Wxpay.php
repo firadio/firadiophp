@@ -12,6 +12,7 @@ class Wxpay {
 
     private $aConfig;
     public $request = array();
+    public $data = array();
 
     public function __construct($conf) {
         $this->aConfig = $conf;
@@ -177,6 +178,7 @@ class Wxpay {
         $data['notify_url'] = $this->aConfig['notify_url']; // 通知地址
         $data['trade_type'] = 'JSAPI'; // 交易类型
         $data['openid'] = $openid; // 用户标识
+        $this->data['unifiedorder'] = $data;
         $this->sign($data);
         $arr = array();
         $arr['xml'] = array();
