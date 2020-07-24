@@ -260,24 +260,24 @@ class Wechat {
         return $jsonArr['ticket'];
     }
 
-    public function jsapi_config() {
+    public function jsapi_config($url) {
         $config = array();
         $config['debug'] = TRUE; // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
         $config['appId'] = $this->aConfig['appId']; // 必填，公众号的唯一标识
         $config['timestamp'] = '' . time(); // 必填，生成签名的时间戳
         $config['nonceStr'] = $this->nonce_str(); // 必填，生成签名的随机串
-        $config['signature'] = $this->jsapi_config_signature($config); // 必填，签名
+        $config['signature'] = $this->jsapi_config_signature($config, $url); // 必填，签名
         $config['jsApiList'] = array(); // 必填，需要使用的JS接口列表
         $config['jsApiList'][] = 'chooseWXPay';
         return $config;
     }
 
-    private function jsapi_config_signature($config) {
+    private function jsapi_config_signature($config, $url) {
         $data = array();
         $data['jsapi_ticket'] = $this->jsapi_getticket();
         $data['noncestr'] = $config['nonceStr'];
         $data['timestamp'] = $config['timestamp'];
-        $data['url'] = 'http://uniapp.feieryun.cn/?a=1';
+        $data['url'] = $url;
         $arr = array();
         ksort($data);
         foreach ($data as $k => $v) {
