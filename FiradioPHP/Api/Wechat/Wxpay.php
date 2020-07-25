@@ -65,7 +65,16 @@ class Wxpay {
         $xml = $this->array2xml($aReqData);
         $this->oCurl->setPost($xml);
         $res_xml = $this->oCurl->execCurl();
-        return $this->xml2array($res_xml);
+        $ret = $this->xml2array($res_xml);
+        $ret['code'] = isset($ret['return_code']) ? $ret['return_code'] : '';
+        if (isset($ret['err_code'])) {
+            $ret['code'] = $ret['err_code'];
+        }
+        $ret['msg'] = isset($ret['return_msg']) ? $ret['return_msg'] : '';
+        if (isset($ret['err_code_des'])) {
+            $ret['msg'] = $ret['err_code_des'];
+        }
+        return $ret;
     }
 
     private function return_code($arr) {
@@ -154,36 +163,24 @@ class Wxpay {
     }
 
 
-    public function refund($out_refund_no, $out_trade_no, $total_fee, $refund_fee) {
+    public function refund($out_refund_no, $out_trade_no, $total_fee_amount, $refund_fee) {
         // 申请退款 https://pay.weixin.qq.com/wiki/doc/api/jsapi.php?chapter=9_4
         $url = 'https://api.mch.weixin.qq.com/secapi/pay/refund';
-        $this->oCurl->setUrlPre($url);
         $data = array();
         $data['appid'] = $this->aConfig['appId'];
         $data['mch_id'] = $this->aConfig['mchId'];
         //$data['transaction_id'] = '4200000510202002059720570566';
         $data['out_trade_no'] = $out_trade_no;
         $data['out_refund_no'] = $out_refund_no;
-        $data['total_fee'] = $total_fee * 100; // 订单金额
+        $data['total_fee'] = $total_fee_amount * 100; // 订单金额
         $data['refund_fee'] = $refund_fee * 100; // 退款金额
         //$data['refund_account'] = 'REFUND_SOURCE_RECHARGE_FUNDS'; // 可用余额退款
-        $this->sign($data);
-        $arr = array();
-        $arr['xml'] = array();
-        $arr['xml'][0] = array();
-        foreach ($data as $k => $v) {
-            $arr['xml'][0][$k] = array(array('#cdata-section' => $v));
+        if (isset($this->data['refund']) && is_array($this->data['refund'])) {
+            $data = array_merge($data, $this->data['refund']);
         }
-        $xml = $this->array2dom($arr, new DOMDocument())->saveXML();
-        $this->oCurl->setPost($xml);
-        $res_xml = $this->oCurl->execCurl();
-        $xml_tree = new DOMDocument();
-        $xml_tree->loadXML($res_xml);
-        $arr = $this->dom2array($xml_tree);
-        $ret = array();
-        $ret['code'] = $this->return_code($arr);
-        $ret['msg'] = $this->return_msg($arr);
-        return $ret;
+        $this->data['refund'] = $data;
+        $this->sign($data);
+        return $this->retCurlPostData($url, $data);
     }
 
 
