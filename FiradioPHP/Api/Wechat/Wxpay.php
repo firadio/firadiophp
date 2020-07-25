@@ -318,5 +318,19 @@ class Wxpay {
         $this->data['notify'] = $aReq;
         return TRUE;
     }
+
+    public function notify_refund_decode($sXml) {
+        $aReq = $this->xml2array($sXml);
+        $decrypt = base64_decode($aReq['req_info'], TRUE);
+        $req_info = openssl_decrypt($decrypt , 'aes-256-ecb', md5($this->aConfig['mchKey']), OPENSSL_RAW_DATA);
+        if (empty($req_info)) {
+            // 解密失败
+            return FALSE;
+        }
+        $aReq['req_info'] = $this->xml2array($req_info);
+        $this->data['notify_refund'] = $aReq;
+        return TRUE;
+    }
+
 }
 
