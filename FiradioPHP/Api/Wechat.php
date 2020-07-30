@@ -286,6 +286,55 @@ class Wechat {
         return sha1(implode('&', $arr));
     }
 
+    public function message_template_send($sTouser, $sTemplateId, $mData, $sUrl) {
+        /*
+        
+        https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html
+        */
+        $oData = array();
+        $oData['touser'] = $sTouser;
+        $oData['template_id'] = $sTemplateId;
+        $oData['url'] = $sUrl;
+        $oData['data'] = $mData;
+        $mGet = array();
+        $mGet['access_token'] = $this->access_token();
+        $cgiBinUrl = 'https://api.weixin.qq.com/cgi-bin/message/template/send';
+        return $this->retDataFromCurl($cgiBinUrl, $mGet, $oData);
+    }
+
+    public function notify_order_took(
+        $sTouser,
+        $product_title = '虚拟恋人 - 连麦语音(1小时)',
+        $staff_nickname = '店员昵称',
+        $duration = 3600,
+        $sUrl = 'https://dreamss.feieryun.cn/#/pages/user/order_list'
+    ) {
+        $sTemplateId = 'E6AJBwQK2DhowjVAegnwPNB9_oJcQ1_2cXv8UTZGuec';
+        $mData = array();
+        $mData['first'] = array('value' => '尊敬的用户您好，您的订单已被接受');
+        $mData['keyword1'] = array('value' => $product_title);
+        $mData['keyword2'] = array('value' => $staff_nickname);
+        $iTime1 = time();
+        $iTime2 = $iTime1 + $duration;
+        $sTime1 = date('Y-m-d H:i', $iTime1);
+        $sTime2 = date('H:i', $iTime2);
+        $mData['keyword3'] = array('value' => "{$sTime1}至{$sTime2}");
+        $mData['remark'] = array('value' => "请点击查看服务详情，并添加[{$staff_nickname}]微信");
+        $this->message_template_send($sTouser, $sTemplateId, $mData, $sUrl);
+    }
+
+    public function sys_alert($detail, $title = '系统通知', $remark = '请点击查看详情') {
+        $sTouser = 'o6fZl0SipjGyauypnix-KPp9ghi8';
+        $sTemplateId = 'mU5TyU0-xmUcZk2JCuRMOFtlkJBPCSfuKQJ4W_RyblE';
+        $mData = array();
+        $mData['first'] = array('value' => $title);
+        $mData['keyword1'] = array('value' => date('Y-m-d H:i:s'));
+        $mData['keyword2'] = array('value' => $detail);
+        $mData['remark'] = array('value' => $remark);
+        $sUrl = 'https://dreamss.feieryun.cn/#/pages/user/order_list';
+        $this->message_template_send($sTouser, $sTemplateId, $mData, $sUrl);
+    }
+
 }
 
 
