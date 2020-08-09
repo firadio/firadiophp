@@ -132,34 +132,24 @@ class Wxpay {
     }
 
 
-    public function transfers() {
+    public function transfers($partner_trade_no, $openid, $amount, $desc = '测试', $re_user_name = NULL) {
         // 企业付款 https://pay.weixin.qq.com/wiki/doc/api/tools/mch_pay.php?chapter=14_2
         $url = 'https://api.mch.weixin.qq.com/mmpaymkttransfers/promotion/transfers';
-        $this->oCurl->setUrlPre($url);
         $data = array();
         $data['mch_appid'] = $this->aConfig['appId'];
         $data['mchid'] = $this->aConfig['mchId'];
-        $data['partner_trade_no'] = 'FIR' . date('YmdHis');
-        $data['openid'] = 'o6fZl0SipjGyauypnix-KPp9ghi8';
+        $data['partner_trade_no'] = $partner_trade_no;
+        $data['openid'] = $openid;
         $data['check_name'] = 'NO_CHECK';
-        $data['amount'] = 1;
-        $data['desc'] = '测试';
+        if ($re_user_name) {
+            $data['check_name'] = 'FORCE_CHECK';
+            $data['re_user_name'] = $re_user_name;
+        }
+        $data['amount'] = floatval($amount) * 100;
+        $data['desc'] = $desc;
         $data['spbill_create_ip'] = '127.0.0.1';
         $this->sign($data);
-        $arr = array();
-        $arr['xml'] = array();
-        $arr['xml'][0] = array();
-        foreach ($data as $k => $v) {
-            $arr['xml'][0][$k] = array(array('#cdata-section' => $v));
-        }
-        $xml = $this->array2dom($arr, new DOMDocument())->saveXML();
-        $this->oCurl->setPost($xml);
-        $res_xml = $this->oCurl->createCurl();
-        $xml_tree = new DOMDocument();
-        $xml_tree->loadXML($res_xml);
-        $arr = $this->dom2array($xml_tree);
-        echo $this->return_msg($arr);
-        exit;
+        return $this->retCurlPostData($url, $data);
     }
 
 
