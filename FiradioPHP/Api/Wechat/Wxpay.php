@@ -148,6 +148,10 @@ class Wxpay {
         $data['amount'] = floatval($amount) * 100;
         $data['desc'] = $desc;
         $data['spbill_create_ip'] = '127.0.0.1';
+        if (isset($this->data['transfers']) && is_array($this->data['transfers'])) {
+            $data = array_merge($data, $this->data['transfers']);
+        }
+        $this->data['transfers'] = $data;
         $this->sign($data);
         return $this->retCurlPostData($url, $data);
     }
