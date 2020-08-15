@@ -20,7 +20,7 @@ class Wechat {
     }
 
     private function error($errmsg, $errcode) {
-        $ex = new \Exception($errmsg);
+        $ex = new \Exception($errmsg, -1);
         $ex->sCode = $errcode;
         throw $ex;
     }
@@ -115,10 +115,14 @@ class Wechat {
         return $ret;
     }
 
-    private function retDataFromCurl($sUrl, $aGet, $aPost = NULL) {
+    private function retDataFromCurl($sUrl, $aGet, $aPost = NULL, $isUpload = FALSE) {
         $oCurl = new Curl();
         $oCurl->setUrlPre($sUrl);
         $oCurl->setParam($aGet);
+        if ($isUpload) {
+            $oCurl->upload(TRUE);
+            $oCurl->setPost($aPost);
+        } else
         if (is_array($aPost)) {
             $sPost = json_encode($aPost, JSON_UNESCAPED_UNICODE);
             $oCurl->setPost($sPost);
@@ -151,26 +155,32 @@ class Wechat {
         return $jsonArr['access_token'];
     }
 
-    public function media_upload($data, $mimeType = 'image/jpeg') {
+    public function media_upload($filePath, $mimeType = 'image/jpeg') {
         $get = array();
         $get['access_token'] = $this->access_token();
         $get['type'] = 'image';
-        $post = array();
-        $tmpPath = 'tmp~';
-        file_put_contents($tmpPath, $data);
-        $post['media'] = curl_file_create($tmpPath, $mimeType, '1.jpg');
-        $url = 'http://file.api.weixin.qq.com/cgi-bin/media/upload';
-        $this->oCurl->setUrlPre($url);
-        $this->oCurl->upload(TRUE);
-        $jsonStr = $this->oCurl->post($get, $post);
-        $this->oCurl->upload(FALSE);
-        $jsonArr = json_decode($jsonStr, TRUE);
-        if (empty($jsonArr['media_id'])) {
-            print_r($jsonArr);
-            return;
+        if ($mimeType === 'voice/speex') {
+            $get['type'] = 'voice';
         }
+        $post = array();
+        if (strlen($filePath) > 1000) {
+            $tmpPath = 'tmp~';
+            file_put_contents($tmpPath, $filePath);
+            $filePath = $tmpPath;
+        }
+        $post['media'] = curl_file_create($filePath, $mimeType, $filePath);
+        $url = 'http://file.api.weixin.qq.com/cgi-bin/media/upload';
+        $jsonArr = $this->retDataFromCurl($url, $get, $post, TRUE);
         return $jsonArr;
     }
+
+    public function media_get_jssdk($MEDIA_ID) {
+        $url = 'https://api.weixin.qq.com/cgi-bin/media/get/jssdk?access_token=ACCESS_TOKEN&media_id=MEDIA_ID';
+        $url = str_replace('ACCESS_TOKEN', $this->access_token(), $url);
+        $url = str_replace('MEDIA_ID', $MEDIA_ID, $url);
+        file_put_contents(DATA_DIR . DS . 'wx_media_jssdk' . DS . $MEDIA_ID . '.speex', file_get_contents($url));
+    }
+
 
     public function menu_get() {
         $get = array();
@@ -225,7 +235,10 @@ class Wechat {
         $get = array();
         $this->oCurl->setParam($get);
         $jsonStr = $this->oCurl->execCurl();
-        if (empty($jsonStr)) exit('<font size=7>请等待...</font><script>location.href="http://' . $GLOBALS['safedomain'] . '";</script>');
+        //if (empty($jsonStr)) exit('<font size=7>请等待...</font><script>location.href="http://' . $GLOBALS['safedomain'] . '";</script>');
+        if (empty($jsonStr)) {
+            $this->error('无法连接到api.weixin.qq.com', -1);
+        }
         $jsonArr = json_decode($jsonStr, true);
         if (!empty($jsonArr['errcode'])) {
             $this->error($jsonArr['errmsg'], $jsonArr['errcode']);
@@ -238,6 +251,25 @@ class Wechat {
          * varchar(30)  openid
          * varchar(16)  scope
          */
+        return $jsonArr;
+    }
+
+    public function getUserInfoByCode($code) {
+        $mRet = $this->getTokenByCode($code);
+        $url = 'https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN';
+        $url = str_replace('ACCESS_TOKEN', $mRet['access_token'], $url);
+        $url = str_replace('OPENID', $mRet['openid'], $url);
+        $this->oCurl->setUrlPre($url);
+        $get = array();
+        $this->oCurl->setParam($get);
+        $jsonStr = $this->oCurl->execCurl();
+        if (empty($jsonStr)) {
+            $this->error('无法连接到api.weixin.qq.com', -1);
+        }
+        $jsonArr = json_decode($jsonStr, true);
+        if (!empty($jsonArr['errcode'])) {
+            $this->error($jsonArr['errmsg'], $jsonArr['errcode']);
+        }
         return $jsonArr;
     }
 
@@ -267,8 +299,6 @@ class Wechat {
         $config['timestamp'] = '' . time(); // 必填，生成签名的时间戳
         $config['nonceStr'] = $this->nonce_str(); // 必填，生成签名的随机串
         $config['signature'] = $this->jsapi_config_signature($config, $url); // 必填，签名
-        $config['jsApiList'] = array(); // 必填，需要使用的JS接口列表
-        $config['jsApiList'][] = 'chooseWXPay';
         return $config;
     }
 

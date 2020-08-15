@@ -145,6 +145,8 @@ class Curl {
         }
         if ($this->_post) {
             $post = $this->_postFields;
+            if ($this->_upload) {
+            } else
             if (is_array($post)) {
                 $sContentType = isset($this->_header['Content-Type']) ? $this->_header['Content-Type'] : '';
                 $postFormat = isset($this->postFormat) ? strtolower($this->postFormat) : '';
