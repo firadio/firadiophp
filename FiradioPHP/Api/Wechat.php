@@ -172,6 +172,32 @@ class Wechat {
         return $jsonArr;
     }
 
+    public function media_upload2($filePath, $mimeType = 'image/jpeg') {
+        $aMimeType = explode('/', $mimeType);
+        $url = 'https://api.weixin.qq.com/cgi-bin/media/upload?access_token=ACCESS_TOKEN&type=TYPE';
+        //$url = str_replace('ACCESS_TOKEN', urlencode($this->access_token()), $url);
+        //$url = str_replace('TYPE', $aMimeType[0], $url);
+        $post_data = array();
+        var_dump(is_file($filePath));
+        $post_data['media'] = curl_file_create($filePath, $mimeType, $aMimeType[0] . '.' . $aMimeType[1]);
+        $ch = curl_init();
+        var_dump($url);
+        $url = 'http://file.api.weixin.qq.com/cgi-bin/media/upload?access_token=36_V_XsDjF4tq4sBKxVw4MSjPMAd51tyfdylDBN4_9-_bMdcZGy9lYw4bBvTAGrs_Gkly-KLI8jmaqYKEVVdLimgo4ynpIpsw_JmAfYJboMM2_s2lfvP5egM2GkKFQa9HQwgynWXUGi9BVSIVklUUJiAAABBQ&type=voice';
+        curl_setopt($ch, CURLOPT_URL , $url);
+        curl_setopt($ch, CURLOPT_SAFE_UPLOAD, true);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        var_dump($post_data);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); //信任任何证书
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); // 检查证书中是否设置域名,0不验证
+        $output = curl_exec($ch);
+        $error = curl_error($ch);
+        var_dump($error);
+        curl_close($ch);
+        return $output;
+    }
+
     public function media_get($MEDIA_ID) {
         $url = 'https://api.weixin.qq.com/cgi-bin/media/get?access_token=ACCESS_TOKEN&media_id=MEDIA_ID';
         $url = str_replace('ACCESS_TOKEN', $this->access_token(), $url);
@@ -296,7 +322,16 @@ class Wechat {
         return $jsonArr['ticket'];
     }
 
-    public function jsapi_config($url) {
+    public function jsapi_config($_url) {
+        $url = call_user_func(function ($sUrl) {
+            $uri = parse_url($sUrl);
+            $retUrl = $uri['scheme'] . '://' . $uri['host'];
+            if (isset($uri['port'])) {
+                $retUrl .= ':' . $uri['port'];
+            }
+            $retUrl .= $uri['path'];
+            return $retUrl;
+        }, $_url);
         $config = array();
         $config['debug'] = TRUE; // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
         $config['appId'] = $this->aConfig['appId']; // 必填，公众号的唯一标识

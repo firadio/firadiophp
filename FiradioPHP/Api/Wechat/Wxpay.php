@@ -196,7 +196,9 @@ class Wxpay {
         // $data['time_start'] = date('YmdHis'); // 交易起始时间
         // $data['time_expire'] = date('YmdHis', time() + 7200); // 交易结束时间
         // $data['goods_tag'] = ''; // 订单优惠标记
-        $data['notify_url'] = $this->aConfig['notify_url']; // 通知地址
+        if (isset($this->aConfig['notify_url'])) {
+            $data['notify_url'] = $this->aConfig['notify_url']; // 通知地址
+        }
         $data['trade_type'] = 'JSAPI'; // 交易类型
         $data['openid'] = $openid; // 用户标识
         if (isset($this->data['unifiedorder']) && is_array($this->data['unifiedorder'])) {
