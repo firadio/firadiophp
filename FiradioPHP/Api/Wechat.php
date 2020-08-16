@@ -156,22 +156,27 @@ class Wechat {
     }
 
     public function media_upload($filePath, $mimeType = 'image/jpeg') {
+        $aMimeType = explode('/', $mimeType);
         $get = array();
         $get['access_token'] = $this->access_token();
-        $get['type'] = 'image';
-        if ($mimeType === 'voice/speex') {
-            $get['type'] = 'voice';
-        }
+        $get['type'] = $aMimeType[0];
         $post = array();
         if (strlen($filePath) > 1000) {
             $tmpPath = 'tmp~';
             file_put_contents($tmpPath, $filePath);
             $filePath = $tmpPath;
         }
-        $post['media'] = curl_file_create($filePath, $mimeType, $filePath);
-        $url = 'http://file.api.weixin.qq.com/cgi-bin/media/upload';
+        $post['media'] = curl_file_create($filePath, $mimeType, $aMimeType[0] . '.' . $aMimeType[1]);
+        $url = 'https://api.weixin.qq.com/cgi-bin/media/upload';
         $jsonArr = $this->retDataFromCurl($url, $get, $post, TRUE);
         return $jsonArr;
+    }
+
+    public function media_get($MEDIA_ID) {
+        $url = 'https://api.weixin.qq.com/cgi-bin/media/get?access_token=ACCESS_TOKEN&media_id=MEDIA_ID';
+        $url = str_replace('ACCESS_TOKEN', $this->access_token(), $url);
+        $url = str_replace('MEDIA_ID', $MEDIA_ID, $url);
+        file_put_contents(DATA_DIR . DS . 'wx_media_jssdk' . DS . $MEDIA_ID . '.amr', file_get_contents($url));
     }
 
     public function media_get_jssdk($MEDIA_ID) {
@@ -180,7 +185,6 @@ class Wechat {
         $url = str_replace('MEDIA_ID', $MEDIA_ID, $url);
         file_put_contents(DATA_DIR . DS . 'wx_media_jssdk' . DS . $MEDIA_ID . '.speex', file_get_contents($url));
     }
-
 
     public function menu_get() {
         $get = array();
@@ -330,6 +334,32 @@ class Wechat {
         $mGet['access_token'] = $this->access_token();
         $cgiBinUrl = 'https://api.weixin.qq.com/cgi-bin/message/template/send';
         return $this->retDataFromCurl($cgiBinUrl, $mGet, $oData);
+    }
+
+    private function message_custom_send($sTouser, $msgtype, $content) {
+        $oData = array();
+        $oData['touser'] = $sTouser;
+        $oData['msgtype'] = $msgtype;
+        switch ($msgtype) {
+            case ('text'):
+                $oData['text'] = array('content' => $content);
+                break;
+            case ('voice'):
+                $oData['voice'] = array('media_id' => $content);
+                break;
+        }
+        $mGet = array();
+        $mGet['access_token'] = $this->access_token();
+        $cgiBinUrl = 'https://api.weixin.qq.com/cgi-bin/message/custom/send';
+        return $this->retDataFromCurl($cgiBinUrl, $mGet, $oData);
+    }
+
+    public function message_custom_send_text($sTouser, $text_content) {
+        return $this->message_custom_send($sTouser, 'text', $text_content);
+    }
+
+    public function message_custom_send_voice($sTouser, $media_id) {
+        return $this->message_custom_send($sTouser, 'voice', $media_id);
     }
 
     public function notify_order_took(
