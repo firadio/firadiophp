@@ -172,32 +172,6 @@ class Wechat {
         return $jsonArr;
     }
 
-    public function media_upload2($filePath, $mimeType = 'image/jpeg') {
-        $aMimeType = explode('/', $mimeType);
-        $url = 'https://api.weixin.qq.com/cgi-bin/media/upload?access_token=ACCESS_TOKEN&type=TYPE';
-        //$url = str_replace('ACCESS_TOKEN', urlencode($this->access_token()), $url);
-        //$url = str_replace('TYPE', $aMimeType[0], $url);
-        $post_data = array();
-        var_dump(is_file($filePath));
-        $post_data['media'] = curl_file_create($filePath, $mimeType, $aMimeType[0] . '.' . $aMimeType[1]);
-        $ch = curl_init();
-        var_dump($url);
-        $url = 'http://file.api.weixin.qq.com/cgi-bin/media/upload?access_token=36_V_XsDjF4tq4sBKxVw4MSjPMAd51tyfdylDBN4_9-_bMdcZGy9lYw4bBvTAGrs_Gkly-KLI8jmaqYKEVVdLimgo4ynpIpsw_JmAfYJboMM2_s2lfvP5egM2GkKFQa9HQwgynWXUGi9BVSIVklUUJiAAABBQ&type=voice';
-        curl_setopt($ch, CURLOPT_URL , $url);
-        curl_setopt($ch, CURLOPT_SAFE_UPLOAD, true);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        curl_setopt($ch, CURLOPT_POST, 1);
-        var_dump($post_data);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $post_data);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false); //信任任何证书
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); // 检查证书中是否设置域名,0不验证
-        $output = curl_exec($ch);
-        $error = curl_error($ch);
-        var_dump($error);
-        curl_close($ch);
-        return $output;
-    }
-
     public function media_get($MEDIA_ID) {
         $url = 'https://api.weixin.qq.com/cgi-bin/media/get?access_token=ACCESS_TOKEN&media_id=MEDIA_ID';
         $url = str_replace('ACCESS_TOKEN', $this->access_token(), $url);
