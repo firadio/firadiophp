@@ -130,7 +130,6 @@ class Wechat {
         $jsonStr = $oCurl->execCurl();
         $jsonArr = json_decode($jsonStr, TRUE);
         if (!empty($jsonArr['errcode']) && isset($jsonArr['errmsg'])) {
-            print_r($jsonArr);
             $this->error($jsonArr['errmsg'], $jsonArr['errcode']);
         }
         return $jsonArr;
@@ -260,15 +259,38 @@ class Wechat {
 
     public function getUserInfoByCode($code) {
         $mRet = $this->getTokenByCode($code);
+        //return $this->getUserInfoBySNS($mRet['access_token'], $mRet['openid']);
+        return $this->getUserInfoByOpenid($mRet['openid']);
+    }
+
+    public function getUserInfoBySNS($access_token, $openid) {
         $url = 'https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN';
-        $url = str_replace('ACCESS_TOKEN', $mRet['access_token'], $url);
-        $url = str_replace('OPENID', $mRet['openid'], $url);
+        $url = str_replace('ACCESS_TOKEN', $access_token, $url);
+        $url = str_replace('OPENID', $openid, $url);
         $this->oCurl->setUrlPre($url);
         $get = array();
         $this->oCurl->setParam($get);
         $jsonStr = $this->oCurl->execCurl();
         if (empty($jsonStr)) {
             $this->error('无法连接到api.weixin.qq.com', -1);
+        }
+        $jsonArr = json_decode($jsonStr, true);
+        if (!empty($jsonArr['errcode'])) {
+            $this->error($jsonArr['errmsg'], $jsonArr['errcode']);
+        }
+        return $jsonArr;
+    }
+
+    public function getUserInfoByOpenid($openid) {
+        $url = 'https://api.weixin.qq.com/cgi-bin/user/info?access_token=ACCESS_TOKEN&openid=OPENID&lang=zh_CN';
+        $url = str_replace('ACCESS_TOKEN', $this->access_token(), $url);
+        $url = str_replace('OPENID', $openid, $url);
+        $this->oCurl->setUrlPre($url);
+        $get = array();
+        $this->oCurl->setParam($get);
+        $jsonStr = $this->oCurl->execCurl();
+        if (empty($jsonStr)) {
+            $this->error('fail in api.weixin.qq.com At getUserInfoByOpenid', -1);
         }
         $jsonArr = json_decode($jsonStr, true);
         if (!empty($jsonArr['errcode'])) {
