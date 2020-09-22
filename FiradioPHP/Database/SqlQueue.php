@@ -14,6 +14,8 @@ class SqlQueue {
     public $sFieldUpdated = 'updated'; // 最后更新时间
     public $sFieldState = 'do_state'; // 状态列, 0为未处理队列（需要做索引）
     public $sFieldSeq = 'do_seq'; // 序号列，每次处理+1（需要做索引）
+    public $mWhere = array();
+    public $aWhere = array();
     private $sCurrentId = null;
 
     public function __construct() {
@@ -21,15 +23,21 @@ class SqlQueue {
     }
 
     public function getOne() {
-        $aWhere = array();
-        $aWhere[$this->sFieldState] = 0;
+        $mWhere = $this->mWhere;
+        $mWhere['sFieldState'] = 0;
         $oSql = $this->oDb->sql();
         $oSql->table($this->sTable);
         $aField = array($this->sFieldId);
         $aField[] = $this->sFieldSeq;
         // 首先获取下一条需要处理的ID号
         $this->oDb->begin();
-        $aRow1 = $oSql->where($aWhere)->order($this->sFieldSeq)->field(implode(',', $aField))->find();
+        $aWhere = array();
+        $aWhere[] = '`' . $this->sFieldState . '`=:sFieldState';
+        foreach ($this->aWhere as $sWhereOne) {
+            $aWhere[] = $sWhereOne;
+        }
+        $sWhereAll = implode(' AND ', $aWhere);
+        $aRow1 = $oSql->where($mWhere, $sWhereAll)->order($this->sFieldSeq)->field(implode(',', $aField))->find();
         if (empty($aRow1)) {
             //没找到就结束
             $this->oDb->rollback();
