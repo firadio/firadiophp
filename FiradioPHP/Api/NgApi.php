@@ -13,13 +13,13 @@ class NgApi {
 
     public function __construct($conf = array()) {
         $this->aConfig = $conf['config'];
-        if (!empty($this->aConfig['api_url'])) {
-            $this->oCurl = new Curl($this->aConfig['api_url']);
-        }
-        if (!empty($this->aConfig['api2_url'])) {
-            $this->oCurl2 = new Curl($this->aConfig['api2_url']);
-            $this->oCurl2->postFormat = 'json';
-        }
+        $this->oCurl = new Curl();
+        $this->oCurl2 = new Curl();
+        $this->oCurl2->postFormat = 'json';
+    }
+
+    public function configSet($aConfig) {
+        $this->aConfig = $aConfig;
     }
 
     private function error($message) {
@@ -27,6 +27,7 @@ class NgApi {
     }
 
     public function retDataByPathAndPost($sPath, $aPost) {
+        $this->oCurl->setUrlPre($this->aConfig['api_url']);
         $sJson = $this->oCurl->post($sPath, $aPost);
         $ret = json_decode($sJson, TRUE);
         if (is_array($ret)) {
@@ -53,6 +54,7 @@ class NgApi {
     }
 
     public function api2($service, $aPost) {
+        $this->oCurl2->setUrlPre($this->aConfig['api2_url']);
         $aParam = array();
         $aParam['service'] = 'ngapi.' . $service;
         $aPost['site_id'] = $this->aConfig['api2_siteid'];
