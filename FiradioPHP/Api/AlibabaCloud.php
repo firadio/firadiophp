@@ -109,7 +109,7 @@ class AlibabaCloud {
     }
 
     public function EcsRebootInstance($InstanceId, $ForceStop = TRUE) {
-        // 重置实例密码
+        // 强制重启，在重置实例密码后使用
         $request = Ecs::v20140526()->RebootInstance();
         $request->withInstanceId($InstanceId);
         $request->withForceStop($ForceStop);
@@ -142,6 +142,15 @@ class AlibabaCloud {
         return $request->request();
     }
 
+    public function EcsDescribeImages() {
+        // 查询全部镜像
+        $request = Ecs::v20140526()->DescribeImages();
+        $request->withImageOwnerAlias('self');
+        $ret = $request->request();
+        $rows = $ret['Images']['Image'];
+        return $rows;
+    }
+
     public function EcsDescribeImagesByImageId($ImageId) {
         // 查询镜像
         $request = Ecs::v20140526()->DescribeImages();
@@ -151,13 +160,24 @@ class AlibabaCloud {
         return isset($rows[0]) ? $rows[0] : array();
     }
 
+    public function EcsModifyImageSharePermission($ImageId, $AddAccount1) {
+        $request = Ecs::v20140526()->DeleteImage();
+        $request->withImageId($ImageId);
+        $options = array();
+        $options['AddAccount.1'] = $AddAccount1;
+        $request->options($options);
+        return $request->request();
+    }
+
+
+
     public function EcsModifyInstancePassword($InstanceId, $Password) {
         // 重置实例密码
         $request = Ecs::v20140526()->ModifyInstanceAttribute();
         $request->withInstanceId($InstanceId);
         $request->withPassword($Password);
         $ret = $request->request();
-        $this->EcsRebootInstance($InstanceId, FALSE);
+        $this->EcsRebootInstance($InstanceId);
         return $ret;
     }
 
@@ -193,14 +213,17 @@ class AlibabaCloud {
         return $ret['Instances']['Instance'][0]['EipAddress']['AllocationId'];
     }
 
-    public function EcsDescribeInstances($regionId, $PageNumber = 1, $PageSize = 10) {
+    public function EcsDescribeInstances($PageNumber = 1, $PageSize = 10) {
         // 调用DescribeInstances查询一台或多台ECS实例的详细信息。
         $request = Ecs::v20140526()->DescribeInstances();
         //$request->withRegionId($regionId);
         $request->withPageNumber($PageNumber);
         $request->withPageSize($PageSize);
-        $ret = $request->request();
-        return $ret;
+        $ret = $request->request()->toArray();
+        $this->data['TotalCount'] = $ret['TotalCount'];
+        $this->data['PageSize'] = $ret['PageSize'];
+        $aRows = $ret['Instances']['Instance'];
+        return $aRows;
     }
 
     public function EcsModifyInstanceVncPasswd($InstanceId, $VncPassword) {
@@ -247,8 +270,20 @@ class AlibabaCloud {
         return $ret;
     }
 
+    public function EcsDescribeSecurityGroups() {
+        $request = Ecs::v20140526()->DescribeSecurityGroups();
+        $ret = $request->request();
+        $aRows = $ret['SecurityGroups']['SecurityGroup'];
+        return $aRows;
+    }
 
-
+    public function EcsDescribeSecurityGroupAttribute($sSecurityGroupId) {
+        $request = Ecs::v20140526()->DescribeSecurityGroupAttribute();
+        $request->withSecurityGroupId($sSecurityGroupId);
+        $ret = $request->request();
+        $aRows = $ret['Permissions'];
+        return $aRows;
+    }
 
     /*
      * 开始VPC相关功能

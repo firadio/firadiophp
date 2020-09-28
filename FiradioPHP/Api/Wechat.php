@@ -175,14 +175,16 @@ class Wechat {
         $url = 'https://api.weixin.qq.com/cgi-bin/media/get?access_token=ACCESS_TOKEN&media_id=MEDIA_ID';
         $url = str_replace('ACCESS_TOKEN', $this->access_token(), $url);
         $url = str_replace('MEDIA_ID', $MEDIA_ID, $url);
-        file_put_contents(DATA_DIR . DS . 'wx_media_jssdk' . DS . $MEDIA_ID . '.amr', file_get_contents($url));
+        //file_put_contents(DATA_DIR . DS . 'wx_media_jssdk' . DS . $MEDIA_ID . '.amr', file_get_contents($url));
+        return file_get_contents($url);
     }
 
     public function media_get_jssdk($MEDIA_ID) {
         $url = 'https://api.weixin.qq.com/cgi-bin/media/get/jssdk?access_token=ACCESS_TOKEN&media_id=MEDIA_ID';
         $url = str_replace('ACCESS_TOKEN', $this->access_token(), $url);
         $url = str_replace('MEDIA_ID', $MEDIA_ID, $url);
-        file_put_contents(DATA_DIR . DS . 'wx_media_jssdk' . DS . $MEDIA_ID . '.speex', file_get_contents($url));
+        //file_put_contents(DATA_DIR . DS . 'wx_media_jssdk' . DS . $MEDIA_ID . '.speex', file_get_contents($url));
+        return file_get_contents($url);
     }
 
     public function menu_get() {
@@ -259,8 +261,8 @@ class Wechat {
 
     public function getUserInfoByCode($code) {
         $mRet = $this->getTokenByCode($code);
-        //return $this->getUserInfoBySNS($mRet['access_token'], $mRet['openid']);
-        return $this->getUserInfoByOpenid($mRet['openid']);
+        return $this->getUserInfoBySNS($mRet['access_token'], $mRet['openid']);
+        //return $this->getUserInfoByOpenid($mRet['openid']);
     }
 
     public function getUserInfoBySNS($access_token, $openid) {
