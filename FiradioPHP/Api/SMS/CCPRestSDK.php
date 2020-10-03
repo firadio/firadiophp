@@ -14,6 +14,7 @@
  */
 
 namespace FiradioPHP\Api\SMS;
+use \stdClass;
 
 class CCPRestSDK {
 
