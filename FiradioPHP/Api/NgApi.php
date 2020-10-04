@@ -72,7 +72,7 @@ class NgApi {
             throw new \Exception('Api2返回错误2', -1);
         }
         if (!empty($ret['msg'])) {
-            throw new \Exception($ret['msg'], intval($ret['ret']));
+            throw new \Exception('Api2返回:' . $ret['msg'], intval($ret['ret']));
         }
         if (empty($ret['data'])) {
             throw new \Exception('Api2返回错误3', -1);
@@ -134,6 +134,14 @@ class NgApi {
         $aPost['code'] = md5($code_text);
         $aPost['username'] = $username;
         return $this->retDataByPathAndPost('/v1/user/all-balance', $aPost);
+    }
+
+    public function getUserAllCredit() {
+        $aPost = array();
+        $aPost['sign_key'] = $this->aConfig['sign_key'];
+        $code_text = $this->aConfig['sign_key'] . $this->aConfig['api_account'];
+        $aPost['code'] = md5($code_text);
+        return $this->retDataByPathAndPost('/v1/user/all-credit', $aPost);
     }
 
     public function transScoreAndGetBalance($username, $plat_type, $money, $client_transfer_id) {
