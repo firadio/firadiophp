@@ -7,6 +7,7 @@ class Worker {
     private $url = 'http://127.0.0.1';
     private $oConfig;
     private $mUrlQuery = array();
+    private $isDebug = FALSE;
 
     public function __construct($oConfig) {
         $this->oConfig = $oConfig;
@@ -60,7 +61,9 @@ class Worker {
     private function getResponse($mReqHeader, $sReqBody) {
         $IPADDR = $this->getIpAddr($mReqHeader);
         $sPath = $this->getPath($mReqHeader['url']);
-        $this->consoleLog($this->ipaddr_format($IPADDR) . ' ' . $sPath);
+        if ($this->isDebug) {
+            $this->consoleLog($this->ipaddr_format($IPADDR) . ' ' . $sPath);
+        }
         $oRes = new \FiradioPHP\Routing\Response();
         $oRes->setParam('IPADDR', $IPADDR);
         $oRes->setParam('sUserAgent', $mReqHeader['user-agent']);
@@ -93,7 +96,9 @@ class Worker {
         }
         $mResHeader = $oRes->getResponseHeaders();
         $sResBody = $oRes->getResponseBody();
-        echo ' [' . number_format($oRes->getExecTime() * 1000, 2) . 'ms]';
+        if ($this->isDebug) {
+            echo ' [' . number_format($oRes->getExecTime() * 1000, 2) . 'ms]';
+        }
         return array($mResHeader, $sResBody);
     }
 
