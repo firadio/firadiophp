@@ -132,6 +132,7 @@ class Response {
     }
 
     public function end($str) {
+        $this->echo($str);
         throw new \Exception($str, -1);
     }
 

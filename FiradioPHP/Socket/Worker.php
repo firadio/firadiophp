@@ -37,10 +37,11 @@ class Worker {
             return $kvUrl['path'];
         }
         parse_str($kvUrl['query'], $this->mUrlQuery);
-        if (!isset($this->mUrlQuery['service'])) {
+        $service = isset($this->mUrlQuery['service']) ? $this->mUrlQuery['service'] : '';
+        if ($service === '') {
             return $kvUrl['path'];
         }
-        return str_replace('.', '/', $this->mUrlQuery['service']);
+        return str_replace('.', '/', $service);
     }
 
     private function getIpAddr($mReqHeader) {
