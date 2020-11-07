@@ -59,8 +59,19 @@ class Worker {
         }
     }
 
+    private function getIpOne($sIpList) {
+        $aIpList = explode(',', $sIpList);
+        foreach ($aIpList as $sIp) {
+            $sIpOne = trim($sIp);
+            if (empty($sIpOne)) {
+                continue;
+            }
+            return $sIpOne;
+        }
+    }
+
     private function getResponse($mReqHeader, $sReqBody) {
-        $IPADDR = $this->getIpAddr($mReqHeader);
+        $IPADDR = $this->getIpOne($this->getIpAddr($mReqHeader));
         $sPath = $this->getPath($mReqHeader['url']);
         if ($this->isDebug) {
             $this->consoleLog($this->ipaddr_format($IPADDR) . ' ' . $sPath);
