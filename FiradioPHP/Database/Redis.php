@@ -95,4 +95,21 @@ class Redis {
         return $row;
     }
 
+    public function gsCache($name, $fn, $ttl = NULL) {
+        $key = 'cache_' . $name;
+        $sJson = $this->get($key);
+        if ($sJson !== FALSE) {
+            //已经get到数据了
+            $aData = json_decode($sJson, TRUE);
+            if ($aData !== NULL) {
+                //json解析没有异常
+                return $aData;
+            }
+        }
+        //get不到数据，或者json解析出异常了
+        $aData = call_user_func($fn);
+        $this->set($key, json_encode($aData), $ttl);
+        return $aData;
+    }
+
 }
