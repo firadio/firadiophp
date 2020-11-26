@@ -7,7 +7,7 @@ class Worker {
     private $url = 'http://127.0.0.1';
     private $oConfig;
     private $mUrlQuery = array();
-    private $isDebug = FALSE;
+    public $isDebug = TRUE;
 
     public function __construct($oConfig) {
         $this->oConfig = $oConfig;
