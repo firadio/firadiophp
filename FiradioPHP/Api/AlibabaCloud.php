@@ -8,6 +8,7 @@ use AlibabaCloud\Client\Exception\ServerException;
 use AlibabaCloud\Ecs\Ecs;
 use AlibabaCloud\Vpc\Vpc;
 use AlibabaCloud\Cms\Cms;
+use AlibabaCloud\Ram\Ram;
 
 /**
  * https://github.com/rjyxz/aliyun-php-sdk-dm
@@ -80,6 +81,17 @@ class AlibabaCloud {
         $request->withImageId($rowNthostOperate['vps_imageid']);
         $request->withSystemDiskSize($rowNthostOperate['limit_storagegb']); // 系统盘大小，单位为GiB。取值范围：20~500
         $request->withPassword($rowNthostOperate['password']);
+        $request->withSecurityEnhancementStrategy('Deactive'); // 更换系统盘后，是否免费使用云安全中心服务。
+        return $request->request();
+    }
+
+    public function EcsReplaceSystemDisk2($InstanceId, $ImageId, $Password) {
+        // 更换系统盘
+        print_r($rowNthostOperate);
+        $request = Ecs::v20140526()->ReplaceSystemDisk();
+        $request->withInstanceId($InstanceId);
+        $request->withImageId($ImageId);
+        $request->withPassword($Password);
         $request->withSecurityEnhancementStrategy('Deactive'); // 更换系统盘后，是否免费使用云安全中心服务。
         return $request->request();
     }
@@ -478,6 +490,31 @@ class AlibabaCloud {
             $mRet[$mRow['instanceId']][] = floatval($mRow['Value']);
         }
         return $mRet;
+    }
+
+
+    public function RamCreateUser($UserName) {
+        $request = Ram::v20150501()->CreateUser();
+        $request->withUserName($UserName);
+        $ret = $request->request();
+        return $ret->toArray();
+    }
+
+    public function RamCreateLoginProfile($UserName, $Password) {
+        $request = Ram::v20150501()->CreateLoginProfile();
+        $request->withUserName($UserName);
+        $request->withPassword($Password);
+        $ret = $request->request();
+        return $ret->toArray();
+    }
+
+    public function RamAttachPolicyToUser($UserName, $PolicyType, $PolicyName) {
+        $request = Ram::v20150501()->AttachPolicyToUser();
+        $request->withUserName($UserName);
+        $request->withPolicyType($PolicyType);
+        $request->withPolicyName($PolicyName);
+        $ret = $request->request();
+        return $ret->toArray();
     }
 
 
