@@ -17,8 +17,12 @@ class Wxpay {
     public function __construct($conf) {
         $this->aConfig = $conf;
         $this->oCurl = new Curl();
-        $this->oCurl->sslcert_file = APP_ROOT . '/config/wechat/apiclient_cert.pem';
-        $this->oCurl->sslkey_file = APP_ROOT . '/config/wechat/apiclient_key.pem';
+        if (isset($conf['sslcert_file'])) {
+            $this->oCurl->sslcert_file = $conf['sslcert_file'];
+        }
+        if (isset($conf['sslkey_file'])) {
+            $this->oCurl->sslkey_file = $conf['sslkey_file'];
+        }
     }
 
     private function nonce_str() {
