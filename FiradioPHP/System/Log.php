@@ -99,7 +99,9 @@ class Log {
         if (is_array($sMessage)) {
             $sMessage = print_r($sMessage, true);
         }
-        echo date('Y-m-d H:i:s') . ' [' . $sLevel . '] ' . $sMessage . "\r\n";
+        if (isset($_SERVER['argv'])) {
+            echo date('Y-m-d H:i:s') . ' [' . $sLevel . '] ' . $sMessage . "\r\n";
+        }
     }
 
     public function write($sLevel, $aMessage) {
