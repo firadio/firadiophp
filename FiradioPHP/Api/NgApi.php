@@ -39,6 +39,7 @@ class NgApi {
                 $this->lastRet['msg'] = $ret['message'];
             }
         } else {
+            file_put_contents(__DIR__ . '.log', "\r\n" . date('Y-m-d H:i:s') . "\t" . $sJson . "\r\n", FILE_APPEND);
             throw new \Exception('Api1返回错误1', -1);
         }
         if (empty($ret)) {
