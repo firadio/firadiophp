@@ -178,15 +178,15 @@ class NgApi {
         return $this->retDataByPathAndPost('/v1/user/trans-all', $aPost);
     }
 
-    public function v1_user_record_all($before_second = 0) {
+    public function v1_user_record_all($before_second = 0, $second_length = 86400, $page = 1) {
         $aPost = array();
         $aPost['sign_key'] = $this->aConfig['sign_key'];
         $time_scope_end = time() - $before_second;
-        $time_scope_begin = $time_scope_end - 86400;
+        $time_scope_begin = $time_scope_end - $second_length;
         $aPost['startTime'] = date('Y-m-d H:i:s', $time_scope_begin);
         $aPost['endTime'] = date('Y-m-d H:i:s', $time_scope_end);
         $aPost['timeType'] = 0; //默认为空按照最后更新时间获取记录 为1时按照下注时间获取记录
-        $aPost['page'] = 1;
+        $aPost['page'] = $page;
         $aPost['limit'] = 2000;
         $code_text = $this->aConfig['sign_key'] . $this->aConfig['api_account'];
         $code_text .= $aPost['startTime'] . $aPost['endTime'];

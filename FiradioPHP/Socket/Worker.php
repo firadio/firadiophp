@@ -78,7 +78,9 @@ class Worker {
         }
         $oRes = new \FiradioPHP\Routing\Response();
         $oRes->setParam('IPADDR', $IPADDR);
-        $oRes->setParam('sUserAgent', $mReqHeader['user-agent']);
+        if (isset($mReqHeader['user-agent'])) {
+            $oRes->setParam('sUserAgent', $mReqHeader['user-agent']);
+        }
         $oRes->setParam('sRawUrl', $mReqHeader['url']);
         $oRes->setParam('sRawContent', $sReqBody);
         $oRes->path = $sPath;

@@ -204,7 +204,11 @@ class Curl {
         }
 
         $this->_status = curl_getinfo($s, CURLINFO_HTTP_CODE);
+        $error = curl_error($s);
         curl_close($s);
+        if ($error) {
+            throw new Exception($error);
+        }
         return $this->_webpage;
     }
 
