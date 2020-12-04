@@ -318,4 +318,103 @@ class NgApi {
         return $user_gscore_balance;
     }
 
+
+    public function fTransScoreIn($oDb, $client_transfer_id, $isReCheck = FALSE) {
+        // 处理指定订单的额度转换 (转入到棋牌)
+        // $iMoney转账金额(负数表示从平台转出，正数转入)，不支持小数
+        $oDb->begin();
+        $oSqlUserGscoreOrder = $oDb->sql()->table('ys_ng_user_gscore_order');
+        $mWhere = array();
+        $mWhere['client_transfer_id'] = $client_transfer_id;
+        $oSqlUserGscoreOrder->where($mWhere);
+        $mRow = $oSqlUserGscoreOrder->lock()->find();
+        if (empty($mRow)) {
+            $this->error('not found client_transfer_id');
+        }
+        if ($mRow['is_ignore']) {
+            $this->error('is_ignore already');
+        }
+        if ($mRow['is_ok']) {
+            $this->error('is_ok already');
+        }
+        if ($isReCheck) {
+            // 对于失败订单，需要先查询订单的真实状态
+        }
+        $mSave = array();
+        try {
+            $qipai_balance = $this->transScoreAndGetBalance($mRow['username'], $mRow['plat_type'], $mRow['money'], $client_transfer_id);
+            $mSave['is_ok'] = 1;
+            $mSave['api_trans_balance'] = $qipai_balance;
+            $oSqlUserGscoreOrder->save($mSave);
+            $oDb->commit();
+            return $qipai_balance;
+        } catch (Exception $ex) {
+            $mSave['is_fail'] = 1;
+            $mSave['api_trans_code'] = $ex->getCode();
+            $mSave['api_trans_msg'] = $ex->getMessage();
+            $oSqlUserGscoreOrder->save($mSave);
+            $oDb->commit();
+            throw $ex;
+        }
+    }
+
+    public function fGetPlatTitle($plat_type) {
+        $aPlatType = array();
+        $aPlatType['ky'] = '开元棋牌';
+        $aPlatType['ag'] = 'AG';
+        $aPlatType['leg'] = '乐游棋牌';
+        $plat_title = isset($aPlatType[$plat_type]) ? $aPlatType[$plat_type] : '未知';
+        return $plat_title;
+    }
+
+    public function fTransScoreOut($class_user, $oDb, $client_transfer_id, $isReCheck = FALSE) {
+        // 处理指定订单的额度转换 (从棋牌转出)
+        $oDb->begin();
+        $oSqlUserGscoreOrder = $oDb->sql()->table('ys_ng_user_gscore_order');
+        $mWhere = array();
+        $mWhere['client_transfer_id'] = $client_transfer_id;
+        $oSqlUserGscoreOrder->where($mWhere);
+        $mRow = $oSqlUserGscoreOrder->lock()->find();
+        if (empty($mRow)) {
+            $this->error('not found client_transfer_id');
+        }
+        if ($mRow['is_ignore']) {
+            $this->error('is_ignore already');
+        }
+        if ($mRow['is_ok']) {
+            $this->error('is_ok already');
+        }
+        if ($isReCheck) {
+            // 对于失败订单，需要先查询订单的真实状态
+        }
+        $mSave = array();
+        try {
+            // 开始请求 API 进行额度转换
+            $qipai_balance = $this->transScoreAndGetBalance($mRow['username'], $mRow['plat_type'], $mRow['money'], $client_transfer_id);
+            $mSave['is_ok'] = 1;
+            $mSave['api_trans_balance'] = $qipai_balance;
+            $mSave['user_bill_id'] = $this->fTransScoreOut_UserBillAdd($class_user, $oDb, $mRow);
+            $oSqlUserGscoreOrder->save($mSave);
+            $oDb->commit();
+            $class_user->DelUserInfo($mRow['user_id']);
+            return $qipai_balance;
+        } catch (Exception $ex) {
+            $mSave['is_fail'] = 1;
+            $mSave['api_trans_code'] = $ex->getCode();
+            $mSave['api_trans_msg'] = $ex->getMessage();
+            $oSqlUserGscoreOrder->save($mSave);
+            $oDb->commit();
+            throw $ex;
+        }
+    }
+
+    private function fTransScoreOut_UserBillAdd($class_user, $oDb, $mRow) {
+        // 这里是执行加钱操作，请确保上一步NG接口是成功的
+        $plat_title = $this->fGetPlatTitle($mRow['plat_type']);
+        $title = "转出-{$plat_title}";
+        $remark = json_encode(array('plat_type' => $mRow['plat_type']));
+        $user_bill_id = $class_user->UserBillAdd(NULL, $oDb, $mRow['user_id'], $mRow['client_transfer_id'], -floatval($mRow['money']), 203, $title, $remark);
+        return $user_bill_id;
+    }
+
 }
