@@ -30,26 +30,25 @@ class NgApi {
         $this->oCurl->setUrlPre($this->aConfig['api_url']);
         $sJson = $this->oCurl->post($sPath, $aPost);
         $ret = json_decode($sJson, TRUE);
-        if (is_array($ret)) {
-            $this->lastRet = $ret;
-            if (isset($ret['statusCode'])) {
-                $this->lastRet['code'] = $ret['statusCode'];
-            }
-            if (isset($ret['message'])) {
-                $this->lastRet['msg'] = $ret['message'];
-            }
-        } else {
-            file_put_contents(__DIR__ . '.log', "\r\n" . date('Y-m-d H:i:s') . "\t" . $sJson . "\r\n", FILE_APPEND);
-            throw new \Exception('Api1返回错误1', -1);
-        }
         if (empty($ret)) {
-            throw new \Exception('Api1返回错误2', -1);
+            throw new \Exception('Api1 return not JSON', -102);
+        }
+        if (!is_array($ret)) {
+            file_put_contents(__DIR__ . '.log', "\r\n" . date('Y-m-d H:i:s') . "\t" . $sJson . "\r\n", FILE_APPEND);
+            throw new \Exception('Api1 return not is_array', -101);
+        }
+        $this->lastRet = $ret;
+        if (isset($ret['statusCode'])) {
+            $this->lastRet['code'] = $ret['statusCode'];
+        }
+        if (isset($ret['message'])) {
+            $this->lastRet['msg'] = $ret['message'];
         }
         if (!empty($ret['statusCode']) && $ret['statusCode'] !== '01') {
-            throw new \Exception($ret['message'], -1);
+            throw new \Exception($ret['message'], -103);
         }
         if (!isset($ret['data'])) {
-            throw new \Exception('Api1返回错误3', -1);
+            throw new \Exception('Api1 no data', -104);
         }
         return($ret['data']);
     }
@@ -337,12 +336,32 @@ class NgApi {
         if ($mRow['is_ok']) {
             $this->error('is_ok already');
         }
-        if ($isReCheck) {
-            // 对于失败订单，需要先查询订单的真实状态
-        }
         $mSave = array();
+        if ($isReCheck) {
+            // 对于重试订单，必须先查询订单的真实状态
+            try {
+                // 首先确定订单是否存在
+                $aScoreStatus = $this->CheckTransUserScoreStatus($mRow['username'], $mRow['plat_type'], $mRow['client_transfer_id']);
+                $mSave['is_ok'] = 1;
+                $mSave['api_trans_balance'] = $aScoreStatus['after_score'];
+                $mSave['api_trans_msg'] = '订单已处理过';
+                $oSqlUserGscoreOrder->save($mSave);
+                $oDb->commit();
+            } catch (\Exception $ex) {
+                if ($this->lastRet['statusCode'] === '00' && $this->lastRet['message'] === '失败') {
+                    // 如果确定订单不存在就去执行
+                    $this->fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+                }
+                $oDb->rollback();
+            }
+            return;
+        }
+        $this->fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+    }
+
+    private function fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow) {
         try {
-            $qipai_balance = $this->transScoreAndGetBalance($mRow['username'], $mRow['plat_type'], $mRow['money'], $client_transfer_id);
+            $qipai_balance = $this->transScoreAndGetBalance($mRow['username'], $mRow['plat_type'], $mRow['money'], $mRow['client_transfer_id']);
             $mSave['is_ok'] = 1;
             $mSave['api_trans_balance'] = $qipai_balance;
             $oSqlUserGscoreOrder->save($mSave);
