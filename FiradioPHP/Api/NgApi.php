@@ -417,16 +417,16 @@ class NgApi {
             } catch (\Exception $ex) {
                 if ($this->lastRet['statusCode'] === '00' && $this->lastRet['message'] === '失败') {
                     // 如果确定订单不存在就去执行
-                    $this->fTransScoreOut_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+                    $this->fTransScoreOut_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow);
                 }
                 $oDb->rollback();
             }
             return;
         }
-        $this->fTransScoreOut_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+        $this->fTransScoreOut_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow);
     }
 
-    private function fTransScoreOut_trans($oDb, $oSqlUserGscoreOrder, $mRow) {
+    private function fTransScoreOut_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow) {
         $mSave = array();
         try {
             // 开始请求 API 进行额度转换
