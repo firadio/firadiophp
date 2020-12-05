@@ -328,12 +328,15 @@ class NgApi {
         $oSqlUserGscoreOrder->where($mWhere);
         $mRow = $oSqlUserGscoreOrder->lock()->find();
         if (empty($mRow)) {
+            $oDb->rollback();
             $this->error('not found client_transfer_id');
         }
         if ($mRow['is_ignore']) {
+            $oDb->rollback();
             $this->error('is_ignore already');
         }
         if ($mRow['is_ok']) {
+            $oDb->rollback();
             $this->error('is_ok already');
         }
         $mSave = array();
@@ -395,12 +398,15 @@ class NgApi {
         $oSqlUserGscoreOrder->where($mWhere);
         $mRow = $oSqlUserGscoreOrder->lock()->find();
         if (empty($mRow)) {
+            $oDb->rollback();
             $this->error('not found client_transfer_id');
         }
         if ($mRow['is_ignore']) {
+            $oDb->rollback();
             $this->error('is_ignore already');
         }
         if ($mRow['is_ok']) {
+            $oDb->rollback();
             $this->error('is_ok already');
         }
         if ($isReCheck) {
