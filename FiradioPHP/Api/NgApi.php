@@ -353,13 +353,14 @@ class NgApi {
             } catch (\Exception $ex) {
                 if ($this->lastRet['statusCode'] === '00' && $this->lastRet['message'] === '失败') {
                     // 如果确定订单不存在就去执行
-                    $this->fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+                    $balance = $this->fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow);
                 }
                 $oDb->rollback();
             }
             return;
         }
-        $this->fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+        $balance = $this->fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+        return $balance;
     }
 
     private function fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow) {
@@ -423,13 +424,14 @@ class NgApi {
             } catch (\Exception $ex) {
                 if ($this->lastRet['statusCode'] === '00' && $this->lastRet['message'] === '失败') {
                     // 如果确定订单不存在就去执行
-                    $this->fTransScoreOut_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow);
+                    $balance = $this->fTransScoreOut_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow);
                 }
                 $oDb->rollback();
             }
             return;
         }
-        $this->fTransScoreOut_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow);
+        $balance = $this->fTransScoreOut_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow);
+        return $balance;
     }
 
     private function fTransScoreOut_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow) {
