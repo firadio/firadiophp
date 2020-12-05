@@ -367,7 +367,7 @@ class NgApi {
             $oSqlUserGscoreOrder->save($mSave);
             $oDb->commit();
             return $qipai_balance;
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $mSave['is_fail'] = 1;
             $mSave['api_trans_code'] = $ex->getCode();
             $mSave['api_trans_msg'] = $ex->getMessage();
@@ -404,12 +404,33 @@ class NgApi {
             $this->error('is_ok already');
         }
         if ($isReCheck) {
-            // 对于失败订单，需要先查询订单的真实状态
+            // 对于重试订单，必须先查询订单的真实状态
+            try {
+                // 首先确定订单是否存在
+                $aScoreStatus = $this->CheckTransUserScoreStatus($mRow['username'], $mRow['plat_type'], $mRow['client_transfer_id']);
+                $mSave['is_ok'] = 1;
+                $mSave['api_trans_balance'] = $aScoreStatus['after_score'];
+                $mSave['api_trans_msg'] = '用户棋牌额度已转出';
+                $mSave['user_bill_id'] = $this->fTransScoreOut_UserBillAdd($class_user, $oDb, $mRow);
+                $oSqlUserGscoreOrder->save($mSave);
+                $oDb->commit();
+            } catch (\Exception $ex) {
+                if ($this->lastRet['statusCode'] === '00' && $this->lastRet['message'] === '失败') {
+                    // 如果确定订单不存在就去执行
+                    $this->fTransScoreOut_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+                }
+                $oDb->rollback();
+            }
+            return;
         }
+        $this->fTransScoreOut_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+    }
+
+    private function fTransScoreOut_trans($oDb, $oSqlUserGscoreOrder, $mRow) {
         $mSave = array();
         try {
             // 开始请求 API 进行额度转换
-            $qipai_balance = $this->transScoreAndGetBalance($mRow['username'], $mRow['plat_type'], $mRow['money'], $client_transfer_id);
+            $qipai_balance = $this->transScoreAndGetBalance($mRow['username'], $mRow['plat_type'], $mRow['money'], $mRow['client_transfer_id']);
             $mSave['is_ok'] = 1;
             $mSave['api_trans_balance'] = $qipai_balance;
             $mSave['user_bill_id'] = $this->fTransScoreOut_UserBillAdd($class_user, $oDb, $mRow);
@@ -417,8 +438,9 @@ class NgApi {
             $oDb->commit();
             $class_user->DelUserInfo($mRow['user_id']);
             return $qipai_balance;
-        } catch (Exception $ex) {
+        } catch (\Exception $ex) {
             $mSave['is_fail'] = 1;
+            $mSave['is_ignore'] = 1;
             $mSave['api_trans_code'] = $ex->getCode();
             $mSave['api_trans_msg'] = $ex->getMessage();
             $oSqlUserGscoreOrder->save($mSave);
