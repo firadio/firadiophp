@@ -23,6 +23,7 @@ class CCPRestSDK {
     private $AppId;
     private $SubAccountSid;
     private $SubAccountToken;
+    private $ServerURL;
     private $ServerIP;
     private $ServerPort;
     private $SoftVersion;
@@ -32,10 +33,12 @@ class CCPRestSDK {
     private $Filename = "../log.txt"; //日志文件
     private $Handle;
 
-    function __construct($ServerIP, $ServerPort, $SoftVersion) {
+    function __construct($ServerURL, $SoftVersion) {
         $this->Batch = date("YmdHis");
-        $this->ServerIP = $ServerIP;
-        $this->ServerPort = $ServerPort;
+        $this->ServerURL = $ServerURL;
+        $mUrl = parse_url($ServerURL);
+        $this->ServerIP = $mUrl['host'];
+        $this->ServerPort = $mUrl['port'];
         $this->SoftVersion = $SoftVersion;
         $this->Handle = fopen($this->Filename, 'a');
     }
@@ -135,7 +138,7 @@ class CCPRestSDK {
         // 大写的sig参数  
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/SubAccounts?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/SubAccounts?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐号Id + 英文冒号 + 时间戳
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -189,7 +192,7 @@ class CCPRestSDK {
         // 大写的sig参数  
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/GetSubAccounts?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/GetSubAccounts?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -236,7 +239,7 @@ class CCPRestSDK {
         // 大写的sig参数  
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/QuerySubAccountByName?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/QuerySubAccountByName?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -293,7 +296,7 @@ class CCPRestSDK {
         // 大写的sig参数 
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL        
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/SMS/TemplateSMS?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/SMS/TemplateSMS?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -369,7 +372,7 @@ class CCPRestSDK {
         // 大写的sig参数
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL  
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/Calls/LandingCalls?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/Calls/LandingCalls?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -427,7 +430,7 @@ class CCPRestSDK {
         // 大写的sig参数
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL  
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/Calls/VoiceVerify?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/Calls/VoiceVerify?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -470,7 +473,7 @@ class CCPRestSDK {
         // 大写的sig参数
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL  
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/ivr/dial?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/ivr/dial?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -513,7 +516,7 @@ class CCPRestSDK {
         // 大写的sig参数
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL  
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/BillRecords?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/BillRecords?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -547,7 +550,7 @@ class CCPRestSDK {
         // 大写的sig参数
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL  
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/AccountInfo?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/AccountInfo?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -592,7 +595,7 @@ class CCPRestSDK {
         // 大写的sig参数
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL  
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/SMS/QuerySMSTemplate?sig=$sig";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/SMS/QuerySMSTemplate?sig=$sig";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -638,7 +641,7 @@ class CCPRestSDK {
         // 大写的sig参数
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL  
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/ivr/call?sig=$sig&callid=$callid";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/ivr/call?sig=$sig&callid=$callid";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -673,7 +676,7 @@ class CCPRestSDK {
         // 大写的sig参数
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL  
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/CallResult?sig=$sig&callsid=$callSid";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/CallResult?sig=$sig&callsid=$callSid";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
@@ -712,7 +715,7 @@ class CCPRestSDK {
         // 大写的sig参数
         $sig = strtoupper(md5($this->AccountSid . $this->AccountToken . $this->Batch));
         // 生成请求URL  
-        $url = "https://$this->ServerIP:$this->ServerPort/$this->SoftVersion/Accounts/$this->AccountSid/Calls/MediaFileUpload?sig=$sig&appid=$this->AppId&filename=$filename";
+        $url = "$this->ServerURL$this->SoftVersion/Accounts/$this->AccountSid/Calls/MediaFileUpload?sig=$sig&appid=$this->AppId&filename=$filename";
         $this->showlog("request url = " . $url);
         // 生成授权：主帐户Id + 英文冒号 + 时间戳。
         $authen = base64_encode($this->AccountSid . ":" . $this->Batch);
