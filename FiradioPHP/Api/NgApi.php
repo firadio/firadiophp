@@ -45,7 +45,7 @@ class NgApi {
             $this->lastRet['msg'] = $ret['message'];
         }
         if (!empty($ret['statusCode']) && $ret['statusCode'] !== '01') {
-            throw new \Exception($ret['message'], -103);
+            throw new \Exception($sPath . '|' . $ret['message'], -103);
         }
         if (!isset($ret['data'])) {
             throw new \Exception('Api1 no data', -104);
