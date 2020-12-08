@@ -318,7 +318,7 @@ class NgApi {
     }
 
 
-    public function fTransScoreIn($oDb, $client_transfer_id, $isReCheck = FALSE) {
+    public function fTransScoreIn($class_user, $oDb, $client_transfer_id, $isReCheck = FALSE) {
         // 处理指定订单的额度转换 (转入到棋牌)
         // $iMoney转账金额(负数表示从平台转出，正数转入)，不支持小数
         $oDb->begin();
@@ -353,17 +353,26 @@ class NgApi {
             } catch (\Exception $ex) {
                 if ($this->lastRet['statusCode'] === '00' && $this->lastRet['message'] === '失败') {
                     // 如果确定订单不存在就去执行
-                    $balance = $this->fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+                    $balance = $this->fTransScoreIn_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow);
                 }
                 $oDb->rollback();
             }
             return;
         }
-        $balance = $this->fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow);
+        $balance = $this->fTransScoreIn_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow);
         return $balance;
     }
 
-    private function fTransScoreIn_trans($oDb, $oSqlUserGscoreOrder, $mRow) {
+    private function fTransScoreIn_refund($class_user, $oDb, $oSqlUserGscoreOrder, $mRow) {
+        //开始退款(当玩家转入游棋牌戏(trans_type=2)失败时，退款到余额账户)
+        $plat_title = $this->fGetPlatTitle($mRow['plat_type']);
+        $title = "转入失败退款-{$plat_title}";
+        $remark = json_encode(array('plat_type' => $mRow['plat_type']));
+        $user_bill_id = $class_user->UserBillAdd(NULL, $oDb, $mRow['user_id'], $mRow['client_transfer_id'], floatval($mRow['money']), 204, $title, $remark);
+        return $user_bill_id;
+    }
+
+    private function fTransScoreIn_trans($class_user, $oDb, $oSqlUserGscoreOrder, $mRow) {
         try {
             $qipai_balance = $this->transScoreAndGetBalance($mRow['username'], $mRow['plat_type'], $mRow['money'], $mRow['client_transfer_id']);
             $mSave['is_ok'] = 1;
@@ -373,6 +382,13 @@ class NgApi {
             return $qipai_balance;
         } catch (\Exception $ex) {
             $mSave['is_fail'] = 1;
+            $mSave['fail_count'] = $mRow['fail_count'] + 1;
+            if ($mSave['fail_count'] >= 10) {
+                // 超过10次失败，自动退回充值账户余额
+                $mSave['is_ignore'] = 1;
+                $mSave['refund_bill_id'] = $this->fTransScoreIn_refund($class_user, $oDb, $oSqlUserGscoreOrder, $mRow);
+                echo '|Refunded';
+            }
             $mSave['api_trans_code'] = $ex->getCode();
             $mSave['api_trans_msg'] = $ex->getMessage();
             $oSqlUserGscoreOrder->save($mSave);
