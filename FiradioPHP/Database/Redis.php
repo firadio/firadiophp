@@ -22,6 +22,10 @@ class Redis {
         }
     }
 
+    public function expire($key, $ttl) {
+        $this->redis->expire($this->keypre . $key, $ttl);
+    }
+
     public function sAdd($name, $value) {
         if (is_array($value)) {
             if (count($value) === 0) {
@@ -75,6 +79,10 @@ class Redis {
 
     public function HDEL($name, $key) {
         return $this->redis->HDEL($this->keypre . $name, $key);
+    }
+
+    public function hMset($name, $mData) {
+        return $this->redis->hMset($this->keypre . $name, $mData);
     }
 
     public function Keys($keyname) {
