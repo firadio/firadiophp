@@ -1,14 +1,12 @@
 @ECHO OFF
-SET path=%path%;P:\data\code\PortableGit\bin\
-SET path=%path%;X:\program\PortableGit\bin\
-SET path=%path%;E:\data\program\PortableGit\bin\
-SET path=%path%;C:\data\program\PortableGit\bin\
-git config --global user.email "xiangxisheng@gmail.com"
-git config --global user.name "Xiang/Xisheng"
-git config --global core.safecrlf warn
-git config --global core.autocrlf true
+CD /d %~dp0
+git config pull.rebase true
+git config user.email "www@firadio.com"
+git config user.name "firadio"
+git config core.safecrlf false
+git config core.autocrlf input
 git remote rm origin
-git remote add origin https://gitee.com/firadio/firadiophp.git
+git remote add origin https://github.com/firadio/firadiophp.git
 ECHO =========git diff============
 git diff
 ECHO =========git pull ^&^& git commit============
