@@ -7,7 +7,7 @@ class Worker {
     private $url = 'http://127.0.0.1';
     private $oConfig;
     private $mUrlQuery = array();
-    public $isDebug = TRUE;
+    public $isDebug = FALSE;
 
     public function __construct($oConfig) {
         $this->oConfig = $oConfig;
@@ -110,8 +110,13 @@ class Worker {
         }
         $mResHeader = $oRes->getResponseHeaders();
         $sResBody = $oRes->getResponseBody();
+        $fExecTimeMs = $oRes->getExecTime() * 1000;
         if ($this->isDebug) {
-            echo ' [' . number_format($oRes->getExecTime() * 1000, 2) . 'ms]';
+            echo ' [' . number_format($fExecTimeMs, 2) . 'ms]';
+        } else
+        if ($fExecTimeMs >= 50) {
+            $this->consoleLog($this->ipaddr_format($IPADDR) . ' ' . $sPath);
+            echo ' [' . number_format($fExecTimeMs, 2) . 'ms]';
         }
         return array($mResHeader, $sResBody);
     }
