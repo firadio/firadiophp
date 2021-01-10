@@ -114,7 +114,7 @@ class Worker {
         if ($this->isDebug) {
             echo ' [' . number_format($fExecTimeMs, 2) . 'ms]';
         } else
-        if ($fExecTimeMs >= 50) {
+        if ($fExecTimeMs >= 100) {
             $this->consoleLog($this->ipaddr_format($IPADDR) . ' ' . $sPath);
             echo ' [' . number_format($fExecTimeMs, 2) . 'ms]';
         }
