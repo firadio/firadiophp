@@ -92,10 +92,12 @@ class Curl {
             $params = http_build_query($params);
         }
         $url = $urlpre;
-        if (strpos($urlpre, '?') > 0) {
-            $url .= '&' . $params;
-        } else {
-            $url .= '?' . $params;
+        if ($params) {
+            if (strpos($urlpre, '?') > 0) {
+                $url .= '&' . $params;
+            } else {
+                $url .= '?' . $params;
+            }
         }
         return $url;
     }
@@ -146,6 +148,7 @@ class Curl {
         if ($this->_post) {
             $post = $this->_postFields;
             if ($this->_upload) {
+                
             } else
             if (is_array($post)) {
                 $sContentType = isset($this->_header['Content-Type']) ? $this->_header['Content-Type'] : '';
@@ -196,11 +199,14 @@ class Curl {
             curl_setopt($s, CURLOPT_SSLKEYTYPE, 'PEM'); //sslKeyType
             curl_setopt($s, CURLOPT_SSLKEY, $this->sslkey_file);
         }
-
+        $exec_result = curl_exec($s);
+        if ($exec_result === FALSE) {
+            throw new Exception('exec_result is FALSE, Error: ' . curl_error($s) . $this->_fullUrl);
+        }
         if ($this->_includeHeader) {
-            $this->getHeaderBody(curl_exec($s), $this->response_header, $this->_webpage);
+            $this->getHeaderBody($exec_result, $this->response_header, $this->_webpage);
         } else {
-            $this->_webpage = curl_exec($s);
+            $this->_webpage = $exec_result;
         }
 
         $this->_status = curl_getinfo($s, CURLINFO_HTTP_CODE);
