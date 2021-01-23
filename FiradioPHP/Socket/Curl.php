@@ -28,6 +28,8 @@ class Curl {
     public $auth_pass = '';
     public $postFormat = '';
     private $_params = array();
+    private $_method = NULL;
+    private $_socks5 = NULL;
 
     public function useAuth($use) {
         $this->authentication = 0;
@@ -121,6 +123,14 @@ class Curl {
         if ($this->_timeout !== NULL) {
             curl_setopt($s, CURLOPT_TIMEOUT, $this->_timeout);
         }
+        if ($this->_method !== NULL) {
+            curl_setopt($s, CURLOPT_CUSTOMREQUEST, $this->_method);
+        }
+        if ($this->_socks5) {
+            curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);  
+            curl_setopt($s, CURLOPT_PROXY, $this->_socks5);  
+            //curl_setopt($s,CURLOPT_PROXYUSERPWD, "username:pwd");  
+        }
         if ($this->_maxRedirects !== NULL) {
             curl_setopt($s, CURLOPT_MAXREDIRS, $this->_maxRedirects);
         }
@@ -178,7 +188,9 @@ class Curl {
           curl_setopt($s,CURLOPT_BINARYTRANSFER,true);
           }
          */
-        curl_setopt($s, CURLOPT_USERAGENT, $this->_useragent);
+        if ($this->_useragent) {
+            curl_setopt($s, CURLOPT_USERAGENT, $this->_useragent);
+        }
         if ($this->_referer !== NULL) {
             curl_setopt($s, CURLOPT_REFERER, $this->_referer);
         }
@@ -338,6 +350,14 @@ class Curl {
 
     public function setTimeout($_timeout = 10) {
         $this->_timeout = $_timeout;
+    }
+
+    public function setMethod($method) {
+        $this->_method = $method;
+    }
+
+    public function setSocks5($socks5) {
+        $this->_socks5 = $socks5;
     }
 
 }
