@@ -8,6 +8,7 @@ class Curl {
 
     protected $_useragent = 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1';
     protected $_urlpre = '';
+    protected $_path = '';
     protected $_followlocation = NULL;
     protected $_timeout = 10;
     protected $_maxRedirects = NULL;
@@ -58,7 +59,12 @@ class Curl {
 
     public function setUrlPre($urlpre) {
         $this->_urlpre = $urlpre;
-        $this->_fullUrl = $this->urlAddParams($this->_urlpre, $this->_params);
+        $this->_fullUrl = $this->urlAddParams($this->_urlpre . $this->_path, $this->_params);
+    }
+
+    public function setPath($path) {
+        $this->_path = $path;
+        $this->_fullUrl = $this->urlAddParams($this->_urlpre . $this->_path, $this->_params);
     }
 
     public function setCookiFileLocation($path) {
@@ -67,7 +73,7 @@ class Curl {
 
     public function setParam($params) {
         $this->_params = $params;
-        $this->_fullUrl = $this->urlAddParams($this->_urlpre, $this->_params);
+        $this->_fullUrl = $this->urlAddParams($this->_urlpre . $this->_path, $this->_params);
     }
 
     public function setPost($postFields) {
@@ -112,7 +118,7 @@ class Curl {
                 $this->setHeader('Content-Type', 'application/x-www-form-urlencoded');
             }
         }
-        $this->_fullUrl = $this->urlAddParams($this->_urlpre, $path);
+        $this->_fullUrl = $this->urlAddParams($this->_urlpre . $this->_path, $path);
         return $this->execCurl();
     }
 
