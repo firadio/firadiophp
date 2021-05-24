@@ -317,7 +317,6 @@ class NgApi {
         return $user_gscore_balance;
     }
 
-
     public function fTransScoreIn($class_user, $oDb, $client_transfer_id, $isReCheck = FALSE) {
         // 处理指定订单的额度转换 (转入到棋牌)
         // $iMoney转账金额(负数表示从平台转出，正数转入)，不支持小数
@@ -475,8 +474,9 @@ class NgApi {
 
     private function fTransScoreOut_UserBillAdd($class_user, $oDb, $mRow) {
         // 这里是执行加钱操作，请确保上一步NG接口是成功的
-        $plat_title = $this->fGetPlatTitle($mRow['plat_type']);
-        $title = "转出-{$plat_title}";
+        //$plat_title = $this->fGetPlatTitle($mRow['plat_type']);
+        //$title = "转出-{$plat_title}";
+        $title = $mRow['title'];
         $remark = json_encode(array('plat_type' => $mRow['plat_type']));
         $user_bill_id = $class_user->UserBillAdd(NULL, $oDb, $mRow['user_id'], $mRow['client_transfer_id'], -floatval($mRow['money']), 203, $title, $remark);
         return $user_bill_id;
