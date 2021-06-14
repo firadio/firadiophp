@@ -1,6 +1,7 @@
 <?php
 
-error_reporting(0);
+//error_reporting(0);
+require __DIR__ . '/F.php';
 
 use FiradioPHP\F;
 use FiradioPHP\System\ConvertCase;
@@ -13,7 +14,7 @@ function initializer() {
     if (!class_exists('FiradioPHP\\F')) {
         $pRequire = __DIR__ . DS . 'vendor' . DS . 'autoload.php';
         if (!file_exists($pRequire)) {
-            $pRequire = __DIR__ . DS . 'FiradioPHP' . DS . 'F.php';
+            $pRequire = __DIR__ . DS . 'F.php';
         }
         if (!file_exists($pRequire)) {
             die('not find file FiradioPHP');
@@ -34,7 +35,7 @@ initializer();
 
 $oRes = new \FiradioPHP\Routing\Response();
 $oRes->fBeginTime = microtime(TRUE);
-$oRes->ipaddr = getIpAddr(filter_input_array(INPUT_SERVER)); //2：输入网络IP地址
+$oRes->setParam('IPADDR', getIpAddr(filter_input_array(INPUT_SERVER))); //2：输入网络IP地址
 $oRes->path = filter_input(INPUT_SERVER, 'PATH_INFO'); //3：输入用户请求路径
 //通过 F::json_decode 可以自动识别数组格式和字符串的JSON格式，最终输出数组
 $aParam = $_REQUEST; //4：用户请求数据（包括sessionId）
