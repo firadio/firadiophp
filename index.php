@@ -45,8 +45,10 @@ if (isset($aParam['param'])) {
 }
 
 $sRawContent = '';
+
 if (filter_input(INPUT_SERVER, 'REQUEST_METHOD') === 'POST') {
-    $oRes->sRawContent = $sRawContent = file_get_contents('php://input');
+    $sRawContent = file_get_contents('php://input');
+    $oRes->setParam('sRawContent', $sRawContent);
 }
 
 if (filter_input(INPUT_SERVER, 'HTTP_CONTENT_TYPE') === 'application/x-www-form-urlencoded') {
