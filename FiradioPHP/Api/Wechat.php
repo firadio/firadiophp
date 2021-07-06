@@ -5,18 +5,22 @@ namespace FiradioPHP\Api;
 use \DOMDocument;
 use \FiradioPHP\Api\Wechat\Response;
 use \FiradioPHP\Api\Wechat\Wxpay;
-
+use \FiradioPHP\Database\Redis;
 use FiradioPHP\Socket\Curl;
 
 class Wechat {
 
     private $aConfig, $sRawContent;
+    private $oRedis;
     public $request = array();
 
     public function __construct($conf) {
         $this->aConfig = $conf;
         unset($this->aConfig['access_token_created']);
         $this->oCurl = new Curl();
+        $redis = array();
+        $redis['config'] = $conf['redis'];
+        $this->oRedis = new Redis($redis);
     }
 
     private function error($errmsg, $errcode) {
@@ -136,8 +140,9 @@ class Wechat {
     }
 
     private function access_token() {
-        if (isset($this->aConfig['access_token_created']) && time() - $this->aConfig['access_token_created'] < 7200) {
-            return $this->aConfig['access_token'];
+        $access_token = $this->oRedis->get('access_token');
+        if ($access_token) {
+            return $access_token;
         }
         $url = 'https://api.weixin.qq.com/cgi-bin/token';
         $get = array();
@@ -149,8 +154,7 @@ class Wechat {
             throw new \Exception('access_token()' . $jsonStr);
             return;
         }
-        $this->aConfig['access_token'] = $jsonArr['access_token'];
-        $this->aConfig['access_token_created'] = time();
+        $this->oRedis->set('access_token', $jsonArr['access_token'], 3600);
         return $jsonArr['access_token'];
     }
 
