@@ -208,6 +208,13 @@ class Wechat {
         return $this->retDataFromCurl($url, $get, $data);
     }
 
+    public function material_batchget() {
+        $get = array();
+        $get['access_token'] = $this->access_token();
+        $url = 'https://api.weixin.qq.com/cgi-bin/material/batchget_material';
+        return $this->retDataFromCurl($url, $get);
+    }
+
     public function get_current_selfmenu_info() {
         $get = array();
         $get['access_token'] = $this->access_token();
