@@ -73,7 +73,7 @@ class Wechat {
             $response->appendToXml('ToUserName', $this->request['FromUserName']);
             $response->appendToXml('MsgType', 'transfer_customer_service');
             return $response->saveXML();
-        } 
+        }
         if (strpos($sContent, 'voice:') === 0) {
             $sContent = substr($sContent, 6);
             return $this->getResponse2($sContent, 'voice');
@@ -334,12 +334,16 @@ class Wechat {
     public function jsapi_config($_url) {
         $url = call_user_func(function ($sUrl) {
             $uri = parse_url($sUrl);
-            $retUrl = $uri['scheme'] . '://' . $uri['host'];
+            $aRetUrl = array();
+            $aRetUrl[] = $uri['scheme'] . '://' . $uri['host'];
             if (isset($uri['port'])) {
-                $retUrl .= ':' . $uri['port'];
+                $aRetUrl[] = ':' . $uri['port'];
             }
-            $retUrl .= $uri['path'];
-            return $retUrl;
+            $aRetUrl[] = $uri['path'];
+            if (isset($uri['query']) && $uri['query']) {
+                $aRetUrl[] = '?' . $uri['query'];
+            }
+            return implode('', $aRetUrl);
         }, $_url);
         $config = array();
         $config['debug'] = TRUE; // 开启调试模式,调用的所有api的返回值会在客户端alert出来，若要查看传入的参数，可以在pc端打开，参数信息会通过log打出，仅在pc端时才会打印。
@@ -366,9 +370,9 @@ class Wechat {
 
     public function message_template_send($sTouser, $sTemplateId, $mData, $sUrl) {
         /*
-        
-        https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html
-        */
+
+          https://developers.weixin.qq.com/doc/offiaccount/Message_Management/Template_Message_Interface.html
+         */
         $oData = array();
         $oData['touser'] = $sTouser;
         $oData['template_id'] = $sTemplateId;
@@ -407,11 +411,11 @@ class Wechat {
     }
 
     public function notify_order_took(
-        $sTouser,
-        $product_title = '虚拟恋人 - 连麦语音(1小时)',
-        $staff_nickname = '店员昵称',
-        $duration = 3600,
-        $sUrl = 'https://dreamss.feieryun.cn/#/pages/user/order_list'
+            $sTouser,
+            $product_title = '虚拟恋人 - 连麦语音(1小时)',
+            $staff_nickname = '店员昵称',
+            $duration = 3600,
+            $sUrl = 'https://dreamss.feieryun.cn/#/pages/user/order_list'
     ) {
         $sTemplateId = 'E6AJBwQK2DhowjVAegnwPNB9_oJcQ1_2cXv8UTZGuec';
         $mData = array();
@@ -440,5 +444,3 @@ class Wechat {
     }
 
 }
-
-
