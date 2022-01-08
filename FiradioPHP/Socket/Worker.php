@@ -31,7 +31,17 @@ class Worker {
         return $mQuery;
     }
 
+    private function replacePreByPath($sUrl, $find, $replace) {
+        $iPreLen = strlen($find);
+        $sUrlPre = substr($sUrl, 0, $iPreLen);
+        if ($sUrlPre === $find) {
+            return $replace . substr($sUrl, $iPreLen);
+        }
+        return $sUrl;
+    }
+
     private function getPath($sUrl) {
+        $sUrl = $this->replacePreByPath($sUrl, '/fapi/', '/');
         $kvUrl = parse_url($sUrl);
         if (!isset($kvUrl['query'])) {
             return $kvUrl['path'];
