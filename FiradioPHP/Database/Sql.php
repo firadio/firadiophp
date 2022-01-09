@@ -129,7 +129,7 @@ class Sql {
                 continue;
             }
             if (is_array($val)) {
-                if ($val[0] === 'FIND_IN_SET') {
+                if (isset($val[0]) && $val[0] === 'FIND_IN_SET') {
                     $where_keys[] = ' FIND_IN_SET(:' . $key . ',' . $whereKey . ')';
                     $this->aSql['paramData'][$key] = $val[1];
                     continue;
