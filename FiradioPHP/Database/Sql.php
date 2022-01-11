@@ -49,6 +49,7 @@ class Sql {
 
     public function join($aJoin) {
         $this->aSql['join'] = $aJoin;
+        return $this;
     }
 
     public function tableField($tableField) {
