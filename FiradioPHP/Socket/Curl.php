@@ -133,8 +133,8 @@ class Curl {
             curl_setopt($s, CURLOPT_CUSTOMREQUEST, $this->_method);
         }
         if ($this->_socks5) {
-            curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);  
-            curl_setopt($s, CURLOPT_PROXY, $this->_socks5);  
+            curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
+            curl_setopt($s, CURLOPT_PROXY, $this->_socks5);
             //curl_setopt($s,CURLOPT_PROXYUSERPWD, "username:pwd");  
         }
         if ($this->_maxRedirects !== NULL) {
@@ -255,7 +255,9 @@ class Curl {
 
     public function get($sPath, $aRequest = array()) {
         $this->_post = false;
-        $sPath .= '?' . http_build_query($aRequest);
+        if ($aRequest) {
+            $sPath .= '?' . http_build_query($aRequest);
+        }
         return $this->createCurl($sPath);
     }
 
@@ -310,7 +312,7 @@ class Curl {
 
     private function headerNameFormat($_name) {
         $_name2 = strtolower($_name);
-        $name = preg_replace_callback("|([A-Za-z]+)|", function($matches) {
+        $name = preg_replace_callback("|([A-Za-z]+)|", function ($matches) {
             return ucfirst($matches[1]);
         }, $_name2);
         return $name;
