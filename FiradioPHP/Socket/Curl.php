@@ -31,6 +31,7 @@ class Curl {
     private $_params = array();
     private $_method = NULL;
     private $_socks5 = NULL;
+    private $_proxy = array();
 
     public function useAuth($use) {
         $this->authentication = 0;
@@ -136,6 +137,47 @@ class Curl {
             curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
             curl_setopt($s, CURLOPT_PROXY, $this->_socks5);
             //curl_setopt($s,CURLOPT_PROXYUSERPWD, "username:pwd");  
+        }
+        if ($this->_proxy && is_array($this->_proxy)) {
+            if (isset($this->_proxy['scheme']) && $this->_proxy['scheme']) {
+                switch ($this->_proxy['scheme']) {
+                    case('http'):
+                        curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_HTTP);
+                        break;
+                    case('https'):
+                        curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_HTTPS);
+                        break;
+                    case('http1.0'):
+                        curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_HTTP_1_0);
+                        break;
+                    case('socks4'):
+                        curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS4);
+                        break;
+                    case('socks4a'):
+                        curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS4A);
+                        break;
+                    case('socks5'):
+                        curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5);
+                        break;
+                    case('socks5hostname'):
+                        curl_setopt($s, CURLOPT_PROXYTYPE, CURLPROXY_SOCKS5_HOSTNAME);
+                        break;
+                }
+            }
+            if (isset($this->_proxy['host']) && $this->_proxy['host']) {
+                curl_setopt($s, CURLOPT_PROXY, $this->_proxy['host']); //代理服务器地址
+            }
+            if (isset($this->_proxy['port']) && $this->_proxy['port']) {
+                curl_setopt($s, CURLOPT_PROXYPORT, $this->_proxy['port']); //代理服务器端口
+            }
+            if (isset($this->_proxy['user']) && $this->_proxy['user']) {
+                $userpwd = $this->_proxy['user'];
+                if (isset($this->_proxy['pass']) && $this->_proxy['pass']) {
+                    $userpwd .= ':' . $this->_proxy['pass'];
+                }
+                //代理认证帐号，username:password的格式
+                curl_setopt($s, CURLOPT_PROXYUSERPWD, $userpwd);
+            }
         }
         if ($this->_maxRedirects !== NULL) {
             curl_setopt($s, CURLOPT_MAXREDIRS, $this->_maxRedirects);
@@ -366,6 +408,10 @@ class Curl {
 
     public function setSocks5($socks5) {
         $this->_socks5 = $socks5;
+    }
+
+    public function setProxy($url_proxy) {
+        $this->_proxy = parse_url($url_proxy);
     }
 
 }
