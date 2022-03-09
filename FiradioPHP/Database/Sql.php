@@ -377,9 +377,19 @@ class Sql {
         }
         $sSets = array();
         foreach ($this->aSql['paramField'] as $field => $val) {
-            $sSets[] = '`' . $field . '`=' . $val;
+            $aFields = explode('.', $field);
+            $sField = '`' . implode('`.`', $aFields) . '`';
+            $sSets[] = $sField . '=' . $val;
         }
-        $sql = 'UPDATE ' . $this->aSql['table'] . ' SET ' . implode(',', $sSets);
+        $sql = 'UPDATE ' . $this->aSql['table'];
+        if (!empty($this->aSql['join'])) {
+            $aJoin = array();
+            foreach ($this->aSql['join'] as $mJoin) {
+                $aJoin[] = " LEFT JOIN `{$mJoin[0]}` {$mJoin[1]} ON {$mJoin[2]}";
+            }
+            $sql .= ' ' . implode('', $aJoin);
+        }
+        $sql .= ' SET ' . implode(',', $sSets);
         if (isset($this->aSql['sql_where']) && !empty($this->aSql['sql_where'])) {
             $sql .= ' WHERE ' . $this->aSql['sql_where'];
         } else {
