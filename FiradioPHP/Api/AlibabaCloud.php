@@ -26,16 +26,15 @@ class AlibabaCloud {
 
     /*
      * 常用功能
-    */
+     */
 
     public function setDefaultClient($accessKeyId, $accessSecret, $regionId) {
         \AlibabaCloud\Client\AlibabaCloud::accessKeyClient($accessKeyId, $accessSecret)->regionId($regionId)->asDefaultClient();
     }
 
-
     /*
      * 开始ECS相关功能
-    */
+     */
 
     public function EcsCreateInstance($rowNthostOperate) {
         print_r($rowNthostOperate);
@@ -60,7 +59,7 @@ class AlibabaCloud {
             // 是否使用镜像预设的密码。使用该参数时，Password参数必须为空，同时您需要确保使用的镜像已经设置了密码。
             $request->withPasswordInherit('true');
         } else {
-             // 长度为8至30个字符，必须同时包含大小写英文字母、数字和特殊符号中的三类字符。特殊符号可以是：()`~!@#$%^&*-_+=|{}[]:;'<>,.?/
+            // 长度为8至30个字符，必须同时包含大小写英文字母、数字和特殊符号中的三类字符。特殊符号可以是：()`~!@#$%^&*-_+=|{}[]:;'<>,.?/
             $request->withPassword($rowNthostOperate['password']);
         }
         $request->withZoneId($rowNthostOperate['zoneId']);
@@ -71,7 +70,6 @@ class AlibabaCloud {
         //$request->withSpotPriceLimit(1);
         return $request->request();
     }
-
 
     public function EcsReplaceSystemDisk($rowNthostOperate) {
         // 更换系统盘
@@ -181,8 +179,6 @@ class AlibabaCloud {
         return $request->request();
     }
 
-
-
     public function EcsModifyInstancePassword($InstanceId, $Password) {
         // 重置实例密码
         $request = Ecs::v20140526()->ModifyInstanceAttribute();
@@ -221,7 +217,8 @@ class AlibabaCloud {
         $request = Ecs::v20140526()->DescribeInstances();
         $request->withInstanceIds(json_encode([$InstanceId]));
         $ret = $request->request();
-        if (empty($ret['Instances']['Instance'])) return;
+        if (empty($ret['Instances']['Instance']))
+            return;
         return $ret['Instances']['Instance'][0]['EipAddress']['AllocationId'];
     }
 
@@ -265,9 +262,12 @@ class AlibabaCloud {
         $request->withInstanceId($InstanceId);
         $request->withDiskType($DiskType);
         $ret = $request->request();
-        if (empty($ret['Disks'])) return FALSE;
-        if (empty($ret['Disks']['Disk'])) return FALSE;
-        if (empty($ret['Disks']['Disk'][0])) return FALSE;
+        if (empty($ret['Disks']))
+            return FALSE;
+        if (empty($ret['Disks']['Disk']))
+            return FALSE;
+        if (empty($ret['Disks']['Disk'][0]))
+            return FALSE;
         return $ret['Disks']['Disk'][0];
     }
 
@@ -277,7 +277,8 @@ class AlibabaCloud {
         $request->withDiskId($DiskId);
         $request->withDeleteWithInstance($DeleteWithInstance);
         $request->withDeleteAutoSnapshot($DeleteAutoSnapshot);
-        if ($DiskName !== NULL) $request->withDiskName($DiskName);
+        if ($DiskName !== NULL)
+            $request->withDiskName($DiskName);
         $ret = $request->request();
         return $ret;
     }
@@ -299,7 +300,7 @@ class AlibabaCloud {
 
     /*
      * 开始VPC相关功能
-    */
+     */
 
     public function VpcAddCommonBandwidthPackageIp($IpInstanceId, $BandwidthPackageId) {
         // 调用AddCommonBandwidthPackageIp接口添加EIP到共享带宽中。
@@ -369,7 +370,7 @@ class AlibabaCloud {
                 foreach ($data as $key => $row)
                     $tmp[$key] = $row[$field];
                 $args[$n] = $tmp;
-                }
+            }
         }
         $args[] = &$data;
         call_user_func_array('array_multisort', $args);
@@ -429,11 +430,9 @@ class AlibabaCloud {
         return $ret;
     }
 
-
-
     /*
      * 开始Cms相关功能
-    */
+     */
 
     public function CmsDescribeMetricList($Namespace, $MetricName, $countLimit = 1, $period = 60, $groupby = NULL) {
         // 参考 https://help.aliyun.com/document_detail/51936.html
@@ -492,7 +491,6 @@ class AlibabaCloud {
         return $mRet;
     }
 
-
     public function RamCreateUser($UserName) {
         $request = Ram::v20150501()->CreateUser();
         $request->withUserName($UserName);
@@ -517,6 +515,44 @@ class AlibabaCloud {
         return $ret->toArray();
     }
 
+    public function EcsDescribeInstanceTypes($MaxResults = null) {
+        $request = Ecs::v20140526()->DescribeInstanceTypes();
+        if ($MaxResults) {
+            $request->withMaxResults($MaxResults);
+        }
+        if (isset($GLOBALS['NextToken'])) {
+            if ($GLOBALS['NextToken'] === '') {
+                return;
+            }
+            $request->withNextToken($GLOBALS['NextToken']);
+        }
+        $ret = $request->request();
+        $GLOBALS['NextToken'] = $ret['NextToken'];
+        $aRows = $ret['InstanceTypes']['InstanceType'];
+        return $aRows;
+    }
 
+    public function EcsDescribeAvailableResource() {
+        $request = Ecs::v20140526()->DescribeAvailableResource();
+        $request->withDestinationResource('InstanceType');
+        $request->withInstanceChargeType('PostPaid'); //PostPaid：按量付费
+        $request->withSpotStrategy('SpotAsPriceGo'); //SpotAsPriceGo：系统自动出价，最高按量付费价格。
+        $ret = $request->request();
+        $aRows = $ret['AvailableZones']['AvailableZone'];
+        return $aRows;
+    }
+
+    public function EcsDescribePrice($InstanceType, $ZoneId, $SystemDiskSize = 40) {
+        $request = Ecs::v20140526()->DescribePrice();
+        $request->withInstanceType($InstanceType);
+        $request->withZoneId($ZoneId);
+        $request->withSpotStrategy('SpotAsPriceGo'); //系统自动出价，最高按量付费价格。
+        $request->withSystemDiskCategory('cloud_efficiency'); //系统盘的云盘种类：高效云盘
+        $request->withSystemDiskSize($SystemDiskSize); //系统盘大小，单位为GiB。取值范围：20~500
+        $request->withSpotDuration(0); //抢占式实例的保留时长，单位为小时。取值范围：0~6
+        $ret = $request->request();
+        $mRow = $ret['PriceInfo']['Price'];
+        return $mRow;
+    }
 
 }
