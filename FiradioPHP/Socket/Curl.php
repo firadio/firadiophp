@@ -33,6 +33,7 @@ class Curl {
     private $_method = NULL;
     private $_socks5 = NULL;
     private $_proxy = array();
+    private $_encoding;
 
     public function useAuth($use) {
         $this->authentication = 0;
@@ -43,6 +44,10 @@ class Curl {
 
     public function useHeader($bool = true) {
         $this->_includeHeader = $bool;
+    }
+
+    public function setEncoding($_encoding = 'gzip') {
+        $this->_encoding = $_encoding;
     }
 
     public function setName($name) {
@@ -137,6 +142,10 @@ class Curl {
         $s = curl_init();
         curl_setopt($s, CURLOPT_URL, $this->_fullUrl);
         curl_setopt($s, CURLOPT_HTTPHEADER, $this->CURLOPT_HTTPHEADER());
+        if ($this->_encoding) {
+            curl_setopt($s, CURLOPT_ACCEPT_ENCODING, $this->_encoding);
+            curl_setopt($s, CURLOPT_ENCODING, $this->_encoding);
+        }
         if ($this->_timeout !== NULL) {
             curl_setopt($s, CURLOPT_TIMEOUT, $this->_timeout);
         }
@@ -383,7 +392,10 @@ class Curl {
         $this->_header[$name] = $value;
     }
 
-    public function getResponseHeaders($_name) {
+    public function getResponseHeaders($_name = null) {
+        if ($_name === null) {
+            return $this->mResponseHeader;
+        }
         $name = $this->headerNameFormat($_name);
         if (!isset($this->mResponseHeader[$name])) {
             return;
@@ -422,6 +434,7 @@ class Curl {
             break;
         }
         $aHeader = explode("\r\n", $sHeader);
+        $this->mResponseHeader = array();
         foreach ($aHeader as $sHead) {
             $sSign = ': ';
             $iPos = strpos($sHead, $sSign);
