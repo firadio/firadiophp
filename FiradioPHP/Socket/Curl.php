@@ -24,6 +24,7 @@ class Curl {
     private $_upload = FALSE;
     private $_header = array();
     public $response_header = array();
+    public $mResponseHeader = array();
     public $authentication = 0;
     public $auth_name = '';
     public $auth_pass = '';
@@ -38,6 +39,10 @@ class Curl {
         if ($use == true) {
             $this->authentication = 1;
         }
+    }
+
+    public function useHeader($bool = true) {
+        $this->_includeHeader = $bool;
     }
 
     public function setName($name) {
@@ -56,6 +61,10 @@ class Curl {
 
     public function setReferer($referer) {
         $this->_referer = $referer;
+    }
+
+    public function setUrl($url) {
+        $this->_fullUrl = $url;
     }
 
     public function setUrlPre($urlpre) {
@@ -78,6 +87,7 @@ class Curl {
     }
 
     public function setPost($postFields) {
+        $this->setMethod('POST');
         $this->_post = true;
         $this->_postFields = $postFields;
     }
@@ -373,6 +383,27 @@ class Curl {
         $this->_header[$name] = $value;
     }
 
+    public function getResponseHeaders($_name) {
+        $name = $this->headerNameFormat($_name);
+        if (!isset($this->mResponseHeader[$name])) {
+            return;
+        }
+        return $this->mResponseHeader[$name];
+    }
+
+    public function getResponseHeader($_name, $index = 0) {
+        $aHeader = $this->getResponseHeaders($_name);
+        if (!isset($aHeader[$index])) {
+            return;
+        }
+        return $aHeader[$index];
+    }
+
+    public function getResponseCookie($_name) {
+        $aCookie = $this->getResponseHeaders('Set-Cookie');
+        return json_encode($aCookie);
+    }
+
     private function getHeaderBody($sData, &$aHeader, &$sBody) {
         $aHeader = array();
         $sDivSign = "\r\n\r\n";
@@ -391,6 +422,18 @@ class Curl {
             break;
         }
         $aHeader = explode("\r\n", $sHeader);
+        foreach ($aHeader as $sHead) {
+            $sSign = ': ';
+            $iPos = strpos($sHead, $sSign);
+            if (is_numeric($iPos)) {
+                $sName = $this->headerNameFormat(substr($sHead, 0, $iPos));
+                $sValue = substr($sHead, $iPos + strlen($sSign));
+                if (!isset($this->mResponseHeader[$sName])) {
+                    $this->mResponseHeader[$sName] = array();
+                }
+                $this->mResponseHeader[$sName][] = $sValue;
+            }
+        }
         $sBody = substr($sData, $iRet + strlen($sDivSign));
     }
 
@@ -403,6 +446,8 @@ class Curl {
     }
 
     public function setMethod($method) {
+        $method = strtoupper($method);
+        $this->_post = ($method === 'POST');
         $this->_method = $method;
     }
 
