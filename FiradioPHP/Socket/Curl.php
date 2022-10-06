@@ -101,6 +101,19 @@ class Curl {
         $this->_useragent = $userAgent;
     }
 
+    private function unparse_url($parsed_url) {
+        $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
+        $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
+        $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
+        $user     = isset($parsed_url['user']) ? $parsed_url['user'] : '';
+        $pass     = isset($parsed_url['pass']) ? ':' . $parsed_url['pass']  : '';
+        $pass     = ($user || $pass) ? "$pass@" : '';
+        $path     = isset($parsed_url['path']) ? $parsed_url['path'] : '';
+        $query    = isset($parsed_url['query']) ? '?' . $parsed_url['query'] : '';
+        $fragment = isset($parsed_url['fragment']) ? '#' . $parsed_url['fragment'] : '';
+        return "$scheme$user$pass$host$port$path$query$fragment";
+    }
+
     private function urlAddParams($urlpre, $params) {
         if ($params === '' || $params === NULL) {
             return $urlpre;
@@ -387,6 +400,10 @@ class Curl {
         return $this->_header[$name];
     }
 
+    public function clearHeader() {
+        $this->_header = array();
+    }
+
     public function setHeader($_name, $value) {
         $name = $this->headerNameFormat($_name);
         $this->_header[$name] = $value;
@@ -411,9 +428,37 @@ class Curl {
         return $aHeader[$index];
     }
 
-    public function getResponseCookie($_name) {
+    public function getResponseCookies($_name = null) {
         $aCookie = $this->getResponseHeaders('Set-Cookie');
-        return json_encode($aCookie);
+        $aRet = array();
+        $fGetKV = function ($str) {
+            $sSign = '=';
+            $i = strpos($str, $sSign);
+            if (!is_numeric($i)) {
+                return;
+            }
+            $mRet = array();
+            $mRet['Name'] = substr($str, 0, $i);
+            $mRet['Value'] = substr($str, $i + strlen($sSign));
+            return $mRet;
+        };
+        foreach ($aCookie as $cookie) {
+            $aCook = explode('; ', $cookie);
+            $sFirst = array_shift($aCook);
+            $mOneCookie = $fGetKV($sFirst);
+            if ($_name !== null && $mOneCookie['Name'] !== $_name) {
+                continue;
+            }
+            foreach ($aCook as $sCook) {
+                $m = $fGetKV($sCook);
+                if (!is_array($m)) {
+                    continue;
+                }
+                $mOneCookie[$m['Name']] = $m['Value'];
+            }
+            $aRet[] = $mOneCookie;
+        }
+        return $aRet;
     }
 
     private function getHeaderBody($sData, &$aHeader, &$sBody) {
