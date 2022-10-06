@@ -7,8 +7,7 @@ use \Exception;
 class Curl {
 
     protected $_useragent = 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1';
-    protected $_urlpre = '';
-    protected $_path = '';
+    protected $_mUrlInfo = array();
     protected $_followlocation = NULL;
     protected $_timeout = 10;
     protected $_maxRedirects = NULL;
@@ -29,7 +28,6 @@ class Curl {
     public $auth_name = '';
     public $auth_pass = '';
     public $postFormat = '';
-    private $_params = array();
     private $_method = NULL;
     private $_socks5 = NULL;
     private $_proxy = array();
@@ -60,7 +58,7 @@ class Curl {
 
     public function __construct($urlpre = NULL) {
         if ($urlpre !== NULL) {
-            $this->_urlpre = $urlpre;
+            $this->setUrlPre($urlpre);
         }
     }
 
@@ -68,18 +66,23 @@ class Curl {
         $this->_referer = $referer;
     }
 
+    public function getUrl() {
+        return $this->unparse_url($this->_mUrlInfo);
+    }
+
     public function setUrl($url) {
-        $this->_fullUrl = $url;
+        if (!is_string($url)) {
+            return;
+        }
+        $this->_mUrlInfo = array_merge($this->_mUrlInfo, parse_url($url));
     }
 
     public function setUrlPre($urlpre) {
-        $this->_urlpre = $urlpre;
-        $this->_fullUrl = $this->urlAddParams($this->_urlpre . $this->_path, $this->_params);
+        $this->setUrl($urlpre);
     }
 
     public function setPath($path) {
-        $this->_path = $path;
-        $this->_fullUrl = $this->urlAddParams($this->_urlpre . $this->_path, $this->_params);
+        $this->_mUrlInfo['path'] = $path;
     }
 
     public function setCookiFileLocation($path) {
@@ -87,8 +90,10 @@ class Curl {
     }
 
     public function setParam($params) {
-        $this->_params = $params;
-        $this->_fullUrl = $this->urlAddParams($this->_urlpre . $this->_path, $this->_params);
+        if (is_array($params)) {
+            $params = http_build_query($params);
+        }
+        $this->_mUrlInfo['query'] = $params;
     }
 
     public function setPost($postFields) {
@@ -147,13 +152,13 @@ class Curl {
                 $this->setHeader('Content-Type', 'application/x-www-form-urlencoded');
             }
         }
-        $this->_fullUrl = $this->urlAddParams($this->_urlpre . $this->_path, $path);
+        $this->setPath($path);
         return $this->execCurl();
     }
 
     public function execCurl() {
         $s = curl_init();
-        curl_setopt($s, CURLOPT_URL, $this->_fullUrl);
+        curl_setopt($s, CURLOPT_URL, $this->getUrl());
         curl_setopt($s, CURLOPT_HTTPHEADER, $this->CURLOPT_HTTPHEADER());
         if ($this->_encoding) {
             curl_setopt($s, CURLOPT_ACCEPT_ENCODING, $this->_encoding);
@@ -293,7 +298,7 @@ class Curl {
         }
         $exec_result = curl_exec($s);
         if ($exec_result === FALSE) {
-            throw new Exception('exec_result is FALSE, Error: ' . curl_error($s) . $this->_fullUrl);
+            throw new Exception('exec_result is FALSE, Error: ' . curl_error($s) . $this->getUrl());
         }
         if ($this->_includeHeader) {
             $this->getHeaderBody($exec_result, $this->response_header, $this->_webpage);
