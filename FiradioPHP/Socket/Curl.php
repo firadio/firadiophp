@@ -78,6 +78,7 @@ class Curl {
     }
 
     public function setUrlPre($urlpre) {
+        $this->_mUrlInfo = array();
         $this->setUrl($urlpre);
     }
 
@@ -334,10 +335,11 @@ class Curl {
 
     public function get($sPath, $aRequest = array()) {
         $this->_post = false;
-        if ($aRequest) {
-            $sPath .= '?' . http_build_query($aRequest);
-        }
-        return $this->createCurl($sPath);
+        $this->setUrl($sPath);
+        $this->setMethod('GET');
+        //$this->clearHeader();
+        $this->setParam($aRequest);
+        return $this->execCurl();
     }
 
     public function post($_param1, $_param2 = array()) {
