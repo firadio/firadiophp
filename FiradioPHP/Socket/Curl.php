@@ -298,8 +298,9 @@ class Curl {
             curl_setopt($s, CURLOPT_SSLKEY, $this->sslkey_file);
         }
         $exec_result = curl_exec($s);
+        $errno = curl_errno($s);
         if ($exec_result === FALSE) {
-            throw new Exception('exec_result is FALSE, Error: ' . curl_error($s) . $this->getUrl());
+            throw new \Exception('exec_result is FALSE, Error: ' . curl_error($s) . $this->getUrl(), $errno);
         }
         if ($this->_includeHeader) {
             $this->getHeaderBody($exec_result, $this->response_header, $this->_webpage);
@@ -311,7 +312,7 @@ class Curl {
         $error = curl_error($s);
         curl_close($s);
         if ($error) {
-            throw new Exception($error);
+            throw new \Exception($error, $errno);
         }
         return $this->_webpage;
     }
