@@ -331,6 +331,7 @@ class AlibabaCloud {
     public function VpcUnassociateEipAddress($IpInstanceId) {
         $request = Vpc::v20160428()->UnassociateEipAddress();
         $request->withAllocationId($IpInstanceId);
+        $request->withForce(true);
         $ret = $request->request();
     }
 
