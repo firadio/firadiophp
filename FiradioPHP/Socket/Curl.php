@@ -92,9 +92,14 @@ class Curl {
 
     public function setParam($params) {
         if (is_array($params)) {
-            $params = http_build_query($params);
+            parse_str($this->_mUrlInfo['query'], $mQuery);
+            $mQuery = array_merge($mQuery, $params);
+            $this->_mUrlInfo['query'] = http_build_query($mQuery);
+            return;
         }
-        $this->_mUrlInfo['query'] = $params;
+        if (is_string($params)) {
+            $this->_mUrlInfo['query'] = $params;
+        }
     }
 
     public function setPost($postFields) {
