@@ -6,7 +6,7 @@ git config user.name "firadio"
 git config core.safecrlf false
 git config core.autocrlf input
 git remote rm origin
-git remote add origin https://github.com/firadio/firadiophp.git
+git remote add origin git@github.com:firadio/firadiophp.git
 ECHO =========git diff============
 git diff
 ECHO =========git pull ^&^& git commit============
