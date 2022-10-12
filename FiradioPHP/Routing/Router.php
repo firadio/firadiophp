@@ -62,6 +62,8 @@ class Router {
      * @return type
      */
     public function getResponse($oRes) {
+        $oRes->assign('errno', 0);
+        $oRes->assign('error', '');
         try {
             //$this->beginTransactionAll();
             $this->execAction($oRes);
@@ -69,7 +71,15 @@ class Router {
         } catch (Exception $ex) {
             //$this->rollbackAll();
             $exCode = $ex->getCode();
+            if ($exCode === 0) {
+                $exCode = -1; // 未定义的异常
+            }
+            $oRes->assign('errno', $exCode);
+            if (property_exists($ex, 'sError')) {
+                $oRes->assign('error', $ex->sError);
+            }
             // code >= 0 无异常
+            // code = -1 未定义的异常
             // code = -1 用于输出特殊格式资料
             // code = -2 自定义错误
             // code = -3 其他未知错误

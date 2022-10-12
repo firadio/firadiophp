@@ -131,6 +131,12 @@ class Response {
         $this->aParam[$name] = $value;
     }
 
+    public function getParam($name) {
+        if (isset($this->aParam[$name])) {
+            return $this->aParam[$name];
+        }
+    }
+
     public function end($str) {
         $this->echo($str);
         throw new \Exception($str, -1);
