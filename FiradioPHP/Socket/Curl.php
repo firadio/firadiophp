@@ -7,6 +7,7 @@ use \Exception;
 class Curl {
 
     protected $_useragent = 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1';
+    protected $_urlpre;
     protected $_mUrlInfo = array();
     protected $_followlocation = NULL;
     protected $_timeout = 10;
@@ -57,7 +58,7 @@ class Curl {
     }
 
     public function __construct($urlpre = NULL) {
-        if ($urlpre !== NULL) {
+        if ($urlpre !== NULL && is_string($urlpre)) {
             $this->setUrlPre($urlpre);
         }
     }
@@ -74,12 +75,22 @@ class Curl {
         if (!is_string($url)) {
             return;
         }
+        $this->resetUrl();
         $this->_mUrlInfo = array_merge($this->_mUrlInfo, parse_url($url));
     }
 
+    public function resetUrl() {
+        if ($this->_urlpre) {
+            $this->_mUrlInfo = parse_url($this->_urlpre);
+        }
+    }
+
     public function setUrlPre($urlpre) {
-        $this->_mUrlInfo = array();
-        $this->setUrl($urlpre);
+        if (!is_string($urlpre)) {
+            return;
+        }
+        $this->_urlpre = $urlpre;
+        $this->resetUrl();
     }
 
     public function setPath($path) {
@@ -115,7 +126,7 @@ class Curl {
         $this->_useragent = $userAgent;
     }
 
-    private function unparse_url($parsed_url) {
+    public function unparse_url($parsed_url) {
         $scheme   = isset($parsed_url['scheme']) ? $parsed_url['scheme'] . '://' : '';
         $host     = isset($parsed_url['host']) ? $parsed_url['host'] : '';
         $port     = isset($parsed_url['port']) ? ':' . $parsed_url['port'] : '';
