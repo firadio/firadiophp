@@ -64,7 +64,10 @@ class AlibabaCloud {
         }
         $request->withZoneId($rowNthostOperate['zoneId']);
         $request->withSystemDiskSize($rowNthostOperate['limit_storagegb']); // 系统盘大小，单位为GiB。取值范围：20~500
-        $request->withSystemDiskCategory('cloud_efficiency'); // cloud_efficiency(高效云盘)
+        $request->withSystemDiskCategory($rowNthostOperate['ecs_systemdisk_category']); // cloud_efficiency(高效云盘)
+        if ($rowNthostOperate['ecs_systemdisk_category'] === 'cloud_essd') {
+            $request->withSystemDiskPerformanceLevel('PL0');
+        }
         $request->withInstanceChargeType('PostPaid'); // PrePaid(包年包月) || PostPaid(按量付费)
         $request->withSpotStrategy('SpotAsPriceGo'); // NoSpot(正常按量付费) | SpotWithPriceLimit(设置上限价格) | SpotAsPriceGo(系统自动出价)
         //$request->withSpotPriceLimit(1);
