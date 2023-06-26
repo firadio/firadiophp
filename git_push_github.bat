@@ -5,7 +5,7 @@ SET path=%path%;E:\data\program\PortableGit\bin\
 SET path=%path%;C:\data\program\PortableGit\bin\
 ECHO =========git push github master============
 git remote remove github
-git remote add github https://github.com/firadio/firadiophp.git
+git remote add github git@github.com:firadio/firadiophp.git
 git pull github master
 git push github master
 PAUSE

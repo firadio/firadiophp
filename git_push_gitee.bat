@@ -5,7 +5,7 @@ SET path=%path%;E:\data\program\PortableGit\bin\
 SET path=%path%;C:\data\program\PortableGit\bin\
 ECHO =========git push gitee master============
 git remote remove gitee
-git remote add gitee https://gitee.com/firadio/firadiophp.git
+git remote add gitee git@gitee.com:firadio/firadiophp.git
 git pull gitee master
 git push gitee master
 PAUSE
