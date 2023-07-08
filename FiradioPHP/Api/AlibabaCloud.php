@@ -434,6 +434,14 @@ class AlibabaCloud {
         return $ret;
     }
 
+    public function VpcModifyEipAddressBandwidth($AllocationId, $Bandwidth) {
+        $request = Vpc::v20160428()->ModifyEipAddressAttribute();
+        $request->withAllocationId($AllocationId);
+        $request->withBandwidth($Bandwidth);
+        $ret = $request->request();
+        return $ret;
+    }
+
     /*
      * 开始Cms相关功能
      */
