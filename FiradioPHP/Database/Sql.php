@@ -236,9 +236,14 @@ class Sql {
                 $this->aSql['paramField'][$key] = 'NULL';
                 continue;
             }
-            if (isset($mysqlFun[$val])) {
-                $this->aSql['paramField'][$key] = $mysqlFun[$val];
-                continue;
+            if (is_string($val)) {
+                if (isset($mysqlFun[$val])) {
+                    $this->aSql['paramField'][$key] = $mysqlFun[$val];
+                    continue;
+                }
+            }
+            if (is_array($val)) {
+                $val = json_encode($val);
             }
             $paramName = 'crc32_' . crc32($key);
             $this->aSql['paramField'][$key] = ':' . $paramName;

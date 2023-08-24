@@ -9,6 +9,11 @@ use AlibabaCloud\Ecs\Ecs;
 use AlibabaCloud\Vpc\Vpc;
 use AlibabaCloud\Cms\Cms;
 use AlibabaCloud\Ram\Ram;
+use Darabonba\OpenApi\Models\Config;
+use AlibabaCloud\SDK\Nis\V20211216\Nis;
+use AlibabaCloud\SDK\Nis\V20211216\Models\GetInternetTupleRequest;
+use AlibabaCloud\Tea\Utils\Utils\RuntimeOptions;
+
 
 /**
  * https://github.com/rjyxz/aliyun-php-sdk-dm
@@ -16,6 +21,7 @@ use AlibabaCloud\Ram\Ram;
 class AlibabaCloud {
 
     private $aConfig = array();
+    private $mAK = array();
 
     public function __construct($conf = array()) {
         if (isset($conf['config'])) {
@@ -29,6 +35,8 @@ class AlibabaCloud {
      */
 
     public function setDefaultClient($accessKeyId, $accessSecret, $regionId) {
+        $this->mAK['accessKeyId'] = $accessKeyId;
+        $this->mAK['accessSecret'] = $accessSecret;
         \AlibabaCloud\Client\AlibabaCloud::accessKeyClient($accessKeyId, $accessSecret)->regionId($regionId)->asDefaultClient();
     }
 
@@ -301,6 +309,17 @@ class AlibabaCloud {
         return $aRows;
     }
 
+    public function EcsRunCommand($InstanceId, $CommandContent) {
+        $request = Ecs::v20140526()->RunCommand();
+        $request->withInstanceId($InstanceId);
+        $request->withCommandContent($CommandContent);
+        $request->withType('RunBatScript');
+        $request->withEnableParameter(true);
+        return $request->request();
+    }
+
+
+
     /*
      * 开始VPC相关功能
      */
@@ -544,27 +563,65 @@ class AlibabaCloud {
         return $aRows;
     }
 
-    public function EcsDescribeAvailableResource() {
+    public function EcsDescribeAvailableResource($DestinationResource = 'InstanceType', $InstanceType = null) {
         $request = Ecs::v20140526()->DescribeAvailableResource();
-        $request->withDestinationResource('InstanceType');
+        $request->withDestinationResource($DestinationResource);
         $request->withInstanceChargeType('PostPaid'); //PostPaid：按量付费
         $request->withSpotStrategy('SpotAsPriceGo'); //SpotAsPriceGo：系统自动出价，最高按量付费价格。
+        if ($InstanceType) {
+            $request->withInstanceType($InstanceType);
+        }
         $ret = $request->request();
         $aRows = $ret['AvailableZones']['AvailableZone'];
         return $aRows;
     }
 
-    public function EcsDescribePrice($InstanceType, $ZoneId, $SystemDiskSize = 40) {
+    public function EcsDescribePrice($InstanceType, $ZoneId, $SystemDiskSize = 40, $SystemDiskCategory = 'cloud_efficiency') {
         $request = Ecs::v20140526()->DescribePrice();
         $request->withInstanceType($InstanceType);
         $request->withZoneId($ZoneId);
         $request->withSpotStrategy('SpotAsPriceGo'); //系统自动出价，最高按量付费价格。
-        $request->withSystemDiskCategory('cloud_efficiency'); //系统盘的云盘种类：高效云盘
+        $request->withSystemDiskCategory($SystemDiskCategory); //系统盘的云盘种类：高效云盘
         $request->withSystemDiskSize($SystemDiskSize); //系统盘大小，单位为GiB。取值范围：20~500
         $request->withSpotDuration(0); //抢占式实例的保留时长，单位为小时。取值范围：0~6
         $ret = $request->request();
         $mRow = $ret['PriceInfo']['Price'];
         return $mRow;
+    }
+
+    // NIS(网络智能服务)
+
+    /**
+     * 使用AK&SK初始化账号Client
+     * @param string $accessKeyId
+     * @param string $accessKeySecret
+     * @return Nis Client
+     */
+    private function createClient($accessKeyId, $accessKeySecret){
+        $config = new Config([
+            // 必填，您的 AccessKey ID
+            "accessKeyId" => $accessKeyId,
+            // 必填，您的 AccessKey Secret
+            "accessKeySecret" => $accessKeySecret
+        ]);
+        // Endpoint 请参考 https://api.aliyun.com/product/nis
+        $config->endpoint = "nis.aliyuncs.com";
+        return new Nis($config);
+    }
+
+    public function NisGetInternetTuple($regionId, $beginTime, $endTime, $topN = 100, $direction = 'out', $tupleType = 1) {
+        $client = $this->createClient($this->mAK['accessKeyId'], $this->mAK['accessSecret']);
+        $getInternetTupleRequest = new GetInternetTupleRequest([
+            "regionId" => "cn-shenzhen",
+            "direction" => "out",
+            "tupleType" => 1,
+            "beginTime" => 1692806400000,
+            "endTime" => 1692892800000,
+            "topN" => 100
+        ]);
+        $runtime = new RuntimeOptions([]);
+        $resp = $client->getInternetTupleWithOptions($getInternetTupleRequest, $runtime);
+        return $resp;
     }
 
 }

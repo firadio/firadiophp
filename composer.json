@@ -16,6 +16,10 @@
         }
     ],
     "require": {
+        "alibabacloud/nis-20211216": "^1.1.0",
+        "alibabacloud/darabonba-openapi": "^0.2.8",
+        "alibabacloud/tea-console": "^0.1.0",
+        "alibabacloud/tea-utils": "^0.2.18",
         "alibabacloud/sdk":"dev-master",
         "aliyun/aliyun-tablestore-sdk-php": "dev-master",
         "rjyxz/aliyun-php-sdk-core": "dev-master",
