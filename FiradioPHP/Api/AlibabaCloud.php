@@ -612,16 +612,28 @@ class AlibabaCloud {
     public function NisGetInternetTuple($regionId, $beginTime, $endTime, $topN = 100, $direction = 'out', $tupleType = 1) {
         $client = $this->createClient($this->mAK['accessKeyId'], $this->mAK['accessSecret']);
         $getInternetTupleRequest = new GetInternetTupleRequest([
-            "regionId" => "cn-shenzhen",
-            "direction" => "out",
-            "tupleType" => 1,
-            "beginTime" => 1692806400000,
-            "endTime" => 1692892800000,
-            "topN" => 100
+            "regionId" => $regionId,
+            "direction" => $direction,
+            "tupleType" => $tupleType,
+            "beginTime" => $beginTime,
+            "endTime" => $endTime,
+            "topN" => $topN,
         ]);
         $runtime = new RuntimeOptions([]);
+        $runtime->ignoreSSL = true;
         $resp = $client->getInternetTupleWithOptions($getInternetTupleRequest, $runtime);
-        return $resp;
+        $aRows = array();
+        foreach ($resp->body->data as $item) {
+            //print_r($item);
+            $mRow = array();
+            $mRow['cloudIp'] = $item->cloudIp;
+            $mRow['cloudProduct'] = $item->cloudProduct;
+            $mRow['instanceId'] = $item->instanceId;
+            $mRow['direction'] = $item->direction;
+            $mRow['byteCount'] = $item->byteCount;
+            $aRows[] = $mRow;
+        }
+        return $aRows;
     }
 
 }
