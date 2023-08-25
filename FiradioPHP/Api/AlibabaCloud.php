@@ -597,7 +597,7 @@ class AlibabaCloud {
      * @param string $accessKeySecret
      * @return Nis Client
      */
-    private function createClient($accessKeyId, $accessKeySecret){
+    private function createClient($accessKeyId, $accessKeySecret, $regionId){
         $config = new Config([
             // 必填，您的 AccessKey ID
             "accessKeyId" => $accessKeyId,
@@ -605,12 +605,17 @@ class AlibabaCloud {
             "accessKeySecret" => $accessKeySecret
         ]);
         // Endpoint 请参考 https://api.aliyun.com/product/nis
-        $config->endpoint = "nis.aliyuncs.com";
+        $aRegionId = explode('-', $regionId);
+        if ($aRegionId[0] === 'cn') {
+            $config->endpoint = "nis.aliyuncs.com";
+        } else {
+            $config->endpoint = "nis-intl.aliyuncs.com";
+        }
         return new Nis($config);
     }
 
     public function NisGetInternetTuple($regionId, $beginTime, $endTime, $topN = 100, $direction = 'out', $tupleType = 1) {
-        $client = $this->createClient($this->mAK['accessKeyId'], $this->mAK['accessSecret']);
+        $client = $this->createClient($this->mAK['accessKeyId'], $this->mAK['accessSecret'], $regionId);
         $getInternetTupleRequest = new GetInternetTupleRequest([
             "regionId" => $regionId,
             "direction" => $direction,
