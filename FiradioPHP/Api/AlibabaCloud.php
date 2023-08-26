@@ -14,7 +14,6 @@ use AlibabaCloud\SDK\Nis\V20211216\Nis;
 use AlibabaCloud\SDK\Nis\V20211216\Models\GetInternetTupleRequest;
 use AlibabaCloud\Tea\Utils\Utils\RuntimeOptions;
 
-
 /**
  * https://github.com/rjyxz/aliyun-php-sdk-dm
  */
@@ -110,6 +109,14 @@ class AlibabaCloud {
         $request->withInstanceId($InstanceId);
         //$request->withIpAddress('1.1.1.1');
         //$request->withVlanId('100');
+        return $request->request();
+    }
+
+    public function EcsModifyInstanceNetworkSpec($InstanceId, $InternetMaxBandwidthOut = 10, $InternetMaxBandwidthIn = 200) {
+        $request = Ecs::v20140526()->ModifyInstanceNetworkSpec();
+        $request->withInstanceId($InstanceId);
+        $request->withInternetMaxBandwidthOut($InternetMaxBandwidthOut);
+        $request->withInternetMaxBandwidthIn($InternetMaxBandwidthIn);
         return $request->request();
     }
 
@@ -317,8 +324,6 @@ class AlibabaCloud {
         $request->withEnableParameter(true);
         return $request->request();
     }
-
-
 
     /*
      * 开始VPC相关功能
@@ -597,7 +602,7 @@ class AlibabaCloud {
      * @param string $accessKeySecret
      * @return Nis Client
      */
-    private function createClient($accessKeyId, $accessKeySecret, $regionId){
+    private function createClient($accessKeyId, $accessKeySecret, $regionId) {
         $config = new Config([
             // 必填，您的 AccessKey ID
             "accessKeyId" => $accessKeyId,
