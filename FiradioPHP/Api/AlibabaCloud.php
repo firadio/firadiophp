@@ -54,8 +54,14 @@ class AlibabaCloud {
             $request->withSecurityGroupId($rowNthostOperate['SecurityGroupId']);
         }
         //$request->withSecurityGroupId(getSecurityGroupId());
-        $InstanceName = 'hvu-' . $rowNthostOperate['hvu_id'] . '-' . $rowNthostOperate['username'];
-        $request->withInstanceName($InstanceName);
+        if (0) {
+            
+        } else if (!empty($rowNthostOperate['ecs_instance_name'])) {
+            $request->withInstanceName($rowNthostOperate['ecs_instance_name']);
+        } else if (!empty($rowNthostOperate['hvu_id']) && !empty($rowNthostOperate['username'])) {
+            $InstanceName = 'hvu-' . $rowNthostOperate['hvu_id'] . '-' . $rowNthostOperate['username'];
+            $request->withInstanceName($InstanceName);
+        }
         $request->withInternetChargeType('PayByTraffic'); // PayByTraffic || PayByBandwidth
         //$request->withAutoRenew('true');
         //$request->withAutoRenewPeriod('1');
@@ -215,10 +221,11 @@ class AlibabaCloud {
         return $ret;
     }
 
-    public function EcsDeleteSnapshot($SnapshotId) {
+    public function EcsDeleteSnapshot($SnapshotId, $Force = false) {
         // 删除快照
         $request = Ecs::v20140526()->DeleteSnapshot();
         $request->withSnapshotId($SnapshotId);
+        $request->withForce($Force);
         $ret = $request->request();
         return $ret;
     }
@@ -228,6 +235,17 @@ class AlibabaCloud {
         $ret = $request->request();
         $sgs = $ret['SecurityGroups']['SecurityGroup'];
         return $sgs[0]['SecurityGroupId'];
+    }
+
+    public function EcsDescribeInstance($InstanceId) {
+        // 获取单个实例详情
+        $request = Ecs::v20140526()->DescribeInstances();
+        $request->withInstanceIds(json_encode([$InstanceId]));
+        $ret = $request->request();
+        if (empty($ret['Instances']['Instance'])) {
+            return;
+        }
+        return $ret['Instances']['Instance'][0];
     }
 
     public function getEipInstanceId($InstanceId) {
@@ -270,6 +288,60 @@ class AlibabaCloud {
         // 查询一块或多块您已经创建的块存储（包括云盘以及本地盘）。
         $request = Ecs::v20140526()->DescribeDisks();
         $request->withPageNumber($PageNumber);
+        $ret = $request->request();
+        return $ret;
+    }
+
+    public function EcsDescribeDiskByDiskId($DiskId) {
+        // 查询一块已经创建的块存储（包括云盘以及本地盘）。
+        $request = Ecs::v20140526()->DescribeDisks();
+        $request->withDiskIds(json_encode(array($DiskId)));
+        $ret = $request->request();
+        if (empty($ret['Disks'])) {
+            return FALSE;
+        }
+        if (empty($ret['Disks']['Disk'])) {
+            return FALSE;
+        }
+        return $ret['Disks']['Disk'][0];
+    }
+
+    public function EcsCreateSnapshot($DiskId) {
+        // 创建快照
+        $request = Ecs::v20140526()->CreateSnapshot();
+        $request->withDiskId($DiskId);
+        $ret = $request->request();
+        return $ret->SnapshotId;
+    }
+
+    public function EcsDescribeSnapshotById($SnapshotId) {
+        // 查询一台ECS实例或一块云盘所有的快照列表
+        $request = Ecs::v20140526()->DescribeSnapshots();
+        $request->withSnapshotIds(json_encode(array($SnapshotId)));
+        $ret = $request->request();
+        if (empty($ret['Snapshots'])) {
+            return FALSE;
+        }
+        if (empty($ret['Snapshots']['Snapshot'])) {
+            return FALSE;
+        }
+        return $ret['Snapshots']['Snapshot'][0];
+    }
+
+    public function EcsCreateDiskBySnapshotId($SnapshotId, $ZoneId, $DiskName) {
+        // 通过快照创建一块按量付费的数据盘
+        $request = Ecs::v20140526()->CreateDisk();
+        $request->withSnapshotId($SnapshotId);
+        $request->withZoneId($ZoneId);
+        $request->withDiskName($DiskName);
+        $request->withDiskCategory('cloud_efficiency');
+        $ret = $request->request();
+        return $ret->DiskId;
+    }
+
+    public function EcsDeleteDisk($DiskId) {
+        $request = Ecs::v20140526()->DeleteDisk();
+        $request->withDiskId($DiskId);
         $ret = $request->request();
         return $ret;
     }
@@ -325,6 +397,35 @@ class AlibabaCloud {
         return $request->request();
     }
 
+    public function InvokeCommand($CommandId, $InstanceId, $Parameters) {
+        $request = Ecs::v20140526()->InvokeCommand();
+        $request->withCommandId($CommandId);
+        $request->withInstanceId($InstanceId);
+        $request->withParameters($Parameters);
+        return $request->request();
+    }
+
+    public function EcsAttachDisk($InstanceId, $DiskId) {
+        //为实例挂载数据盘或系统盘
+        $request = Ecs::v20140526()->AttachDisk();
+        $request->withInstanceId($InstanceId);
+        $request->withDiskId($DiskId);
+        //withDeleteWithInstance--false：不释放。云盘会转换成按量付费数据盘而被保留下来。
+        $request->withDeleteWithInstance(false);
+        return $request->request();
+    }
+
+    public function EcsDetachDisk($InstanceId, $DiskId) {
+        //卸载按量付费数据盘或系统盘
+        $request = Ecs::v20140526()->DetachDisk();
+        //卸载系统盘时，所挂载的实例必须处于已停止（Stopped）状态。
+        $request->withInstanceId($InstanceId);
+        $request->withDiskId($DiskId);
+        //withDeleteWithInstance--false：不释放。云盘会转换成按量付费数据盘而被保留下来。
+        $request->withDeleteWithInstance(false);
+        return $request->request();
+    }
+
     /*
      * 开始VPC相关功能
      */
@@ -372,6 +473,7 @@ class AlibabaCloud {
     }
 
     public function VpcAssociateEipAddress($AllocationId, $InstanceId) {
+        // 将EIP绑定到云产品实例
         $request = Vpc::v20160428()->AssociateEipAddress();
         $request->withAllocationId($AllocationId);
         $request->withInstanceId($InstanceId);
