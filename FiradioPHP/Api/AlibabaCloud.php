@@ -491,6 +491,14 @@ class AlibabaCloud {
         //print_r($ret->toArray());
     }
 
+    public function VpcDescribeCommonBandwidthPackagesRequest($BandwidthPackageId) {
+        $request = Vpc::v20160428()->DescribeCommonBandwidthPackages();
+        $request->withBandwidthPackageId($BandwidthPackageId);
+        $ret = $request->request();
+        $arr = $ret->toArray();
+        return $arr['CommonBandwidthPackages']['CommonBandwidthPackage'][0];
+    }
+
     private function array_orderby() {
         $args = func_get_args();
         $data = array_shift($args);
