@@ -328,13 +328,16 @@ class AlibabaCloud {
         return $ret['Snapshots']['Snapshot'][0];
     }
 
-    public function EcsCreateDiskBySnapshotId($SnapshotId, $ZoneId, $DiskName) {
+    public function EcsCreateDiskBySnapshotId($SnapshotId, $ZoneId, $DiskName, $DiskCategory = 'cloud_efficiency') {
         // 通过快照创建一块按量付费的数据盘
         $request = Ecs::v20140526()->CreateDisk();
         $request->withSnapshotId($SnapshotId);
         $request->withZoneId($ZoneId);
         $request->withDiskName($DiskName);
-        $request->withDiskCategory('cloud_efficiency');
+        $request->withDiskCategory($DiskCategory);
+        if ($DiskCategory === 'cloud_essd') {
+            $request->withSystemDiskPerformanceLevel('PL0');
+        }
         $ret = $request->request();
         return $ret->DiskId;
     }
