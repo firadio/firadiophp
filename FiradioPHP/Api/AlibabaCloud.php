@@ -83,6 +83,7 @@ class AlibabaCloud {
         }
         $request->withInstanceChargeType('PostPaid'); // PrePaid(包年包月) || PostPaid(按量付费)
         $request->withSpotStrategy('SpotAsPriceGo'); // NoSpot(正常按量付费) | SpotWithPriceLimit(设置上限价格) | SpotAsPriceGo(系统自动出价)
+        $request->withSpotInterruptionBehavior('Stop'); // Terminate：直接释放实例。Stop：实例进入节省停机模式。
         //$request->withSpotPriceLimit(1);
         return $request->request();
     }
