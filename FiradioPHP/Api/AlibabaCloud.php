@@ -156,7 +156,7 @@ class AlibabaCloud {
         $request = Ecs::v20140526()->StopInstance();
         $request->withInstanceId($InstanceId);
         // StopCharging：停止计费 | KeepCharging：继续计费。
-        $request->withStoppedMode('StopCharging');
+        $request->withStoppedMode('KeepCharging');
         $request->withForceStop($ForceStop);
         return $request->request();
     }
