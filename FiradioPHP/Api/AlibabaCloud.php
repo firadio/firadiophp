@@ -561,12 +561,15 @@ class AlibabaCloud {
         return $ret;
     }
 
-    public function VpcDescribeEipAddresses($PageNumber = 1, $PageSize = NULL) {
+    public function VpcDescribeEipAddresses($PageNumber = 1, $PageSize = NULL, $Status = NULL) {
         // 参考 https://help.aliyun.com/document_detail/36018.html
         $request = Vpc::v20160428()->DescribeEipAddresses();
         $request->withPageNumber($PageNumber);
         if ($PageSize !== NULL) {
             $request->withPageSize($PageSize);
+        }
+        if ($Status !== NULL) {
+            $request->withStatus($Status);
         }
         $ret = $request->request();
         return $ret;
